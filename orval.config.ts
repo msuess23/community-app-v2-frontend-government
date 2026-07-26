@@ -12,6 +12,15 @@ export default defineConfig({
       schemas: './src/api/generated/models',
       client: 'react-query',
       httpClient: 'fetch',
+      override: {
+        fetch: {
+          includeHttpResponseReturnType: false,
+        },
+        mutator: {
+          path: './src/api/client/api-fetch.ts',
+          name: 'apiFetch',
+        },
+      },
     },
   },
 })

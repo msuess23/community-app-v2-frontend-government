@@ -85,3 +85,9 @@ src/shared/
 ```
 
 Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Text- und Checkboxfelder basieren auf React Aria Components und stellen sichtbare Beschriftungen, Beschreibungen, Fehlerzustände und ausreichend große Interaktionsflächen bereit. Unter `src/shared/forms` liegen die schmalen React-Hook-Form-Adapter sowie die gemeinsame Zod-Validierung und Fehlerzusammenfassung. Zusätzliche Varianten werden erst ergänzt, wenn ein konkreter Anwendungsfall sie benötigt.
+
+## API-Transport
+
+Der gemeinsame Fetch-Mutator liegt unter `src/api/client`. Er verbindet relative OpenAPI-Pfade mit `VITE_API_BASE_URL`, verarbeitet JSON-, Text-, Blob- und leere Antworten und überführt Backendfehler in `ApiError`.
+
+Orval verwendet diesen Mutator für alle später generierten Funktionen und TanStack-Query-Hooks. Authentifizierungsheader und Token-Rotation sind bewusst noch nicht Bestandteil dieser Schicht und werden in einem eigenen Patch ergänzt.

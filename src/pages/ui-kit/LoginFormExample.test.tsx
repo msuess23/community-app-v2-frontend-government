@@ -21,7 +21,9 @@ describe('LoginFormExample', () => {
     expect(errorSummary).toHaveTextContent(
       'Bitte gib deine E-Mail-Adresse ein.',
     )
-    expect(screen.getByLabelText('E-Mail-Adresse')).toHaveFocus()
+    expect(
+      screen.getByRole('textbox', { name: 'E-Mail-Adresse' }),
+    ).toHaveFocus()
   })
 
   it('submits valid values from controlled fields', async () => {
@@ -29,8 +31,11 @@ describe('LoginFormExample', () => {
 
     renderWithProviders(<LoginFormExample />)
 
-    await user.type(screen.getByLabelText('E-Mail-Adresse'), 'admin@test.com')
-    await user.type(screen.getByLabelText('Passwort'), 'sicheres-passwort')
+    await user.type(
+      screen.getByRole('textbox', { name: 'E-Mail-Adresse' }),
+      'admin@test.com',
+    )
+    await user.type(screen.getByLabelText(/^Passwort/), 'sicheres-passwort')
     await user.click(
       screen.getByRole('checkbox', { name: 'Angemeldet bleiben' }),
     )

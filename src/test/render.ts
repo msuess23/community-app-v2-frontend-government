@@ -8,7 +8,10 @@ import { createQueryClient } from '@/app/query-client'
 
 export function renderWithProviders(ui: ReactElement) {
   return render(
-    createElement(AppProviders, { queryClient: createQueryClient() }, ui),
+    createElement(AppProviders, {
+      children: ui,
+      queryClient: createQueryClient(),
+    }),
   )
 }
 
@@ -17,11 +20,10 @@ export function renderRouter(
   initialEntries: string[] = ['/'],
 ) {
   const router = createMemoryRouter(routes, { initialEntries })
-  const application = createElement(
-    AppProviders,
-    { queryClient: createQueryClient() },
-    createElement(RouterProvider, { router }),
-  )
+  const application = createElement(AppProviders, {
+    children: createElement(RouterProvider, { router }),
+    queryClient: createQueryClient(),
+  })
 
   return {
     router,
