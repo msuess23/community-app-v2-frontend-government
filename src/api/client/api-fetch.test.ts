@@ -1,181 +1,161 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { ApiError } from '@/api/client/api-error'
-import { apiFetch } from '@/api/client/api-fetch'
-import { resolveApiUrl } from '@/api/client/api-url'
+import {
+  createApiFetch,
+  type ApiRequestOptions,
+} from '@/api/client/api-fetch'
+import type { ApiRequestExecutor } from '@/api/client/api-request'
 
-type FetchImplementation = (
-  input: RequestInfo | URL,
-  init?: RequestInit,
-) => Promise<Response>
-
-describe('resolveApiUrl', () => {
-  it('adds the configured API path to an operation path', () => {
-    expect(resolveApiUrl('/auth/login', '/api/v1')).toBe('/api/v1/auth/login')
-  })
-
-  it('does not duplicate an API path already present in the operation URL', () => {
-    expect(resolveApiUrl('/api/v1/auth/login', '/api/v1')).toBe(
-      '/api/v1/auth/login',
-    )
-  })
-
-  it('supports an absolute API base URL', () => {
-    expect(
-      resolveApiUrl('/users/me?include=office', 'https://api.example/api/v1'),
-    ).toBe('https://api.example/api/v1/users/me?include=office')
-  })
-
-  it('keeps an absolute operation URL unchanged', () => {
-    expect(
-      resolveApiUrl('https://files.example/document.pdf', '/api/v1'),
-    ).toBe('https://files.example/document.pdf')
-  })
-})
-
-describe('apiFetch', () => {
-  const fetchMock = vi.fn<FetchImplementation>()
-
-  beforeEach(() => {
-    fetchMock.mockReset()
-    vi.stubGlobal('fetch', fetchMock)
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
-  it('returns a JSON response and uses the resolved API URL', async () => {
-    fetchMock.mockResolvedValue(
-      Response.json({ id: 'user-1' }, { status: 200 }),
-    )
-
-    await expect(apiFetch<{ id: string }>('/users/me')).resolves.toEqual({
-      id: 'user-1',
+describe('apiFetch authentication', () => {
+  it('adds the current access token to a managed request', async () => {
+    const request = createRequestMock({ id: 'user-1' })
+    const apiFetch = createApiFetch({
+      request,
+      tokens: createTokenReader('access-token', 'refresh-token'),
     })
-    expect(fetchMock).toHaveBeenCalledOnce()
-    expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/v1/users/me')
+
+    await apiFetch('/users/me')
+
+    expect(readAuthorization(request, 0)).toBe('Bearer access-token')
   })
 
-  it('returns undefined for a no-content response', async () => {
-    fetchMock.mockResolvedValue(new Response(null, { status: 204 }))
+  it('does not replace an explicitly supplied authorization header', async () => {
+    const request = createRequestMock({ ok: true })
+    const refresh = { refresh: vi.fn() }
+    const apiFetch = createApiFetch({
+      refresh,
+      request,
+      tokens: createTokenReader('stored-access-token', 'refresh-token'),
+    })
 
-    await expect(apiFetch<void>('/auth/logout')).resolves.toBeUndefined()
-  })
-
-  it('does not set a content type for FormData requests', async () => {
-    const formData = new FormData()
-    formData.append('title', 'Beispiel')
-    fetchMock.mockResolvedValue(Response.json({ id: 'info-1' }))
-
-    await apiFetch('/infos', {
-      body: formData,
+    await apiFetch('/external-resource', {
       headers: {
-        'Content-Type': 'multipart/form-data',
-        'X-Request-Id': 'request-1',
+        Authorization: 'Custom credential',
       },
-      method: 'POST',
     })
 
-    const request = fetchMock.mock.calls[0]?.[1]
-    const headers = new Headers(request?.headers)
-
-    expect(headers.has('Content-Type')).toBe(false)
-    expect(headers.get('X-Request-Id')).toBe('request-1')
+    expect(readAuthorization(request, 0)).toBe('Custom credential')
+    expect(refresh.refresh).not.toHaveBeenCalled()
   })
 
-  it('returns binary responses as blobs', async () => {
-    fetchMock.mockResolvedValue(
-      new Response('PDF', {
-        headers: { 'Content-Type': 'application/pdf' },
+  it('supports public requests without adding or refreshing credentials', async () => {
+    const request = vi.fn<ApiRequestExecutor>().mockRejectedValue(
+      new ApiError({
+        message: 'Unauthorized',
+        status: 401,
       }),
     )
-
-    const result = await apiFetch<Blob>('/documents/example', {
-      responseType: 'blob',
+    const refresh = { refresh: vi.fn() }
+    const apiFetch = createApiFetch({
+      refresh,
+      request,
+      tokens: createTokenReader('access-token', 'refresh-token'),
     })
 
-    expect(result.type).toBe('application/pdf')
-    expect(result.size).toBe(3)
+    await expect(
+      apiFetch('/auth/login', { authentication: 'none' }),
+    ).rejects.toMatchObject({ status: 401 })
+    expect(readAuthorization(request, 0)).toBeNull()
+    expect(refresh.refresh).not.toHaveBeenCalled()
   })
 
-  it('passes an abort signal to fetch', async () => {
-    const controller = new AbortController()
-    fetchMock.mockResolvedValue(Response.json({ ok: true }))
-
-    await apiFetch('/health', { signal: controller.signal })
-
-    expect(fetchMock.mock.calls[0]?.[1]?.signal).toBe(controller.signal)
-  })
-
-  it('normalizes the project error envelope', async () => {
-    fetchMock.mockResolvedValue(
-      Response.json(
-        {
-          details: [{ field: 'email', message: 'Ungültige E-Mail-Adresse.' }],
-          error_code: 'VALIDATION_ERROR',
-          message: 'Die Anfrage enthält ungültige Daten.',
-        },
-        { status: 422, statusText: 'Unprocessable Entity' },
-      ),
-    )
-
-    const error = await captureApiError(() => apiFetch('/auth/register'))
-
-    expect(error).toMatchObject({
-      details: [{ field: 'email', message: 'Ungültige E-Mail-Adresse.' }],
-      errorCode: 'VALIDATION_ERROR',
-      message: 'Die Anfrage enthält ungültige Daten.',
-      status: 422,
-      statusText: 'Unprocessable Entity',
-    })
-  })
-
-  it('normalizes native FastAPI validation details', async () => {
-    fetchMock.mockResolvedValue(
-      Response.json(
-        {
-          detail: [
-            {
-              loc: ['body', 'profile', 'first_name'],
-              msg: 'Field required',
-              type: 'missing',
-            },
-          ],
-        },
-        { status: 422 },
-      ),
-    )
-
-    const error = await captureApiError(() => apiFetch('/users'))
-
-    expect(error.details).toEqual([
-      { field: 'profile.first_name', message: 'Field required' },
-    ])
-  })
-
-  it('wraps network failures but preserves abort errors', async () => {
-    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
-
-    await expect(apiFetch('/health')).rejects.toMatchObject({
-      errorCode: 'NETWORK_ERROR',
-      status: 0,
+  it('refreshes after one unauthorized response and retries once', async () => {
+    let accessToken = 'old-access-token'
+    const request = vi
+      .fn<ApiRequestExecutor>()
+      .mockRejectedValueOnce(
+        new ApiError({
+          message: 'Unauthorized',
+          status: 401,
+        }),
+      )
+      .mockResolvedValueOnce({ id: 'user-1' })
+    const refresh = {
+      refresh: vi.fn(async () => {
+        accessToken = 'new-access-token'
+        return true
+      }),
+    }
+    const apiFetch = createApiFetch({
+      refresh,
+      request,
+      tokens: {
+        getAccessToken: () => accessToken,
+        getRefreshToken: () => 'refresh-token',
+      },
     })
 
-    const abortError = new DOMException('Aborted', 'AbortError')
-    fetchMock.mockRejectedValueOnce(abortError)
+    await expect(apiFetch('/users/me')).resolves.toEqual({ id: 'user-1' })
+    expect(refresh.refresh).toHaveBeenCalledOnce()
+    expect(request).toHaveBeenCalledTimes(2)
+    expect(readAuthorization(request, 0)).toBe('Bearer old-access-token')
+    expect(readAuthorization(request, 1)).toBe('Bearer new-access-token')
+  })
 
-    await expect(apiFetch('/health')).rejects.toBe(abortError)
+  it('does not retry a second unauthorized response', async () => {
+    const unauthorized = new ApiError({
+      message: 'Unauthorized',
+      status: 401,
+    })
+    const request = vi
+      .fn<ApiRequestExecutor>()
+      .mockRejectedValueOnce(unauthorized)
+      .mockRejectedValueOnce(unauthorized)
+    const refresh = { refresh: vi.fn().mockResolvedValue(true) }
+    const apiFetch = createApiFetch({
+      refresh,
+      request,
+      tokens: createTokenReader('access-token', 'refresh-token'),
+    })
+
+    await expect(apiFetch('/users/me')).rejects.toBe(unauthorized)
+    expect(request).toHaveBeenCalledTimes(2)
+    expect(refresh.refresh).toHaveBeenCalledOnce()
+  })
+
+  it('does not refresh without a stored refresh token', async () => {
+    const unauthorized = new ApiError({
+      message: 'Unauthorized',
+      status: 401,
+    })
+    const request = vi
+      .fn<ApiRequestExecutor>()
+      .mockRejectedValue(unauthorized)
+    const refresh = { refresh: vi.fn() }
+    const apiFetch = createApiFetch({
+      refresh,
+      request,
+      tokens: createTokenReader('access-token', null),
+    })
+
+    await expect(apiFetch('/users/me')).rejects.toBe(unauthorized)
+    expect(refresh.refresh).not.toHaveBeenCalled()
+    expect(request).toHaveBeenCalledOnce()
   })
 })
 
-async function captureApiError(action: () => Promise<unknown>) {
-  try {
-    await action()
-  } catch (error) {
-    expect(error).toBeInstanceOf(ApiError)
-    return error as ApiError
-  }
+function createRequestMock(result: unknown) {
+  return vi.fn<ApiRequestExecutor>().mockResolvedValue(result)
+}
 
-  throw new Error('Expected the request to fail with an ApiError.')
+function createTokenReader(
+  accessToken: string | null,
+  refreshToken: string | null,
+) {
+  return {
+    getAccessToken: () => accessToken,
+    getRefreshToken: () => refreshToken,
+  }
+}
+
+function readAuthorization(
+  request: ReturnType<typeof vi.fn<ApiRequestExecutor>>,
+  callIndex: number,
+): string | null {
+  const options = request.mock.calls[callIndex]?.[1] as
+    | ApiRequestOptions
+    | undefined
+
+  return new Headers(options?.headers).get('Authorization')
 }

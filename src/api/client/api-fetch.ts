@@ -1,134 +1,120 @@
+import { isApiError } from '@/api/client/api-error'
 import {
-  ApiError,
-  createHttpApiError,
-  createNetworkApiError,
-} from '@/api/client/api-error'
-import { resolveApiUrl } from '@/api/client/api-url'
+  executeApiRequest,
+  type ApiRequestExecutor,
+  type ApiRequestOptions as TransportRequestOptions,
+  type ApiResponseType,
+  type BodyType,
+  type ErrorType,
+} from '@/api/client/api-request'
+import {
+  refreshCoordinator,
+  type RefreshCoordinator,
+} from '@/auth/refresh-coordinator'
+import { tokenStore, type TokenStore } from '@/auth/token-store'
 
-export type ApiResponseType =
-  | 'arrayBuffer'
-  | 'arraybuffer'
-  | 'blob'
-  | 'json'
-  | 'text'
+export type ApiAuthenticationMode = 'auto' | 'none'
 
-export type ApiRequestOptions = RequestInit & {
-  responseType?: ApiResponseType
+export type ApiRequestOptions = TransportRequestOptions & {
+  authentication?: ApiAuthenticationMode
 }
 
-export type BodyType<BodyData> = BodyData
-export type ErrorType<ErrorBody> = ApiError<ErrorBody>
+export type { ApiResponseType, BodyType, ErrorType }
 
-export async function apiFetch<T>(
+export type ApiFetch = <T>(
   url: string,
-  options: ApiRequestOptions = {},
-): Promise<T> {
-  const { responseType, ...requestInit } = options
-  const headers = new Headers(requestInit.headers)
+  options?: ApiRequestOptions,
+) => Promise<T>
 
-  if (isFormData(requestInit.body)) {
-    headers.delete('Content-Type')
-  }
+type ApiFetchDependencies = {
+  refresh?: Pick<RefreshCoordinator, 'refresh'>
+  request?: ApiRequestExecutor
+  tokens?: Pick<TokenStore, 'getAccessToken' | 'getRefreshToken'>
+}
 
-  let response: Response
+export function createApiFetch({
+  refresh = refreshCoordinator,
+  request = executeApiRequest,
+  tokens = tokenStore,
+}: ApiFetchDependencies = {}): ApiFetch {
+  return async function authenticatedApiFetch<T>(
+    url: string,
+    options: ApiRequestOptions = {},
+  ): Promise<T> {
+    const { authentication = 'auto', ...requestOptions } = options
+    const headers = new Headers(requestOptions.headers)
+    const usesManagedAuthentication =
+      authentication === 'auto' && !headers.has('Authorization')
 
-  try {
-    response = await fetch(resolveApiUrl(url), {
-      ...requestInit,
-      headers,
-    })
-  } catch (error) {
-    if (isAbortError(error)) {
-      throw error
+    if (usesManagedAuthentication) {
+      setBearerToken(headers, tokens.getAccessToken())
     }
 
-    throw createNetworkApiError(error)
-  }
-
-  if (!response.ok) {
-    throw createHttpApiError(response, await readErrorBody(response))
-  }
-
-  return readSuccessBody<T>(response, responseType)
-}
-
-async function readSuccessBody<T>(
-  response: Response,
-  responseType?: ApiResponseType,
-): Promise<T> {
-  if ([204, 205, 304].includes(response.status) || response.body === null) {
-    return undefined as T
-  }
-
-  switch (responseType) {
-    case 'arrayBuffer':
-    case 'arraybuffer':
-      return (await response.arrayBuffer()) as T
-    case 'blob':
-      return (await response.blob()) as T
-    case 'json':
-      return (await response.json()) as T
-    case 'text':
-      return (await response.text()) as T
-  }
-
-  const contentType = response.headers.get('content-type')?.toLowerCase() ?? ''
-
-  if (isJsonContentType(contentType)) {
-    return (await response.json()) as T
-  }
-
-  if (contentType.startsWith('text/') || contentType.includes('xml')) {
-    return (await response.text()) as T
-  }
-
-  if (contentType) {
-    return (await response.blob()) as T
-  }
-
-  const text = await response.text()
-
-  return (text ? text : undefined) as T
-}
-
-async function readErrorBody(response: Response): Promise<unknown> {
-  if (response.body === null) {
-    return undefined
-  }
-
-  const contentType = response.headers.get('content-type')?.toLowerCase() ?? ''
-
-  if (isJsonContentType(contentType)) {
     try {
-      return await response.json()
-    } catch {
-      return undefined
-    }
-  }
+      return (await request(url, {
+        ...requestOptions,
+        headers,
+      })) as T
+    } catch (error) {
+      if (
+        !shouldRefresh({
+          error,
+          requestOptions,
+          tokens,
+          usesManagedAuthentication,
+        })
+      ) {
+        throw error
+      }
 
-  try {
-    const text = await response.text()
-    return text || undefined
-  } catch {
-    return undefined
+      const refreshed = await refresh.refresh()
+      const accessToken = tokens.getAccessToken()
+
+      if (!refreshed || !accessToken) {
+        throw error
+      }
+
+      const retryHeaders = new Headers(requestOptions.headers)
+      setBearerToken(retryHeaders, accessToken)
+
+      return (await request(url, {
+        ...requestOptions,
+        headers: retryHeaders,
+      })) as T
+    }
   }
 }
 
-function isJsonContentType(contentType: string): boolean {
+export const apiFetch = createApiFetch()
+
+function setBearerToken(headers: Headers, accessToken: string | null): void {
+  if (accessToken) {
+    headers.set('Authorization', `Bearer ${accessToken}`)
+  }
+}
+
+function shouldRefresh({
+  error,
+  requestOptions,
+  tokens,
+  usesManagedAuthentication,
+}: {
+  error: unknown
+  requestOptions: TransportRequestOptions
+  tokens: Pick<TokenStore, 'getRefreshToken'>
+  usesManagedAuthentication: boolean
+}): boolean {
   return (
-    contentType.includes('application/json') || contentType.includes('+json')
+    usesManagedAuthentication &&
+    isApiError(error) &&
+    error.status === 401 &&
+    tokens.getRefreshToken() !== null &&
+    isRetryableBody(requestOptions.body)
   )
 }
 
-function isFormData(body: BodyInit | null | undefined): body is FormData {
-  return typeof FormData !== 'undefined' && body instanceof FormData
-}
-
-function isAbortError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'name' in error &&
-    error.name === 'AbortError'
+function isRetryableBody(body: BodyInit | null | undefined): boolean {
+  return !(
+    typeof ReadableStream !== 'undefined' && body instanceof ReadableStream
   )
 }

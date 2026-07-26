@@ -1,0 +1,110 @@
+import { isApiError } from '@/api/client/api-error'
+import { requestTokenRefresh } from '@/auth/refresh-api'
+import { refreshLock, type RefreshLock } from '@/auth/refresh-lock'
+import {
+  sessionEvents,
+  type SessionEventBus,
+} from '@/auth/session-events'
+import {
+  tokenStore,
+  type AuthTokens,
+  type TokenStore,
+} from '@/auth/token-store'
+
+export type TokenRefreshFunction = (refreshToken: string) => Promise<AuthTokens>
+
+type RefreshCoordinatorOptions = {
+  events?: SessionEventBus
+  lock?: RefreshLock
+  refreshTokens?: TokenRefreshFunction
+  store?: TokenStore
+}
+
+export class RefreshCoordinator {
+  private readonly events: SessionEventBus
+  private inFlight: Promise<boolean> | null = null
+  private readonly lock: RefreshLock
+  private readonly refreshTokens: TokenRefreshFunction
+  private readonly store: TokenStore
+
+  constructor({
+    events = sessionEvents,
+    lock = refreshLock,
+    refreshTokens = requestTokenRefresh,
+    store = tokenStore,
+  }: RefreshCoordinatorOptions = {}) {
+    this.events = events
+    this.lock = lock
+    this.refreshTokens = refreshTokens
+    this.store = store
+  }
+
+  refresh(): Promise<boolean> {
+    if (this.inFlight) {
+      return this.inFlight
+    }
+
+    const refreshPromise = this.lock
+      .runExclusive(() => this.rotateCurrentToken())
+      .finally(() => {
+        if (this.inFlight === refreshPromise) {
+          this.inFlight = null
+        }
+      })
+
+    this.inFlight = refreshPromise
+    return refreshPromise
+  }
+
+  private async rotateCurrentToken(): Promise<boolean> {
+    const initialSnapshot = this.store.getSnapshot()
+    const refreshToken = initialSnapshot.refreshToken
+    const persistence = initialSnapshot.refreshTokenPersistence
+
+    if (!refreshToken || !persistence) {
+      return false
+    }
+
+    try {
+      const tokens = await this.refreshTokens(refreshToken)
+
+      if (!this.sessionMatches(refreshToken, persistence)) {
+        return false
+      }
+
+      this.store.setTokens(tokens, persistence)
+      return true
+    } catch (error) {
+      if (
+        isRejectedRefresh(error) &&
+        this.sessionMatches(refreshToken, persistence)
+      ) {
+        this.store.clear()
+        this.events.emit({
+          reason: 'refresh-rejected',
+          type: 'session-expired',
+        })
+      }
+
+      throw error
+    }
+  }
+
+  private sessionMatches(
+    refreshToken: string,
+    persistence: 'persistent' | 'session',
+  ): boolean {
+    const currentSnapshot = this.store.getSnapshot()
+
+    return (
+      currentSnapshot.refreshToken === refreshToken &&
+      currentSnapshot.refreshTokenPersistence === persistence
+    )
+  }
+}
+
+export const refreshCoordinator = new RefreshCoordinator()
+
+function isRejectedRefresh(error: unknown): boolean {
+  return isApiError(error) && error.status === 401
+}

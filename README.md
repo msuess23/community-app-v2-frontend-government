@@ -90,4 +90,16 @@ Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Text- und Checkbox
 
 Der gemeinsame Fetch-Mutator liegt unter `src/api/client`. Er verbindet relative OpenAPI-Pfade mit `VITE_API_BASE_URL`, verarbeitet JSON-, Text-, Blob- und leere Antworten und überführt Backendfehler in `ApiError`.
 
-Orval verwendet diesen Mutator für alle später generierten Funktionen und TanStack-Query-Hooks. Authentifizierungsheader und Token-Rotation sind bewusst noch nicht Bestandteil dieser Schicht und werden in einem eigenen Patch ergänzt.
+Orval verwendet diesen Mutator für alle später generierten Funktionen und TanStack-Query-Hooks. Die allgemeine Antwort- und Fehlerverarbeitung bleibt in einer auth-unabhängigen Transportfunktion gekapselt; der äußere Mutator ergänzt bei Bedarf die Sitzungsinformationen.
+
+## Token-Speicherung
+
+Der Client hält Access-Tokens ausschließlich im Arbeitsspeicher. Refresh-Tokens werden standardmäßig tablokal in `sessionStorage` gespeichert und nur bei einer späteren expliziten „Angemeldet bleiben“-Entscheidung in `localStorage` abgelegt. Login, Logout und die React-Sitzungsintegration werden in separaten Patches ergänzt.
+
+## Authentifizierter API-Transport
+
+Der Orval-Mutator ergänzt bei verwalteten API-Aufrufen automatisch den aktuellen Access-Token aus dem speicherunabhängigen `TokenStore`. Öffentliche oder bewusst fremdauthentifizierte Requests können mit `authentication: 'none'` von diesem Verhalten ausgenommen werden.
+
+Antwortet ein verwalteter Request mit HTTP 401 und ist ein Refresh-Token vorhanden, koordiniert der Client genau eine Rotation pro Tab. Unterstützt der Browser die Web-Locks-API, werden Rotationen zusätzlich zwischen Tabs serialisiert. Nach erfolgreicher Rotation wird die ursprüngliche Anfrage genau einmal mit dem neuen Access-Token wiederholt.
+
+Ein vom Backend abgelehnter Refresh-Token löscht die lokale Sitzung und veröffentlicht ein `session-expired`-Ereignis. Temporäre Netzwerkfehler löschen den gespeicherten Refresh-Token dagegen nicht. Auth-Provider und Login-Oberflächen werden weiterhin in späteren Patches ergänzt.
