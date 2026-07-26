@@ -94,7 +94,7 @@ Orval verwendet diesen Mutator für alle später generierten Funktionen und TanS
 
 ## Token-Speicherung
 
-Der Client hält Access-Tokens ausschließlich im Arbeitsspeicher. Refresh-Tokens werden standardmäßig tablokal in `sessionStorage` gespeichert und nur bei einer späteren expliziten „Angemeldet bleiben“-Entscheidung in `localStorage` abgelegt. Login, Logout und die React-Sitzungsintegration werden in separaten Patches ergänzt.
+Der Client hält Access-Tokens ausschließlich im Arbeitsspeicher. Refresh-Tokens werden standardmäßig tablokal in `sessionStorage` gespeichert und nur bei einer späteren expliziten „Angemeldet bleiben“-Entscheidung in `localStorage` abgelegt. Login, Logout und die React-Sitzungsintegration werden durch den Session-Core unter `src/auth` ergänzt.
 
 ## Authentifizierter API-Transport
 
@@ -102,4 +102,21 @@ Der Orval-Mutator ergänzt bei verwalteten API-Aufrufen automatisch den aktuelle
 
 Antwortet ein verwalteter Request mit HTTP 401 und ist ein Refresh-Token vorhanden, koordiniert der Client genau eine Rotation pro Tab. Unterstützt der Browser die Web-Locks-API, werden Rotationen zusätzlich zwischen Tabs serialisiert. Nach erfolgreicher Rotation wird die ursprüngliche Anfrage genau einmal mit dem neuen Access-Token wiederholt.
 
-Ein vom Backend abgelehnter Refresh-Token löscht die lokale Sitzung und veröffentlicht ein `session-expired`-Ereignis. Temporäre Netzwerkfehler löschen den gespeicherten Refresh-Token dagegen nicht. Auth-Provider und Login-Oberflächen werden weiterhin in späteren Patches ergänzt.
+Ein vom Backend abgelehnter Refresh-Token löscht die lokale Sitzung und veröffentlicht ein `session-expired`-Ereignis. Temporäre Netzwerkfehler löschen den gespeicherten Refresh-Token dagegen nicht. Die React-Sitzungsintegration wird im folgenden Abschnitt beschrieben; sichtbare Login-Oberflächen werden später ergänzt.
+
+## Auth-Sitzung
+
+`src/auth/auth-session.ts` kapselt den browserseitigen Sitzungszustand unabhängig von React. Die Zustände `initializing`, `anonymous` und `authenticated` werden als unveränderliche Snapshots veröffentlicht und im `AuthProvider` über `useSyncExternalStore` bereitgestellt.
+
+Der Session-Core übernimmt:
+
+- Login über das OAuth2-Formular des FastAPI-Backends,
+- optionale persistente Refresh-Token-Speicherung,
+- Wiederherstellung einer vorhandenen Sitzung durch Tokenrotation und `/users/me`,
+- Registrierung eines Bürgerkontos ohne automatische Behördenanmeldung,
+- lokalen Logout auch bei nicht erreichbarem Backend,
+- Logout aller Sitzungen,
+- Bereinigung des TanStack-Query-Caches beim Benutzerwechsel,
+- Reaktion auf abgelehnte Refresh-Tokens und tabübergreifenden Logout.
+
+Sichtbare Login-, Registrierungs- und Berechtigungsseiten werden in einem späteren UI-Patch ergänzt.
