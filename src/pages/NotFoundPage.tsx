@@ -1,24 +1,20 @@
-import { Link } from 'react-router'
+import { LinkButton } from '@/shared/ui/LinkButton'
+import { PageHeader } from '@/shared/ui/PageHeader'
 
 export function NotFoundPage() {
   return (
     <section aria-labelledby="not-found-heading" className="max-w-2xl">
-      <p className="text-sm font-semibold text-blue-700">Fehler 404</p>
-      <h1
-        id="not-found-heading"
-        className="mt-2 text-3xl font-bold tracking-tight text-slate-950"
-      >
-        Seite nicht gefunden
-      </h1>
-      <p className="mt-4 leading-7 text-slate-600">
-        Die aufgerufene Adresse existiert nicht oder wurde verschoben.
-      </p>
-      <Link
-        className="mt-6 inline-flex min-h-11 items-center rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
-        to="/"
-      >
+      <PageHeader
+        description={
+          <p>Die aufgerufene Adresse existiert nicht oder wurde verschoben.</p>
+        }
+        eyebrow="Fehler 404"
+        headingId="not-found-heading"
+        title="Seite nicht gefunden"
+      />
+      <LinkButton className="mt-6" to="/">
         Zur Startseite
-      </Link>
+      </LinkButton>
     </section>
   )
 }

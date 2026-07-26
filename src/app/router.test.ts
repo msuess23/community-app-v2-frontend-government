@@ -16,6 +16,17 @@ describe('application routes', () => {
     ).toHaveAttribute('href', '#main-content')
   })
 
+  it('renders the shared UI kit', () => {
+    renderRouter(appRoutes, ['/ui-kit'])
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'UI-Bausteine' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Primär' }),
+    ).toBeInTheDocument()
+  })
+
   it('renders the not-found page for an unknown path', () => {
     renderRouter(appRoutes, ['/nicht-vorhanden'])
 

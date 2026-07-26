@@ -54,3 +54,22 @@ src/
 ```
 
 Fachliche Features, Authentifizierung und API-Kommunikation werden in getrennten Patches ergänzt.
+
+## Gemeinsame UI-Bausteine
+
+Die Route `/ui-kit` zeigt die aktuell verfügbaren gemeinsamen Komponenten und semantischen Designfarben. Die Farbpalette orientiert sich am bisherigen Bürgerclient; Komponenten verwenden ausschließlich semantische Tokens wie `primary`, `surface` oder `error` statt fachlich bedeutungsloser Farbnamen.
+
+Aktuell enthalten sind:
+
+```text
+src/shared/
+├── lib/
+│   └── cn.ts
+└── ui/
+    ├── Button.tsx
+    ├── Card.tsx
+    ├── LinkButton.tsx
+    └── PageHeader.tsx
+```
+
+Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Zusätzliche Varianten werden erst ergänzt, wenn ein konkreter Anwendungsfall sie benötigt.
