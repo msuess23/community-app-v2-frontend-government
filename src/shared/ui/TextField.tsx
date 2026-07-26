@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactNode, Ref } from 'react'
 import {
   FieldError,
   Input,
@@ -18,6 +18,7 @@ export interface TextFieldProps extends Omit<
   description?: ReactNode
   errorMessage?: ReactNode
   inputClassName?: string
+  inputRef?: Ref<HTMLInputElement>
   label: ReactNode
 }
 
@@ -26,6 +27,7 @@ export function TextField({
   description,
   errorMessage,
   inputClassName,
+  inputRef,
   isRequired,
   label,
   validationBehavior = 'aria',
@@ -48,6 +50,7 @@ export function TextField({
       </Label>
 
       <Input
+        ref={inputRef}
         className={cn(
           'border-outline bg-surface min-h-11 w-full rounded-lg border px-3 py-2.5',
           'text-on-surface text-base shadow-sm transition-colors outline-none',

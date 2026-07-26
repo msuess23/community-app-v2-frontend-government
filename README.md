@@ -30,6 +30,8 @@ npm run verify
 npm run test:e2e
 ```
 
+Vitest sammelt ausschließlich Tests unter `src/`. Die Playwright-Spezifikationen unter `tests/e2e/` werden getrennt über `npm run test:e2e` ausgeführt.
+
 `verify` führt ESLint, Prettier, Vitest, TypeScript und den Produktionsbuild aus. Die Playwright-Tests werden separat ausgeführt.
 
 ## OpenAPI-Client
@@ -63,6 +65,12 @@ Aktuell enthalten sind:
 
 ```text
 src/shared/
+├── forms/
+│   ├── ControlledCheckboxField.tsx
+│   ├── ControlledTextField.tsx
+│   ├── field-name.ts
+│   ├── form-errors.ts
+│   └── zod-resolver.ts
 ├── lib/
 │   └── cn.ts
 └── ui/
@@ -76,4 +84,4 @@ src/shared/
     └── TextField.tsx
 ```
 
-Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Text- und Checkboxfelder basieren auf React Aria Components und stellen sichtbare Beschriftungen, Beschreibungen, Fehlerzustände und ausreichend große Interaktionsflächen bereit. Eine Kopplung an React Hook Form oder fachliche Validierung ist bewusst noch nicht enthalten. Zusätzliche Varianten werden erst ergänzt, wenn ein konkreter Anwendungsfall sie benötigt.
+Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Text- und Checkboxfelder basieren auf React Aria Components und stellen sichtbare Beschriftungen, Beschreibungen, Fehlerzustände und ausreichend große Interaktionsflächen bereit. Unter `src/shared/forms` liegen die schmalen React-Hook-Form-Adapter sowie die gemeinsame Zod-Validierung und Fehlerzusammenfassung. Zusätzliche Varianten werden erst ergänzt, wenn ein konkreter Anwendungsfall sie benötigt.

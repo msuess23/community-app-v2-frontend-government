@@ -1,9 +1,9 @@
 import { ArrowRight, Check, Trash2 } from 'lucide-react'
 
+import { LoginFormExample } from '@/pages/ui-kit/LoginFormExample'
 import { Button } from '@/shared/ui/Button'
 import { CheckboxField } from '@/shared/ui/CheckboxField'
 import { Card } from '@/shared/ui/Card'
-import { FormActions } from '@/shared/ui/FormActions'
 import { FormErrorSummary } from '@/shared/ui/FormErrorSummary'
 import { LinkButton } from '@/shared/ui/LinkButton'
 import { PageHeader } from '@/shared/ui/PageHeader'
@@ -122,31 +122,7 @@ export function UiKitPage() {
         </h2>
         <div className="grid gap-5 lg:grid-cols-2">
           <Card>
-            <div className="space-y-5">
-              <TextField
-                description="Verwende die dienstliche E-Mail-Adresse."
-                id="ui-kit-email"
-                isRequired
-                label="E-Mail-Adresse"
-                placeholder="name@behoerde.de"
-                type="email"
-              />
-              <TextField
-                description="Mindestens acht Zeichen."
-                id="ui-kit-password"
-                isRequired
-                label="Passwort"
-                type="password"
-              />
-              <CheckboxField
-                description="Nur auf einem privaten oder dienstlich verwalteten Gerät aktivieren."
-                label="Angemeldet bleiben"
-              />
-              <FormActions>
-                <Button variant="outline">Abbrechen</Button>
-                <Button>Anmelden</Button>
-              </FormActions>
-            </div>
+            <LoginFormExample />
           </Card>
 
           <Card variant="subtle">
