@@ -1,9 +1,13 @@
 import { ArrowRight, Check, Trash2 } from 'lucide-react'
 
 import { Button } from '@/shared/ui/Button'
+import { CheckboxField } from '@/shared/ui/CheckboxField'
 import { Card } from '@/shared/ui/Card'
+import { FormActions } from '@/shared/ui/FormActions'
+import { FormErrorSummary } from '@/shared/ui/FormErrorSummary'
 import { LinkButton } from '@/shared/ui/LinkButton'
 import { PageHeader } from '@/shared/ui/PageHeader'
+import { TextField } from '@/shared/ui/TextField'
 
 const colorTokens = [
   {
@@ -107,6 +111,72 @@ export function UiKitPage() {
             <Button isDisabled>Deaktiviert</Button>
           </div>
         </Card>
+      </section>
+
+      <section aria-labelledby="forms-heading" className="space-y-5">
+        <h2
+          className="text-2xl font-semibold tracking-tight text-on-surface"
+          id="forms-heading"
+        >
+          Formulare
+        </h2>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <Card>
+            <div className="space-y-5">
+              <TextField
+                description="Verwende die dienstliche E-Mail-Adresse."
+                id="ui-kit-email"
+                isRequired
+                label="E-Mail-Adresse"
+                placeholder="name@behoerde.de"
+                type="email"
+              />
+              <TextField
+                description="Mindestens acht Zeichen."
+                id="ui-kit-password"
+                isRequired
+                label="Passwort"
+                type="password"
+              />
+              <CheckboxField
+                description="Nur auf einem privaten oder dienstlich verwalteten Gerät aktivieren."
+                label="Angemeldet bleiben"
+              />
+              <FormActions>
+                <Button variant="outline">Abbrechen</Button>
+                <Button>Anmelden</Button>
+              </FormActions>
+            </div>
+          </Card>
+
+          <Card variant="subtle">
+            <div className="space-y-5">
+              <FormErrorSummary
+                errors={[
+                  {
+                    fieldId: 'ui-kit-invalid-email',
+                    message: 'Die E-Mail-Adresse ist ungültig.',
+                  },
+                  {
+                    message: 'Die Anmeldung konnte nicht abgeschlossen werden.',
+                  },
+                ]}
+              />
+              <TextField
+                errorMessage="Bitte gib eine gültige E-Mail-Adresse ein."
+                id="ui-kit-invalid-email"
+                isInvalid
+                label="E-Mail-Adresse"
+                defaultValue="ungueltig"
+              />
+              <CheckboxField
+                errorMessage="Die Zustimmung ist erforderlich."
+                isInvalid
+                label="Nutzungsbedingungen bestätigen"
+              />
+            </div>
+          </Card>
+        </div>
       </section>
 
       <section aria-labelledby="cards-heading" className="space-y-5">

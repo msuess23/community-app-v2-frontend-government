@@ -68,8 +68,12 @@ src/shared/
 └── ui/
     ├── Button.tsx
     ├── Card.tsx
+    ├── CheckboxField.tsx
+    ├── FormActions.tsx
+    ├── FormErrorSummary.tsx
     ├── LinkButton.tsx
-    └── PageHeader.tsx
+    ├── PageHeader.tsx
+    └── TextField.tsx
 ```
 
-Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Zusätzliche Varianten werden erst ergänzt, wenn ein konkreter Anwendungsfall sie benötigt.
+Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Text- und Checkboxfelder basieren auf React Aria Components und stellen sichtbare Beschriftungen, Beschreibungen, Fehlerzustände und ausreichend große Interaktionsflächen bereit. Eine Kopplung an React Hook Form oder fachliche Validierung ist bewusst noch nicht enthalten. Zusätzliche Varianten werden erst ergänzt, wenn ein konkreter Anwendungsfall sie benötigt.
