@@ -10,9 +10,8 @@ export function HomePage() {
       <PageHeader
         description={
           <p>
-            Das technische Fundament der Anwendung ist eingerichtet. Fachliche
-            Bereiche und die Authentifizierung werden in getrennten Patches
-            ergänzt.
+            Die geschützte Anwendungssitzung ist eingerichtet. Fachliche
+            Arbeitsbereiche werden in den folgenden Patches ergänzt.
           </p>
         }
         eyebrow="Community-App"
@@ -22,11 +21,11 @@ export function HomePage() {
 
       <Card>
         <h2 className="text-on-surface text-lg font-semibold">
-          Aktueller Stand
+          Technischer Stand
         </h2>
         <p className="text-on-surface-variant mt-2 leading-7">
-          Routing, zentrale Provider, Fehlerbehandlung und die responsive
-          Grundstruktur stehen für die nächsten Implementierungsschritte bereit.
+          Routing, wiederverwendbare UI- und Formbausteine, API-Transport sowie
+          Anmeldung und Sitzungswiederherstellung stehen bereit.
         </p>
         <LinkButton className="mt-5" to="/ui-kit" variant="outline">
           UI-Bausteine ansehen
