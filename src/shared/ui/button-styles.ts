@@ -1,12 +1,7 @@
 import { cn } from '@/shared/lib/cn'
 
 export type ButtonVariant =
-  | 'primary'
-  | 'secondary'
-  | 'tertiary'
-  | 'outline'
-  | 'ghost'
-  | 'danger'
+  'primary' | 'secondary' | 'tertiary' | 'outline' | 'ghost' | 'danger'
 
 export type ButtonSize = 'sm' | 'md' | 'lg'
 

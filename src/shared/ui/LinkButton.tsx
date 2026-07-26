@@ -19,9 +19,6 @@ export function LinkButton({
   ...props
 }: LinkButtonProps) {
   return (
-    <Link
-      {...props}
-      className={buttonStyles({ className, size, variant })}
-    />
+    <Link {...props} className={buttonStyles({ className, size, variant })} />
   )
 }

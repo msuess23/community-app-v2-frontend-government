@@ -59,8 +59,8 @@ export function UiKitPage() {
         description={
           <p>
             Gemeinsame Komponenten und semantische Farben des Behördenclients.
-            Die Palette orientiert sich am bisherigen Bürgerclient und wurde
-            für zugängliche Textkontraste geprüft.
+            Die Palette orientiert sich am bisherigen Bürgerclient und wurde für
+            zugängliche Textkontraste geprüft.
           </p>
         }
         eyebrow="Designsystem"
@@ -69,7 +69,7 @@ export function UiKitPage() {
 
       <section aria-labelledby="colors-heading" className="space-y-5">
         <h2
-          className="text-2xl font-semibold tracking-tight text-on-surface"
+          className="text-on-surface text-2xl font-semibold tracking-tight"
           id="colors-heading"
         >
           Farben
@@ -89,7 +89,7 @@ export function UiKitPage() {
 
       <section aria-labelledby="buttons-heading" className="space-y-5">
         <h2
-          className="text-2xl font-semibold tracking-tight text-on-surface"
+          className="text-on-surface text-2xl font-semibold tracking-tight"
           id="buttons-heading"
         >
           Aktionen
@@ -115,7 +115,7 @@ export function UiKitPage() {
 
       <section aria-labelledby="forms-heading" className="space-y-5">
         <h2
-          className="text-2xl font-semibold tracking-tight text-on-surface"
+          className="text-on-surface text-2xl font-semibold tracking-tight"
           id="forms-heading"
         >
           Formulare
@@ -181,7 +181,7 @@ export function UiKitPage() {
 
       <section aria-labelledby="cards-heading" className="space-y-5">
         <h2
-          className="text-2xl font-semibold tracking-tight text-on-surface"
+          className="text-on-surface text-2xl font-semibold tracking-tight"
           id="cards-heading"
         >
           Flächen
@@ -189,20 +189,20 @@ export function UiKitPage() {
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <h3 className="font-semibold">Standardkarte</h3>
-            <p className="mt-2 leading-7 text-on-surface-variant">
+            <p className="text-on-surface-variant mt-2 leading-7">
               Für zentrale Inhalte mit dezenter Abgrenzung und leichter
               Erhöhung.
             </p>
           </Card>
           <Card variant="subtle">
             <h3 className="font-semibold">Dezente Fläche</h3>
-            <p className="mt-2 leading-7 text-on-surface-variant">
+            <p className="text-on-surface-variant mt-2 leading-7">
               Für zusammengehörige Informationen ohne zusätzliche Erhöhung.
             </p>
           </Card>
           <Card variant="outlined">
             <h3 className="font-semibold">Konturkarte</h3>
-            <p className="mt-2 leading-7 text-on-surface-variant">
+            <p className="text-on-surface-variant mt-2 leading-7">
               Für klar abgegrenzte Inhalte auf einer hellen Oberfläche.
             </p>
           </Card>
@@ -211,7 +211,7 @@ export function UiKitPage() {
 
       <section aria-labelledby="links-heading" className="space-y-5">
         <h2
-          className="text-2xl font-semibold tracking-tight text-on-surface"
+          className="text-on-surface text-2xl font-semibold tracking-tight"
           id="links-heading"
         >
           Navigation

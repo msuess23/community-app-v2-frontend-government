@@ -34,7 +34,7 @@ export function RouteErrorPage() {
         />
 
         {import.meta.env.DEV ? (
-          <pre className="mt-6 overflow-auto rounded-lg bg-on-surface p-4 text-sm text-surface">
+          <pre className="bg-on-surface text-surface mt-6 overflow-auto rounded-lg p-4 text-sm">
             {getErrorMessage(error)}
           </pre>
         ) : null}

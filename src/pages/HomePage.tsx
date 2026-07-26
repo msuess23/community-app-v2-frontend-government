@@ -21,13 +21,12 @@ export function HomePage() {
       />
 
       <Card>
-        <h2 className="text-lg font-semibold text-on-surface">
+        <h2 className="text-on-surface text-lg font-semibold">
           Aktueller Stand
         </h2>
-        <p className="mt-2 leading-7 text-on-surface-variant">
+        <p className="text-on-surface-variant mt-2 leading-7">
           Routing, zentrale Provider, Fehlerbehandlung und die responsive
-          Grundstruktur stehen für die nächsten Implementierungsschritte
-          bereit.
+          Grundstruktur stehen für die nächsten Implementierungsschritte bereit.
         </p>
         <LinkButton className="mt-5" to="/ui-kit" variant="outline">
           UI-Bausteine ansehen

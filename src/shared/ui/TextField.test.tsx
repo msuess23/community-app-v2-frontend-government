@@ -27,9 +27,7 @@ describe('TextField', () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
 
-    renderWithProviders(
-      <TextField label="Vorname" onChange={onChange} />,
-    )
+    renderWithProviders(<TextField label="Vorname" onChange={onChange} />)
 
     await user.type(screen.getByRole('textbox', { name: 'Vorname' }), 'Mia')
 

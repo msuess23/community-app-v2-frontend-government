@@ -15,8 +15,6 @@ describe('parseEnvironment', () => {
   })
 
   it('rejects an explicitly empty API URL', () => {
-    expect(() => parseEnvironment({ VITE_API_BASE_URL: ' ' })).toThrow(
-      ZodError,
-    )
+    expect(() => parseEnvironment({ VITE_API_BASE_URL: ' ' })).toThrow(ZodError)
   })
 })

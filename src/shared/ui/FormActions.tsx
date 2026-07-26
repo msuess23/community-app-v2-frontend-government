@@ -9,7 +9,7 @@ export function FormActions({ className, ...props }: FormActionsProps) {
     <div
       {...props}
       className={cn(
-        'flex flex-col gap-3 border-t border-outline-variant pt-5 sm:flex-row sm:items-center sm:justify-end',
+        'border-outline-variant flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-end',
         className,
       )}
     />

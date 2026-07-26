@@ -7,8 +7,10 @@ import {
 
 import { cn } from '@/shared/lib/cn'
 
-export interface CheckboxFieldProps
-  extends Omit<AriaCheckboxProps, 'children' | 'className'> {
+export interface CheckboxFieldProps extends Omit<
+  AriaCheckboxProps,
+  'children' | 'className'
+> {
   className?: string
   description?: ReactNode
   errorMessage?: ReactNode
@@ -45,7 +47,7 @@ export function CheckboxField({
           'text-on-surface outline-none',
           isDisabled && 'cursor-not-allowed opacity-60',
           isFocusVisible &&
-            'ring-2 ring-primary ring-offset-2 ring-offset-surface-container-low',
+            'ring-primary ring-offset-surface-container-low ring-2 ring-offset-2',
           className,
         )
       }
@@ -76,12 +78,12 @@ export function CheckboxField({
           </span>
 
           <span className="grid min-w-0 gap-1">
-            <span className="text-sm font-semibold leading-5" id={labelId}>
+            <span className="text-sm leading-5 font-semibold" id={labelId}>
               {label}
             </span>
             {description ? (
               <span
-                className="text-sm leading-5 text-on-surface-variant"
+                className="text-on-surface-variant text-sm leading-5"
                 id={descriptionId}
               >
                 {description}
@@ -89,7 +91,7 @@ export function CheckboxField({
             ) : null}
             {isInvalid && errorMessage ? (
               <span
-                className="text-sm font-medium leading-5 text-error"
+                className="text-error text-sm leading-5 font-medium"
                 id={errorId}
               >
                 {errorMessage}

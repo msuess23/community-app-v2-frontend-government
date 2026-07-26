@@ -34,7 +34,7 @@ export function Card({
     <div
       {...props}
       className={cn(
-        'rounded-xl text-on-surface',
+        'text-on-surface rounded-xl',
         variantStyles[variant],
         paddingStyles[padding],
         className,

@@ -1,7 +1,4 @@
-import {
-  QueryClientProvider,
-  type QueryClient,
-} from '@tanstack/react-query'
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 
 import { queryClient as defaultQueryClient } from '@/app/query-client'
@@ -16,8 +13,6 @@ export function AppProviders({
   queryClient = defaultQueryClient,
 }: AppProvidersProps) {
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   )
 }

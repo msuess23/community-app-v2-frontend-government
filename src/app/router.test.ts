@@ -22,9 +22,7 @@ describe('application routes', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'UI-Bausteine' }),
     ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: 'Primär' }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Primär' })).toBeInTheDocument()
   })
 
   it('renders the not-found page for an unknown path', () => {

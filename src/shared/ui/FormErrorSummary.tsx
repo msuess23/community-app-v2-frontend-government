@@ -26,7 +26,7 @@ export function FormErrorSummary({
   return (
     <div
       className={cn(
-        'rounded-xl border border-error bg-error-container p-4 text-on-error-container',
+        'border-error bg-error-container text-on-error-container rounded-xl border p-4',
         className,
       )}
       role="alert"
@@ -37,7 +37,7 @@ export function FormErrorSummary({
           <li key={error.id ?? error.fieldId ?? index}>
             {error.fieldId ? (
               <a
-                className="font-medium underline decoration-2 underline-offset-2 hover:no-underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-error"
+                className="focus-visible:outline-error font-medium underline decoration-2 underline-offset-2 hover:no-underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
                 href={`#${error.fieldId}`}
               >
                 {error.message}

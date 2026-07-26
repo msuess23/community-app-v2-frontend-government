@@ -24,9 +24,7 @@ describe('FormErrorSummary', () => {
   })
 
   it('renders nothing without errors', () => {
-    const { container } = renderWithProviders(
-      <FormErrorSummary errors={[]} />,
-    )
+    const { container } = renderWithProviders(<FormErrorSummary errors={[]} />)
 
     expect(container).toBeEmptyDOMElement()
   })

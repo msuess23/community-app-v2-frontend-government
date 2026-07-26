@@ -8,11 +8,7 @@ import { createQueryClient } from '@/app/query-client'
 
 export function renderWithProviders(ui: ReactElement) {
   return render(
-    createElement(
-      AppProviders,
-      { queryClient: createQueryClient() },
-      ui,
-    ),
+    createElement(AppProviders, { queryClient: createQueryClient() }, ui),
   )
 }
 

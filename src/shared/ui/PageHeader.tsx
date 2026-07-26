@@ -28,18 +28,18 @@ export function PageHeader({
     >
       <div className="min-w-0 space-y-2">
         {eyebrow ? (
-          <p className="text-sm font-semibold tracking-wide text-primary uppercase">
+          <p className="text-primary text-sm font-semibold tracking-wide uppercase">
             {eyebrow}
           </p>
         ) : null}
         <h1
-          className="text-3xl font-bold tracking-tight text-on-surface sm:text-4xl"
+          className="text-on-surface text-3xl font-bold tracking-tight sm:text-4xl"
           id={headingId}
         >
           {title}
         </h1>
         {description ? (
-          <div className="max-w-3xl text-base leading-7 text-on-surface-variant sm:text-lg">
+          <div className="text-on-surface-variant max-w-3xl text-base leading-7 sm:text-lg">
             {description}
           </div>
         ) : null}
