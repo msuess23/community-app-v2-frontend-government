@@ -9,6 +9,8 @@ import type {
   AuthUser,
   LoginInput,
   RegisterInput,
+  RequestPasswordResetInput,
+  ResetPasswordInput,
 } from '@/auth/auth-types'
 import type { AuthTokens } from '@/auth/token-store'
 
@@ -80,6 +82,45 @@ export function createAuthApi(request: ApiFetch = apiFetch): AuthApi {
     },
   }
 }
+
+export type PasswordRecoveryApi = Readonly<{
+  requestPasswordReset: (input: RequestPasswordResetInput) => Promise<void>
+  resetPassword: (input: ResetPasswordInput) => Promise<void>
+}>
+
+export function createPasswordRecoveryApi(
+  request: ApiFetch = apiFetch,
+): PasswordRecoveryApi {
+  return {
+    async requestPasswordReset(input: RequestPasswordResetInput): Promise<void> {
+      await request('/auth/forgot-password-request', {
+        authentication: 'none',
+        body: JSON.stringify({ email: normalizeEmail(input.email) }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      })
+    },
+
+    async resetPassword(input: ResetPasswordInput): Promise<void> {
+      await request('/auth/reset-password', {
+        authentication: 'none',
+        body: JSON.stringify({
+          email: normalizeEmail(input.email),
+          new_password: input.newPassword,
+          otp: input.otp.trim(),
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      })
+    },
+  }
+}
+
+export const passwordRecoveryApi = createPasswordRecoveryApi()
 
 export const authApi = createAuthApi()
 

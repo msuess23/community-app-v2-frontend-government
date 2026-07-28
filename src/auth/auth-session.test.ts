@@ -11,7 +11,7 @@ import type {
   RegisterInput,
 } from '@/auth/auth-types'
 import { SessionEventBus } from '@/auth/session-events'
-import { createTokenStore, type TokenStore } from '@/auth/token-store'
+import { createTokenStore } from '@/auth/token-store'
 
 const AUTH_USER: AuthUser = {
   email: 'admin@test.com',

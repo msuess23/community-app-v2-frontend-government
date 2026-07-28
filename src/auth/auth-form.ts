@@ -6,33 +6,19 @@ import type {
 import { z } from 'zod'
 
 import { isApiError } from '@/api/client/api-error'
+import { authEmailSchema, authPasswordSchema } from '@/auth/auth-field-schemas'
 import type { LoginInput, RegisterInput } from '@/auth/auth-types'
 import type { FormErrorSummaryItem } from '@/shared/ui/FormErrorSummary'
 
-const emailSchema = z
-  .string()
-  .trim()
-  .min(1, 'Bitte gib deine E-Mail-Adresse ein.')
-  .email('Bitte gib eine gültige E-Mail-Adresse ein.')
-
-const passwordByteLengthSchema = z
-  .string()
-  .min(8, 'Das Passwort muss mindestens acht Zeichen haben.')
-  .max(128, 'Das Passwort darf höchstens 128 Zeichen haben.')
-  .refine(
-    (password) => new TextEncoder().encode(password).length <= 72,
-    'Das Passwort darf in UTF-8 höchstens 72 Byte lang sein.',
-  )
-
 export const loginFormSchema = z.object({
-  email: emailSchema,
+  email: authEmailSchema,
   password: z.string().min(1, 'Bitte gib dein Passwort ein.'),
   rememberMe: z.boolean(),
 })
 
 export const registerFormSchema = z
   .object({
-    email: emailSchema,
+    email: authEmailSchema,
     firstName: z
       .string()
       .trim()
@@ -43,7 +29,7 @@ export const registerFormSchema = z
       .trim()
       .min(1, 'Bitte gib deinen Nachnamen ein.')
       .max(100, 'Der Nachname darf höchstens 100 Zeichen haben.'),
-    password: passwordByteLengthSchema,
+    password: authPasswordSchema,
     passwordConfirmation: z.string(),
   })
   .refine((values) => values.password === values.passwordConfirmation, {

@@ -9,8 +9,10 @@ import { HomePage } from '@/pages/HomePage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { RouteErrorPage } from '@/pages/RouteErrorPage'
 import { UiKitPage } from '@/pages/UiKitPage'
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
+import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
 import { RootLayout } from '@/shared/layout/RootLayout'
 
 export const appRoutes: RouteObject[] = [
@@ -26,6 +28,14 @@ export const appRoutes: RouteObject[] = [
       {
         path: 'register',
         Component: RegisterPage,
+      },
+      {
+        path: 'password-forgotten',
+        Component: ForgotPasswordPage,
+      },
+      {
+        path: 'password-reset',
+        Component: ResetPasswordPage,
       },
       {
         path: 'forbidden',

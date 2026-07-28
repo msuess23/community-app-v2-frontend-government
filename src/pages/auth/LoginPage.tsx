@@ -44,6 +44,12 @@ export function LoginPage() {
   const searchParams = new URLSearchParams(location.search)
   const returnTo = getSafeReturnTo(searchParams.get('returnTo'))
   const registrationCompleted = searchParams.get('registered') === '1'
+  const passwordResetCompleted = searchParams.get('passwordReset') === '1'
+  const successMessage = registrationCompleted
+    ? 'Das Bürgerkonto wurde erstellt. Du kannst dich jetzt anmelden.'
+    : passwordResetCompleted
+      ? 'Das Passwort wurde geändert. Du kannst dich jetzt anmelden.'
+      : undefined
   const {
     control,
     formState: { errors, isSubmitting },
@@ -105,12 +111,12 @@ export function LoginPage() {
           }
         })}
       >
-        {registrationCompleted ? (
+        {successMessage ? (
           <p
             className="bg-tertiary-container text-on-tertiary-container rounded-lg p-4 text-sm font-medium"
             role="status"
           >
-            Das Bürgerkonto wurde erstellt. Du kannst dich jetzt anmelden.
+            {successMessage}
           </p>
         ) : null}
 
@@ -134,6 +140,15 @@ export function LoginPage() {
           name="password"
           type="password"
         />
+
+        <p className="text-right text-sm">
+          <Link
+            className="text-primary focus-visible:outline-primary rounded-sm font-semibold underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+            to="/password-forgotten"
+          >
+            Passwort vergessen?
+          </Link>
+        </p>
 
         <ControlledCheckboxField
           control={control}

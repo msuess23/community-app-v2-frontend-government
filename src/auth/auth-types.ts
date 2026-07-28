@@ -38,6 +38,16 @@ export type RegisterInput = Readonly<{
   password: string
 }>
 
+export type RequestPasswordResetInput = Readonly<{
+  email: string
+}>
+
+export type ResetPasswordInput = Readonly<{
+  email: string
+  newPassword: string
+  otp: string
+}>
+
 export type AuthStatus = 'anonymous' | 'authenticated' | 'initializing'
 
 export type AuthState =

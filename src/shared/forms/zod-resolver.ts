@@ -66,7 +66,7 @@ export function createZodResolver<TFieldValues extends FieldValues>(
 
     return {
       errors,
-      values: {} as TFieldValues,
+      values: {},
     }
   }
 }

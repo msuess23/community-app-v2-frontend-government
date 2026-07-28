@@ -20,6 +20,7 @@ export interface TextFieldProps extends Omit<
   inputClassName?: string
   inputRef?: Ref<HTMLInputElement>
   label: ReactNode
+  placeholder?: string
 }
 
 export function TextField({
@@ -30,6 +31,7 @@ export function TextField({
   inputRef,
   isRequired,
   label,
+  placeholder,
   validationBehavior = 'aria',
   ...props
 }: TextFieldProps) {
@@ -51,6 +53,7 @@ export function TextField({
 
       <Input
         ref={inputRef}
+        placeholder={placeholder}
         className={cn(
           'border-outline bg-surface min-h-11 w-full rounded-lg border px-3 py-2.5',
           'text-on-surface text-base shadow-sm transition-colors outline-none',

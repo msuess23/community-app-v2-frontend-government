@@ -4,7 +4,12 @@ type ReturnLocation = Readonly<{
   search?: string
 }>
 
-const AUTH_ENTRY_PATHS = new Set(['/login', '/register'])
+const AUTH_ENTRY_PATHS = new Set([
+  '/login',
+  '/password-forgotten',
+  '/password-reset',
+  '/register',
+])
 const INTERNAL_ORIGIN = 'https://community-app.invalid'
 
 export function createLoginPath(location: ReturnLocation): string {
