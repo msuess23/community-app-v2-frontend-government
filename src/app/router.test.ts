@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -6,7 +6,7 @@ import { appRoutes } from '@/app/router'
 import { createQueryClient } from '@/app/query-client'
 import type { AuthApi } from '@/auth/auth-api'
 import { AuthSession } from '@/auth/auth-session'
-import type { AuthUser } from '@/auth/auth-types'
+import type { AuthUser, UpdateCurrentUserInput } from '@/auth/auth-types'
 import { SessionEventBus } from '@/auth/session-events'
 import { createTokenStore } from '@/auth/token-store'
 import { renderRouter } from '@/test/render'
@@ -58,6 +58,10 @@ describe('application routes', () => {
       screen.getByRole('link', { name: 'Übersicht', hidden: true }),
     ).toHaveAttribute('aria-current', 'page')
 
+    expect(
+      screen.getByRole('link', { name: 'Mein Konto', hidden: true }),
+    ).toHaveAttribute('href', '/account')
+
     const menuButton = screen.getByRole('button', {
       hidden: true,
       name: 'Hauptnavigation öffnen',
@@ -104,6 +108,106 @@ describe('application routes', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Übersicht' }),
     ).toBeInTheDocument()
+  })
+
+  it('updates the authenticated profile from the account page', async () => {
+    const user = userEvent.setup()
+    const fixture = await createAuthFixture(ADMIN_USER)
+
+    renderRouter(appRoutes, ['/account'], fixture)
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Mein Konto' }),
+    ).toBeInTheDocument()
+
+    const firstName = screen.getByRole('textbox', { name: 'Vorname' })
+    const lastName = screen.getByRole('textbox', { name: 'Nachname' })
+    await user.clear(firstName)
+    await user.type(firstName, 'Augusta')
+    await user.clear(lastName)
+    await user.type(lastName, 'Lovelace')
+    await user.click(
+      screen.getByRole('button', { name: 'Änderungen speichern' }),
+    )
+
+    expect(fixture.api.updateCurrentUser).toHaveBeenCalledWith({
+      firstName: 'Augusta',
+      lastName: 'Lovelace',
+    })
+    expect(await screen.findByText('Profildaten gespeichert')).toBeVisible()
+    expect(screen.getAllByText('Augusta Lovelace')).not.toHaveLength(0)
+  })
+
+  it('confirms and ends every account session from the account page', async () => {
+    const user = userEvent.setup()
+    const fixture = await createAuthFixture(ADMIN_USER)
+    const rendered = renderRouter(appRoutes, ['/account'], fixture)
+
+    await screen.findByRole('heading', { level: 1, name: 'Mein Konto' })
+    await user.click(
+      screen.getByRole('button', { name: 'Alle Sitzungen beenden' }),
+    )
+
+    const dialog = screen.getByRole('dialog', {
+      name: 'Alle Sitzungen wirklich beenden?',
+    })
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Alle Sitzungen beenden' }),
+    )
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Anmelden' }),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Sitzungen beendet')).toBeVisible()
+    expect(rendered.router.state.location.pathname).toBe('/login')
+  })
+
+  it('warns when only the local session can be ended safely', async () => {
+    const user = userEvent.setup()
+    const fixture = await createAuthFixture(ADMIN_USER)
+    vi.mocked(fixture.api.logoutAll).mockRejectedValueOnce(
+      new Error('server unavailable'),
+    )
+    renderRouter(appRoutes, ['/account'], fixture)
+
+    await screen.findByRole('heading', { level: 1, name: 'Mein Konto' })
+    await user.click(
+      screen.getByRole('button', { name: 'Alle Sitzungen beenden' }),
+    )
+    const dialog = screen.getByRole('dialog', {
+      name: 'Alle Sitzungen wirklich beenden?',
+    })
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Alle Sitzungen beenden' }),
+    )
+
+    expect(
+      await screen.findByText('Nur lokale Sitzung sicher beendet'),
+    ).toBeVisible()
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Anmelden' }),
+    ).toBeInTheDocument()
+  })
+
+  it('preserves the requested account route after a session expires', async () => {
+    const fixture = await createAuthFixture(ADMIN_USER)
+    const rendered = renderRouter(appRoutes, ['/account'], fixture)
+
+    await screen.findByRole('heading', { level: 1, name: 'Mein Konto' })
+    act(() => {
+      fixture.events.emit({
+        reason: 'refresh-rejected',
+        type: 'session-expired',
+      })
+    })
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Anmelden' }),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Sitzung abgelaufen')).toBeVisible()
+    expect(
+      `${rendered.router.state.location.pathname}${rendered.router.state.location.search}`,
+    ).toBe('/login?returnTo=%2Faccount')
   })
 
   it('redirects a citizen away from the protected application shell', async () => {
@@ -172,7 +276,9 @@ describe('application routes', () => {
 })
 
 type AuthFixture = Readonly<{
+  api: AuthApi
   authSession: AuthSession
+  events: SessionEventBus
   queryClient: ReturnType<typeof createQueryClient>
   setCurrentUser: (user: AuthUser) => void
 }>
@@ -196,10 +302,19 @@ async function createAuthFixture(user?: AuthUser): Promise<AuthFixture> {
     logout: vi.fn(async () => undefined),
     logoutAll: vi.fn(async () => undefined),
     register: vi.fn(async () => CITIZEN_USER),
+    updateCurrentUser: vi.fn(async (input: UpdateCurrentUserInput) => {
+      currentUser = {
+        ...currentUser,
+        firstName: input.firstName.trim(),
+        lastName: input.lastName.trim(),
+      }
+      return currentUser
+    }),
   }
+  const events = new SessionEventBus()
   const authSession = new AuthSession({
     api,
-    events: new SessionEventBus(),
+    events,
     queryClient,
     refresh: { refresh: vi.fn(async () => false) },
     store,
@@ -214,7 +329,9 @@ async function createAuthFixture(user?: AuthUser): Promise<AuthFixture> {
   }
 
   return {
+    api,
     authSession,
+    events,
     queryClient,
     setCurrentUser(nextUser) {
       currentUser = nextUser

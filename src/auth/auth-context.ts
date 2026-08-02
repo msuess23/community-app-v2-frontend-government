@@ -5,6 +5,7 @@ import type {
   AuthUser,
   LoginInput,
   RegisterInput,
+  UpdateCurrentUserInput,
 } from '@/auth/auth-types'
 
 export type AuthContextValue = Readonly<{
@@ -16,6 +17,7 @@ export type AuthContextValue = Readonly<{
   refreshCurrentUser: () => Promise<AuthUser>
   register: (input: RegisterInput) => Promise<AuthUser>
   state: AuthState
+  updateCurrentUser: (input: UpdateCurrentUserInput) => Promise<AuthUser>
   user: AuthUser | null
 }>
 

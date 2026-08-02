@@ -1,13 +1,9 @@
-import type {
-  FieldPath,
-  FieldValues,
-  UseFormSetError,
-} from 'react-hook-form'
+import type { UseFormSetError } from 'react-hook-form'
 import { z } from 'zod'
 
-import { isApiError } from '@/api/client/api-error'
 import { authEmailSchema, authPasswordSchema } from '@/auth/auth-field-schemas'
 import type { LoginInput, RegisterInput } from '@/auth/auth-types'
+import { applySubmissionError } from '@/shared/forms/apply-submission-error'
 import type { FormErrorSummaryItem } from '@/shared/ui/FormErrorSummary'
 
 export const loginFormSchema = z.object({
@@ -92,52 +88,4 @@ export function applyRegisterSubmissionError(
       409: 'Für diese E-Mail-Adresse besteht bereits ein Konto.',
     },
   })
-}
-
-type SubmissionErrorOptions<TFieldValues extends FieldValues> = Readonly<{
-  fallbackMessage: string
-  fieldAliases: Readonly<Record<string, FieldPath<TFieldValues>>>
-  statusMessages: Readonly<Record<number, string>>
-}>
-
-function applySubmissionError<TFieldValues extends FieldValues>(
-  error: unknown,
-  setError: UseFormSetError<TFieldValues>,
-  options: SubmissionErrorOptions<TFieldValues>,
-): FormErrorSummaryItem[] {
-  if (!isApiError(error)) {
-    return [{ message: options.fallbackMessage }]
-  }
-
-  let hasUnmappedDetail = false
-  let mappedFieldError = false
-
-  for (const detail of error.details) {
-    const field = detail.field
-      ? options.fieldAliases[detail.field]
-      : undefined
-
-    if (!field) {
-      hasUnmappedDetail = true
-      continue
-    }
-
-    mappedFieldError = true
-    setError(field, {
-      message: detail.message,
-      type: 'server',
-    })
-  }
-
-  if (mappedFieldError && !hasUnmappedDetail) {
-    return []
-  }
-
-  return [
-    {
-      message:
-        options.statusMessages[error.status] ??
-        (error.status === 0 ? error.message : options.fallbackMessage),
-    },
-  ]
 }

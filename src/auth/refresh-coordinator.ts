@@ -79,11 +79,12 @@ export class RefreshCoordinator {
         isRejectedRefresh(error) &&
         this.sessionMatches(refreshToken, persistence)
       ) {
-        this.store.clear()
+        // Publish the reason before clearing storage so the session can retain it.
         this.events.emit({
           reason: 'refresh-rejected',
           type: 'session-expired',
         })
+        this.store.clear()
       }
 
       throw error

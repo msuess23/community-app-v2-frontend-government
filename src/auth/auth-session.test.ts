@@ -9,6 +9,7 @@ import type {
   AuthUser,
   LoginInput,
   RegisterInput,
+  UpdateCurrentUserInput,
 } from '@/auth/auth-types'
 import { SessionEventBus } from '@/auth/session-events'
 import { createTokenStore } from '@/auth/token-store'
@@ -123,18 +124,26 @@ describe('AuthSession', () => {
     await result
   })
 
-  it('always clears the local session after logout from all devices', async () => {
+  it('reports a local-only result when revoking all sessions fails', async () => {
     const fixture = createFixture({ storedRefreshToken: 'stored-refresh' })
     fixture.store.setAccessToken('access-token')
     vi.mocked(fixture.api.logoutAll).mockRejectedValueOnce(
       new Error('server unavailable'),
     )
 
-    await expect(fixture.session.logoutAll()).rejects.toThrow(
-      'server unavailable',
-    )
+    await expect(fixture.session.logoutAll()).resolves.toBeUndefined()
     expect(fixture.store.getRefreshToken()).toBeNull()
     expect(fixture.session.getSnapshot().status).toBe('anonymous')
+    expect(fixture.session.consumeEndReason()).toBe('logout-all-local-only')
+    expect(fixture.session.consumeEndReason()).toBeNull()
+  })
+
+  it('reports successful revocation after logout from all devices', async () => {
+    const fixture = createFixture({ storedRefreshToken: 'stored-refresh' })
+
+    await fixture.session.logoutAll()
+
+    expect(fixture.session.consumeEndReason()).toBe('logout-all-complete')
   })
 
   it('reacts to a rejected refresh event and clears cached data', () => {
@@ -150,6 +159,7 @@ describe('AuthSession', () => {
     expect(fixture.store.getRefreshToken()).toBeNull()
     expect(fixture.queryClient.clear).toHaveBeenCalled()
     expect(fixture.session.getSnapshot().status).toBe('anonymous')
+    expect(fixture.session.consumeEndReason()).toBe('refresh-rejected')
     stop()
   })
 
@@ -172,12 +182,50 @@ describe('AuthSession', () => {
     })
   })
 
+  it('updates the current profile and publishes the returned user snapshot', async () => {
+    const fixture = createFixture()
+    const updatedUser = {
+      ...AUTH_USER,
+      firstName: 'Augusta',
+      lastName: 'Lovelace',
+    }
+
+    await fixture.session.login({
+      email: 'admin@test.com',
+      password: 'secret-password',
+      rememberMe: false,
+    })
+    vi.mocked(fixture.api.updateCurrentUser).mockResolvedValueOnce(updatedUser)
+
+    await expect(
+      fixture.session.updateCurrentUser({
+        firstName: 'Augusta',
+        lastName: 'Lovelace',
+      }),
+    ).resolves.toEqual(updatedUser)
+    expect(fixture.session.getSnapshot()).toEqual({
+      status: 'authenticated',
+      user: updatedUser,
+    })
+  })
+
   it('rejects profile reloads without an authenticated session', async () => {
     const fixture = createFixture()
 
     await expect(fixture.session.refreshCurrentUser()).rejects.toThrow(
       'without an active session',
     )
+  })
+
+  it('rejects profile updates without an authenticated session', async () => {
+    const fixture = createFixture()
+
+    await expect(
+      fixture.session.updateCurrentUser({
+        firstName: 'Ada',
+        lastName: 'Admin',
+      }),
+    ).rejects.toThrow('without an active session')
   })
 
   it('registers a citizen without changing the current session', async () => {
@@ -220,6 +268,7 @@ function createFixture(options: FixtureOptions = {}) {
     logout: vi.fn(async (_refreshToken: string) => undefined),
     logoutAll: vi.fn(async () => undefined),
     register: vi.fn(async (_input: RegisterInput) => CITIZEN_USER),
+    updateCurrentUser: vi.fn(async (_input: UpdateCurrentUserInput) => AUTH_USER),
   }
   const queryClient = {
     cancelQueries: vi.fn(async () => undefined),

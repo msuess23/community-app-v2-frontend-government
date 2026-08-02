@@ -1,4 +1,4 @@
-import { ChevronDown, LogOut, Menu, UserRound, X } from 'lucide-react'
+import { ChevronDown, LogOut, Menu, Settings, UserRound, X } from 'lucide-react'
 import { useState, type KeyboardEvent } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 
@@ -144,8 +144,19 @@ export function AppShellLayout() {
                   </p>
                 </div>
 
+                <Link
+                  className="focus-visible:outline-primary mt-3 flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-primary hover:bg-primary-container focus-visible:outline-2 focus-visible:outline-offset-2"
+                  onClick={(event) => {
+                    event.currentTarget.closest('details')?.removeAttribute('open')
+                  }}
+                  to="/account"
+                >
+                  <Settings aria-hidden="true" size={18} />
+                  Mein Konto
+                </Link>
+
                 <Button
-                  className="mt-3 w-full justify-start"
+                  className="mt-1 w-full justify-start"
                   isDisabled={isLoggingOut}
                   onPress={() => void handleLogout()}
                   size="sm"

@@ -70,6 +70,7 @@ src/shared/
 ├── forms/
 │   ├── ControlledCheckboxField.tsx
 │   ├── ControlledTextField.tsx
+│   ├── apply-submission-error.ts
 │   ├── field-name.ts
 │   ├── form-errors.ts
 │   └── zod-resolver.ts
@@ -119,8 +120,12 @@ Der Session-Core übernimmt:
 - Wiederherstellung einer vorhandenen Sitzung durch Tokenrotation und `/users/me`,
 - Registrierung eines Bürgerkontos ohne automatische Behördenanmeldung,
 - lokalen Logout auch bei nicht erreichbarem Backend,
-- Logout aller Sitzungen,
+- Aktualisierung der selbst verwalteten Profildaten,
+- Logout aller Sitzungen mit verständlichem Teilfehler-Verhalten,
 - Bereinigung des TanStack-Query-Caches beim Benutzerwechsel,
-- Reaktion auf abgelehnte Refresh-Tokens und tabübergreifenden Logout.
+- Reaktion auf abgelehnte Refresh-Tokens und tabübergreifenden Logout,
+- einmalige Rückmeldung zum Grund einer beendeten Sitzung.
+
+Die geschützte Route `/account` bietet die Bearbeitung von Vor- und Nachname sowie die Abmeldung dieser oder aller Sitzungen. E-Mail-Adresse, Rolle und Behördenzuordnung bleiben entsprechend dem Backendvertrag schreibgeschützt. Details stehen unter `docs/account-session-management.md`.
 
 Login, Registrierung, Passwort-Wiederherstellung und Rollenfreischaltung verwenden diesen Session-Core über den `AuthProvider`.

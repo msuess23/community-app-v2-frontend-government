@@ -38,6 +38,18 @@ export type RegisterInput = Readonly<{
   password: string
 }>
 
+/** Contains the profile fields an authenticated account may edit itself. */
+export type UpdateCurrentUserInput = Readonly<{
+  firstName: string
+  lastName: string
+}>
+
+/** Identifies user-visible outcomes when an authenticated session ends. */
+export type AuthSessionEndReason =
+  | 'logout-all-complete'
+  | 'logout-all-local-only'
+  | 'refresh-rejected'
+
 export type RequestPasswordResetInput = Readonly<{
   email: string
 }>

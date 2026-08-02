@@ -11,6 +11,7 @@ import type {
   RegisterInput,
   RequestPasswordResetInput,
   ResetPasswordInput,
+  UpdateCurrentUserInput,
 } from '@/auth/auth-types'
 import type { AuthTokens } from '@/auth/token-store'
 
@@ -20,6 +21,7 @@ export type AuthApi = Readonly<{
   logout: (refreshToken: string) => Promise<void>
   logoutAll: () => Promise<void>
   register: (input: RegisterInput) => Promise<AuthUser>
+  updateCurrentUser: (input: UpdateCurrentUserInput) => Promise<AuthUser>
 }>
 
 export function createAuthApi(request: ApiFetch = apiFetch): AuthApi {
@@ -76,6 +78,24 @@ export function createAuthApi(request: ApiFetch = apiFetch): AuthApi {
           'Content-Type': 'application/json',
         },
         method: 'POST',
+      })
+
+      return parseAuthUser(response)
+    },
+
+    /** Updates profile fields owned by the authenticated account. */
+    async updateCurrentUser(
+      input: UpdateCurrentUserInput,
+    ): Promise<AuthUser> {
+      const response = await request<unknown>('/users/me', {
+        body: JSON.stringify({
+          first_name: input.firstName.trim(),
+          last_name: input.lastName.trim(),
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'PATCH',
       })
 
       return parseAuthUser(response)

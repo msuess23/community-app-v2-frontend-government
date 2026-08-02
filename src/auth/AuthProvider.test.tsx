@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -35,6 +35,51 @@ describe('AuthProvider', () => {
 
     expect(await screen.findByText('authenticated')).toBeVisible()
     expect(screen.getByText('admin@test.com')).toBeVisible()
+  })
+
+  it('announces a rejected refresh after clearing the authenticated session', async () => {
+    const fixture = createFixture()
+    const user = userEvent.setup()
+
+    renderWithProviders(<AuthHarness />, {
+      authSession: fixture.session,
+      queryClient: fixture.queryClient,
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Anmelden' }))
+    await screen.findByText('authenticated')
+    act(() => {
+      fixture.events.emit({
+        reason: 'refresh-rejected',
+        type: 'session-expired',
+      })
+    })
+
+    expect(await screen.findByText('Sitzung abgelaufen')).toBeVisible()
+    expect(screen.getByText('anonymous')).toBeVisible()
+  })
+
+  it('announces a rejected refresh while a stored session is initializing', async () => {
+    const fixture = createFixture({ storedRefreshToken: 'stored-refresh' })
+    const refreshResult = deferred<boolean>()
+    fixture.refresh.mockReturnValueOnce(refreshResult.promise)
+
+    renderWithProviders(<AuthHarness />, {
+      authSession: fixture.session,
+      queryClient: fixture.queryClient,
+    })
+
+    expect(screen.getByText('initializing')).toBeVisible()
+    act(() => {
+      fixture.events.emit({
+        reason: 'refresh-rejected',
+        type: 'session-expired',
+      })
+    })
+
+    expect(await screen.findByText('Sitzung abgelaufen')).toBeVisible()
+    expect(screen.getByText('anonymous')).toBeVisible()
+    refreshResult.resolve(false)
   })
 
   it('shows the initializing state while a stored session is restored', async () => {
@@ -109,17 +154,20 @@ function createFixture(options: FixtureOptions = {}) {
     logout: vi.fn(async () => undefined),
     logoutAll: vi.fn(async () => undefined),
     register: vi.fn(async () => AUTH_USER),
+    updateCurrentUser: vi.fn(async () => AUTH_USER),
   }
+  const events = new SessionEventBus()
   const refresh = vi.fn(async () => false)
   const session = new AuthSession({
     api,
-    events: new SessionEventBus(),
+    events,
     queryClient,
     refresh: { refresh },
     store,
   })
 
   return {
+    events,
     queryClient,
     refresh,
     session,

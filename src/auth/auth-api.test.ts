@@ -98,6 +98,34 @@ describe('AuthApi', () => {
     ])
   })
 
+  it('updates self-managed profile fields through the authenticated transport', async () => {
+    const recorder = createRequestRecorder([
+      {
+        ...USER_RESPONSE,
+        first_name: 'Augusta',
+        last_name: 'Lovelace',
+      },
+    ])
+    const api = createAuthApi(recorder.request)
+
+    await expect(
+      api.updateCurrentUser({
+        firstName: '  Augusta ',
+        lastName: ' Lovelace  ',
+      }),
+    ).resolves.toMatchObject({
+      firstName: 'Augusta',
+      lastName: 'Lovelace',
+    })
+
+    expect(recorder.calls[0]?.url).toBe('/users/me')
+    expect(recorder.calls[0]?.options.method).toBe('PATCH')
+    expect(JSON.parse(String(recorder.calls[0]?.options.body))).toEqual({
+      first_name: 'Augusta',
+      last_name: 'Lovelace',
+    })
+  })
+
   it('revokes one refresh token without an access token', async () => {
     const recorder = createRequestRecorder([undefined])
     const api = createAuthApi(recorder.request)

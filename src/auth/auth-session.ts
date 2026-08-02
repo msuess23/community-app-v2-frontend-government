@@ -2,10 +2,12 @@ import type { QueryClient } from '@tanstack/react-query'
 
 import { authApi, type AuthApi } from '@/auth/auth-api'
 import type {
+  AuthSessionEndReason,
   AuthState,
   AuthUser,
   LoginInput,
   RegisterInput,
+  UpdateCurrentUserInput,
 } from '@/auth/auth-types'
 import {
   refreshCoordinator,
@@ -58,6 +60,7 @@ export class AuthSession {
   private readonly events: SessionEventBus
   private clearingLocalSession = false
   private initialization: Promise<AuthUser | null> | null = null
+  private lastEndReason: AuthSessionEndReason | null = null
   private readonly listeners = new Set<AuthStateListener>()
   private operationVersion = 0
   private readonly queryClient: QueryCache
@@ -84,6 +87,13 @@ export class AuthSession {
 
   getSnapshot = (): AuthState => this.snapshot
 
+  /** Returns and clears the reason attached to the most recent session end. */
+  consumeEndReason(): AuthSessionEndReason | null {
+    const reason = this.lastEndReason
+    this.lastEndReason = null
+    return reason
+  }
+
   subscribe = (listener: AuthStateListener): (() => void) => {
     this.listeners.add(listener)
 
@@ -93,8 +103,8 @@ export class AuthSession {
   }
 
   start(): () => void {
-    const unsubscribeEvents = this.events.subscribe(() => {
-      this.clearLocalSession()
+    const unsubscribeEvents = this.events.subscribe((event) => {
+      this.clearLocalSession(event.reason)
     })
     const unsubscribeStore = this.store.subscribe((snapshot) => {
       this.handleTokenSnapshot(snapshot)
@@ -199,14 +209,37 @@ export class AuthSession {
     }
   }
 
+  /** Invalidates every server session and always terminates the local session. */
   async logoutAll(): Promise<void> {
     ++this.operationVersion
+    let endReason: AuthSessionEndReason = 'logout-all-complete'
 
     try {
       await this.api.logoutAll()
+    } catch {
+      // Local sign-out remains mandatory even when the server cannot revoke other sessions.
+      endReason = 'logout-all-local-only'
     } finally {
-      this.clearLocalSession()
+      this.clearLocalSession(endReason)
     }
+  }
+
+  /** Updates profile fields owned by the current user and publishes the new snapshot. */
+  async updateCurrentUser(input: UpdateCurrentUserInput): Promise<AuthUser> {
+    if (this.snapshot.status !== 'authenticated') {
+      throw new Error('Cannot update the user profile without an active session.')
+    }
+
+    const operationVersion = this.operationVersion
+    const user = await this.api.updateCurrentUser(input)
+    this.assertCurrentOperation(operationVersion)
+
+    if (this.snapshot.status !== 'authenticated') {
+      throw new AuthOperationSupersededError()
+    }
+
+    this.publishAuthenticated(user)
+    return user
   }
 
   private assertAuthenticatedOperation(
@@ -226,7 +259,9 @@ export class AuthSession {
     }
   }
 
-  private clearLocalSession(): void {
+  private clearLocalSession(
+    endReason: AuthSessionEndReason | null = null,
+  ): void {
     if (this.clearingLocalSession) {
       return
     }
@@ -234,6 +269,7 @@ export class AuthSession {
     this.clearingLocalSession = true
 
     try {
+      this.lastEndReason = endReason
       ++this.operationVersion
       this.publish(ANONYMOUS_STATE)
       this.store.clear()
@@ -262,6 +298,7 @@ export class AuthSession {
   }
 
   private publishAuthenticated(user: AuthUser): void {
+    this.lastEndReason = null
     this.publish(
       Object.freeze({
         status: 'authenticated',

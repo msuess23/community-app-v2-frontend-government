@@ -4,6 +4,7 @@ import { createBrowserRouter, type RouteObject } from 'react-router'
 import { RequireAuth } from '@/auth/RequireAuth'
 import { RequireCapability } from '@/auth/RequireCapability'
 import { AccessPendingPage } from '@/pages/AccessPendingPage'
+import { AccountPage } from '@/pages/AccountPage'
 import { ForbiddenPage } from '@/pages/ForbiddenPage'
 import { HomePage } from '@/pages/HomePage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -88,6 +89,11 @@ export const appRoutes: RouteObject[] = [
                     index: true,
                     Component: HomePage,
                     handle: { pageTitle: 'Übersicht' },
+                  },
+                  {
+                    path: 'account',
+                    Component: AccountPage,
+                    handle: { pageTitle: 'Mein Konto' },
                   },
                   {
                     path: 'forbidden',
