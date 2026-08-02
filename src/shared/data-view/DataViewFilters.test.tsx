@@ -24,7 +24,9 @@ describe('data view filters', () => {
       </DataViewFilterPanel>,
     )
 
-    const trigger = screen.getByRole('button', { name: /Filter 1/ })
+    const trigger = screen.getByRole('button', {
+      name: 'Filter: 1 aktiver Filter',
+    })
     await user.click(trigger)
 
     expect(trigger).toHaveAttribute('aria-expanded', 'true')

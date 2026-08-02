@@ -28,6 +28,9 @@ const ANONYMOUS_AUTH: AuthContextValue = {
     throw new Error('Not used in this test.')
   }),
   state: { status: 'anonymous', user: null },
+  updateCurrentUser: vi.fn(async () => {
+    throw new Error('Not used in this test.')
+  }),
   user: null,
 }
 
@@ -72,7 +75,12 @@ describe('password recovery pages', () => {
       'citizen@test.com',
     )
     await user.type(screen.getByRole('textbox', { name: 'Einmalcode' }), '123456')
-    await user.type(screen.getByLabelText(/^Neues Passwort$/), 'secret-password')
+    await user.type(
+      screen.getByLabelText(/^Neues Passwort/, {
+        selector: 'input[name="newPassword"]',
+      }),
+      'secret-password',
+    )
     await user.type(
       screen.getByLabelText('Neues Passwort bestätigen'),
       'secret-password',

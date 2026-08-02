@@ -58,9 +58,11 @@ describe('ResourceActionBar', () => {
 
     await user.click(screen.getByRole('button', { name: 'Fertig' }))
 
-    expect(
-      screen.queryByRole('heading', { name: 'Anliegen abschließen' }),
-    ).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('heading', { name: 'Anliegen abschließen' }),
+      ).not.toBeInTheDocument()
+    })
     await waitFor(() => expect(trigger).toHaveFocus())
   })
 
@@ -117,9 +119,11 @@ describe('ResourceActionBar', () => {
     await user.click(trigger)
     await user.keyboard('{Escape}')
 
-    expect(
-      screen.queryByRole('heading', { name: 'Anliegen abschließen' }),
-    ).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('heading', { name: 'Anliegen abschließen' }),
+      ).not.toBeInTheDocument()
+    })
     await waitFor(() => expect(trigger).toHaveFocus())
   })
 })

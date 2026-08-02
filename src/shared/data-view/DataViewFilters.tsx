@@ -31,6 +31,12 @@ export function DataViewFilterPanel({
   const panelId = useId()
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)
+  const triggerLabel =
+    activeFilterCount === 0
+      ? title
+      : `${title}: ${activeFilterCount} ${
+          activeFilterCount === 1 ? 'aktiver Filter' : 'aktive Filter'
+        }`
 
   /** Closes the compact filter panel and returns focus to its trigger. */
   const handlePanelKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -47,6 +53,7 @@ export function DataViewFilterPanel({
     <div className={cn('space-y-3', className)}>
       <Button
         aria-controls={panelId}
+        aria-label={triggerLabel}
         aria-expanded={isOpen}
         className="w-full justify-between md:hidden"
         onPress={() => setIsOpen((current) => !current)}

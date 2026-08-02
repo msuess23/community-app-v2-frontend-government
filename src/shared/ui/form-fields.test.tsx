@@ -21,7 +21,9 @@ describe('shared form fields', () => {
     )
 
     const field = screen.getByRole('textbox', { name: 'Beschreibung' })
-    expect(field).toHaveAccessibleDescription('Mindestens zehn Zeichen.')
+    expect(field).toHaveAccessibleDescription(
+      'Mindestens zehn Zeichen. Die Beschreibung ist zu kurz.',
+    )
     expect(field).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByText('Die Beschreibung ist zu kurz.')).toBeVisible()
   })

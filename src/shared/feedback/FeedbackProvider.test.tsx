@@ -1,4 +1,4 @@
-import { act, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { useFeedback } from '@/shared/feedback/feedback-context'
@@ -43,13 +43,11 @@ describe('FeedbackProvider', () => {
     vi.useRealTimers()
   })
 
-  it('announces and automatically dismisses non-critical feedback', async () => {
+  it('announces and automatically dismisses non-critical feedback', () => {
     vi.useFakeTimers()
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-
     renderWithProviders(<FeedbackHarness />)
 
-    await user.click(screen.getByRole('button', { name: 'Erfolg anzeigen' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Erfolg anzeigen' }))
 
     expect(screen.getByRole('status')).toHaveTextContent('Gespeichert')
 

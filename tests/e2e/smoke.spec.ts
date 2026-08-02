@@ -1,7 +1,7 @@
 import { AxeBuilder } from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 
-import { signInAsAuthorityUser } from './fixtures/auth'
+import { signInAsAuthorityUser } from './fixtures/auth.js'
 
 test('anonymous users are redirected to login', async ({ page }) => {
   await page.goto('/')

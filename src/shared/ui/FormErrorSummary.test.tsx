@@ -1,14 +1,12 @@
-import { screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-
-import { renderWithProviders } from '@/test/render'
 
 import { FormErrorSummary } from './FormErrorSummary'
 
 describe('FormErrorSummary', () => {
   it('links field errors to the affected controls', () => {
-    renderWithProviders(
+    render(
       <FormErrorSummary
         errors={[
           {
@@ -26,7 +24,7 @@ describe('FormErrorSummary', () => {
 
   it('moves focus to a linked field without changing the URL hash', async () => {
     const user = userEvent.setup()
-    renderWithProviders(
+    render(
       <>
         <input aria-label="E-Mail-Adresse" id="email" />
         <FormErrorSummary
@@ -49,7 +47,7 @@ describe('FormErrorSummary', () => {
   })
 
   it('focuses the summary when a failed submission requests it', async () => {
-    renderWithProviders(
+    render(
       <FormErrorSummary
         errors={[{ message: 'Speichern fehlgeschlagen.' }]}
         focusKey={1}
@@ -63,7 +61,7 @@ describe('FormErrorSummary', () => {
   })
 
   it('does not steal focus while existing errors are corrected', async () => {
-    const { rerender } = renderWithProviders(
+    const { rerender } = render(
       <>
         <input aria-label="E-Mail-Adresse" id="email" />
         <FormErrorSummary
@@ -99,7 +97,7 @@ describe('FormErrorSummary', () => {
   })
 
   it('renders nothing without errors', () => {
-    const { container } = renderWithProviders(<FormErrorSummary errors={[]} />)
+    const { container } = render(<FormErrorSummary errors={[]} />)
 
     expect(container).toBeEmptyDOMElement()
   })

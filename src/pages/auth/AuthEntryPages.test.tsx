@@ -135,6 +135,7 @@ function renderAuthRoutes(initialEntry: string, overrides: AuthOverrides = {}) {
       status: 'anonymous',
       user: null,
     },
+    updateCurrentUser: vi.fn(async () => AUTHORITY_USER),
     user: null,
   }
   const router = createMemoryRouter(
