@@ -15,6 +15,7 @@ import type { AuthUser } from '@/auth/auth-types'
 import { getRoleLabel } from '@/auth/role-labels'
 import { useConfirmation } from '@/shared/confirmation/confirmation-context'
 import { useFeedback } from '@/shared/feedback/feedback-context'
+import { FormFieldScope } from '@/shared/forms/FormFieldScope'
 import { ControlledTextField } from '@/shared/forms/ControlledTextField'
 import { useUnsavedChangesGuard } from '@/shared/forms/use-unsaved-changes-guard'
 import { getFormErrorSummary } from '@/shared/forms/form-errors'
@@ -181,51 +182,53 @@ function AuthenticatedAccountPage({ user }: AuthenticatedAccountPageProps) {
                 }
               })}
             >
-              <FormErrorSummary
-                errors={formErrors}
-                focusKey={submitCount}
-                shouldFocus
-              />
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <ControlledTextField
-                  autoComplete="given-name"
-                  control={control}
-                  isRequired
-                  label="Vorname"
-                  name="firstName"
+              <FormFieldScope>
+                <FormErrorSummary
+                  errors={formErrors}
+                  focusKey={submitCount}
+                  shouldFocus
                 />
-                <ControlledTextField
-                  autoComplete="family-name"
-                  control={control}
-                  isRequired
-                  label="Nachname"
-                  name="lastName"
-                />
-              </div>
 
-              <FormActions>
-                <Button
-                  isDisabled={!isDirty || isSubmitting}
-                  onPress={() => {
-                    reset(toAccountProfileFormValues(user))
-                    setSubmissionErrors([])
-                  }}
-                  type="button"
-                  variant="outline"
-                >
-                  <Undo2 aria-hidden="true" size={18} />
-                  Änderungen verwerfen
-                </Button>
-                <FormSubmitButton
-                  isDisabled={!isDirty}
-                  isSubmitting={isSubmitting}
-                  pendingLabel="Speichern läuft …"
-                >
-                  <Save aria-hidden="true" size={18} />
-                  Änderungen speichern
-                </FormSubmitButton>
-              </FormActions>
+                <div className="grid gap-5 md:grid-cols-2">
+                  <ControlledTextField
+                    autoComplete="given-name"
+                    control={control}
+                    isRequired
+                    label="Vorname"
+                    name="firstName"
+                  />
+                  <ControlledTextField
+                    autoComplete="family-name"
+                    control={control}
+                    isRequired
+                    label="Nachname"
+                    name="lastName"
+                  />
+                </div>
+
+                <FormActions>
+                  <Button
+                    isDisabled={!isDirty || isSubmitting}
+                    onPress={() => {
+                      reset(toAccountProfileFormValues(user))
+                      setSubmissionErrors([])
+                    }}
+                    type="button"
+                    variant="outline"
+                  >
+                    <Undo2 aria-hidden="true" size={18} />
+                    Änderungen verwerfen
+                  </Button>
+                  <FormSubmitButton
+                    isDisabled={!isDirty}
+                    isSubmitting={isSubmitting}
+                    pendingLabel="Speichern läuft …"
+                  >
+                    <Save aria-hidden="true" size={18} />
+                    Änderungen speichern
+                  </FormSubmitButton>
+                </FormActions>
+              </FormFieldScope>
             </form>
           </FormSection>
         </Card>

@@ -5,6 +5,7 @@ import {
   type FieldValues,
 } from 'react-hook-form'
 
+import { useFormFieldId } from '@/shared/forms/FormFieldScope'
 import {
   RadioGroupField,
   type RadioGroupFieldProps,
@@ -28,9 +29,12 @@ export interface ControlledRadioGroupFieldProps<
 /** Connects a semantic radio group to a React Hook Form string value. */
 export function ControlledRadioGroupField<TFieldValues extends FieldValues>({
   control,
+  id,
   name,
   ...props
 }: ControlledRadioGroupFieldProps<TFieldValues>) {
+  const fieldId = useFormFieldId(name, id)
+
   return (
     <Controller
       control={control}
@@ -39,6 +43,7 @@ export function ControlledRadioGroupField<TFieldValues extends FieldValues>({
         <RadioGroupField
           {...props}
           errorMessage={fieldState.error?.message}
+          id={fieldId}
           isInvalid={fieldState.invalid}
           name={field.name}
           onBlur={field.onBlur}

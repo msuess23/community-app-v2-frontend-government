@@ -5,7 +5,7 @@ import {
   type FieldValues,
 } from 'react-hook-form'
 
-import { fieldNameToId } from '@/shared/forms/field-name'
+import { useFormFieldId } from '@/shared/forms/FormFieldScope'
 import {
   FileUploadField,
   type FileUploadFieldProps,
@@ -34,7 +34,7 @@ export function ControlledFileUploadField<TFieldValues extends FieldValues>({
   name,
   ...props
 }: ControlledFileUploadFieldProps<TFieldValues>) {
-  const fieldId = id ?? fieldNameToId(name)
+  const fieldId = useFormFieldId(name, id)
 
   return (
     <Controller

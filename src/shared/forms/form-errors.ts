@@ -1,6 +1,5 @@
 import type { FieldError, FieldErrors, FieldValues } from 'react-hook-form'
 
-import { fieldNameToId } from '@/shared/forms/field-name'
 import type { FormErrorSummaryItem } from '@/shared/ui/FormErrorSummary'
 
 function isFieldError(value: unknown): value is FieldError {
@@ -19,7 +18,7 @@ function collectNestedErrors(
   if (isFieldError(value)) {
     return [
       {
-        fieldId: path.length > 0 ? fieldNameToId(path.join('.')) : undefined,
+        fieldName: path.length > 0 ? path.join('.') : undefined,
         message: value.message,
       },
     ]

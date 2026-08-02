@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
+import { FormFieldScope } from '@/shared/forms/FormFieldScope'
 import { ControlledCheckboxField } from '@/shared/forms/ControlledCheckboxField'
 import { ControlledTextField } from '@/shared/forms/ControlledTextField'
 import { getFormErrorSummary } from '@/shared/forms/form-errors'
@@ -54,50 +55,52 @@ export function LoginFormExample() {
         setSubmittedEmail(values.email)
       })}
     >
-      <FormErrorSummary errors={errorSummary} />
+      <FormFieldScope>
+        <FormErrorSummary errors={errorSummary} />
 
-      <ControlledTextField
-        autoComplete="email"
-        control={control}
-        description="Verwende die dienstliche E-Mail-Adresse."
-        isRequired
-        label="E-Mail-Adresse"
-        name="email"
-        placeholder="name@behoerde.de"
-        type="email"
-      />
+        <ControlledTextField
+          autoComplete="email"
+          control={control}
+          description="Verwende die dienstliche E-Mail-Adresse."
+          isRequired
+          label="E-Mail-Adresse"
+          name="email"
+          placeholder="name@behoerde.de"
+          type="email"
+        />
 
-      <ControlledTextField
-        autoComplete="current-password"
-        control={control}
-        description="Mindestens acht Zeichen."
-        isRequired
-        label="Passwort"
-        name="password"
-        type="password"
-      />
+        <ControlledTextField
+          autoComplete="current-password"
+          control={control}
+          description="Mindestens acht Zeichen."
+          isRequired
+          label="Passwort"
+          name="password"
+          type="password"
+        />
 
-      <ControlledCheckboxField
-        control={control}
-        description="Nur auf einem privaten oder dienstlich verwalteten Gerät aktivieren."
-        label="Angemeldet bleiben"
-        name="rememberMe"
-      />
+        <ControlledCheckboxField
+          control={control}
+          description="Nur auf einem privaten oder dienstlich verwalteten Gerät aktivieren."
+          label="Angemeldet bleiben"
+          name="rememberMe"
+        />
 
-      {submittedEmail ? (
-        <p
-          className="bg-tertiary-container text-on-tertiary-container rounded-lg p-3 text-sm font-medium"
-          role="status"
-        >
-          Das Beispielformular wurde für {submittedEmail} validiert.
-        </p>
-      ) : null}
+        {submittedEmail ? (
+          <p
+            className="bg-tertiary-container text-on-tertiary-container rounded-lg p-3 text-sm font-medium"
+            role="status"
+          >
+            Das Beispielformular wurde für {submittedEmail} validiert.
+          </p>
+        ) : null}
 
-      <FormActions>
-        <Button isDisabled={isSubmitting} type="submit">
-          Beispiel validieren
-        </Button>
-      </FormActions>
+        <FormActions>
+          <Button isDisabled={isSubmitting} type="submit">
+            Beispiel validieren
+          </Button>
+        </FormActions>
+      </FormFieldScope>
     </form>
   )
 }

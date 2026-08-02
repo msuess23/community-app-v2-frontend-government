@@ -5,10 +5,12 @@ import {
   type ReactNode,
 } from 'react'
 
+import { useFormFieldIdResolver } from '@/shared/forms/FormFieldScope'
 import { cn } from '@/shared/lib/cn'
 
 export interface FormErrorSummaryItem {
   fieldId?: string
+  fieldName?: string
   id?: string
   message: ReactNode
 }
@@ -29,6 +31,7 @@ export function FormErrorSummary({
   shouldFocus = false,
   title = 'Bitte überprüfe die folgenden Angaben.',
 }: FormErrorSummaryProps) {
+  const resolveFieldId = useFormFieldIdResolver()
   const summaryRef = useRef<HTMLDivElement>(null)
   const previousErrorCountRef = useRef(0)
   const previousFocusKeyRef = useRef(focusKey)
@@ -74,10 +77,12 @@ export function FormErrorSummary({
       <p className="font-semibold">{title}</p>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-5">
         {errors.map((error, index) => {
-          const fieldId = error.fieldId
+          const fieldId =
+            error.fieldId ??
+            (error.fieldName ? resolveFieldId(error.fieldName) : undefined)
 
           return (
-            <li key={error.id ?? fieldId ?? index}>
+            <li key={error.id ?? error.fieldName ?? fieldId ?? index}>
               {fieldId ? (
                 <a
                   className="focus-visible:outline-error font-medium underline decoration-2 underline-offset-2 hover:no-underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"

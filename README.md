@@ -4,8 +4,8 @@ Responsiver React-Client für die Behördenfunktionen des Community-App-Backends
 
 ## Voraussetzungen
 
-- Node.js 22.22 oder neuer
-- npm
+- Node.js 22.22.x (siehe `.nvmrc` und `.node-version`)
+- npm 10.9.x
 - optional: laufendes FastAPI-Backend für OpenAPI-Synchronisation und spätere API-Aufrufe
 
 ## Installation
@@ -26,13 +26,13 @@ Die Anwendung ist standardmäßig unter `http://localhost:5173` erreichbar. Anfr
 ## Qualitätssicherung
 
 ```bash
+npm run verify:fast
 npm run verify
-npm run test:e2e
 ```
 
 Vitest sammelt ausschließlich Tests unter `src/`. Die Playwright-Spezifikationen unter `tests/e2e/` werden getrennt über `npm run test:e2e` ausgeführt.
 
-`verify` führt ESLint, Prettier, Vitest, TypeScript und den Produktionsbuild aus. Die Playwright-Tests werden separat ausgeführt.
+`verify:fast` führt OpenAPI-Validierung, ESLint, Prettier, Vitest, TypeScript und den Produktionsbuild aus. `verify` ergänzt die Playwright-Tests für Desktop, Tablet und Smartphone. Der CI-Workflow verwendet den vollständigen Lauf.
 
 ## OpenAPI-Client
 
@@ -108,6 +108,8 @@ Listenansichten verwenden die Grundlagen unter `src/shared/data-view`: URL-geste
 
 Detailseiten verwenden die Grundlagen unter `src/shared/resource-detail`: explizite Rücksprungziele, benannte Inhaltsabschnitte, semantische Metadaten, servergesteuerte Aktionsregistrierung, serverbestätigte Mutationsabläufe und erweiterbare Ereignis-Timelines. Unbekannte Backendaktionen werden nicht geraten, unbekannte Ereignisse erhalten eine sichere Fallbackdarstellung. Der Vertrag ist unter `docs/resource-detail-actions-and-event-timeline.md` dokumentiert.
 
+Die Härtung von Cross-Tab-Sitzungen, API-Origins, Formular-IDs und CI ist unter `docs/core-hardening-and-verification.md` beschrieben. Formulare mit Controlled Fields verwenden `FormFieldScope`, damit parallele Formulare keine doppelten DOM-IDs erzeugen.
+
 ## API-Transport
 
 Der gemeinsame Fetch-Mutator liegt unter `src/api/client`. Er verbindet relative OpenAPI-Pfade mit `VITE_API_BASE_URL`, verarbeitet JSON-, Text-, Blob- und leere Antworten und überführt Backendfehler in `ApiError`.
@@ -116,13 +118,13 @@ Orval verwendet diesen Mutator für alle später generierten Funktionen und TanS
 
 ## Token-Speicherung
 
-Der Client hält Access-Tokens ausschließlich im Arbeitsspeicher. Refresh-Tokens werden standardmäßig tablokal in `sessionStorage` gespeichert und nur bei einer späteren expliziten „Angemeldet bleiben“-Entscheidung in `localStorage` abgelegt. Login, Logout und die React-Sitzungsintegration werden durch den Session-Core unter `src/auth` ergänzt.
+Der Client hält Access-Tokens ausschließlich im Arbeitsspeicher. Refresh-Tokens werden standardmäßig tablokal in `sessionStorage` gespeichert und nur bei einer expliziten „Angemeldet bleiben“-Entscheidung in `localStorage` abgelegt. Persistente Werte enthalten zusätzlich eine stabile Sitzungs-ID, damit andere Tabs eine normale Tokenrotation von einem tatsächlichen Kontowechsel unterscheiden können. Login, Logout und die React-Sitzungsintegration werden durch den Session-Core unter `src/auth` ergänzt.
 
 ## Authentifizierter API-Transport
 
-Der Orval-Mutator ergänzt bei verwalteten API-Aufrufen automatisch den aktuellen Access-Token aus dem speicherunabhängigen `TokenStore`. Öffentliche oder bewusst fremdauthentifizierte Requests können mit `authentication: 'none'` von diesem Verhalten ausgenommen werden.
+Der Orval-Mutator ergänzt bei verwalteten API-Aufrufen automatisch den aktuellen Access-Token aus dem speicherunabhängigen `TokenStore`. Öffentliche oder bewusst fremdauthentifizierte Requests können mit `authentication: 'none'` von diesem Verhalten ausgenommen werden. Managed Authentication wird ausschließlich an den konfigurierten API-Origin gesendet und folgt keinen Redirects.
 
-Antwortet ein verwalteter Request mit HTTP 401 und ist ein Refresh-Token vorhanden, koordiniert der Client genau eine Rotation pro Tab. Unterstützt der Browser die Web-Locks-API, werden Rotationen zusätzlich zwischen Tabs serialisiert. Nach erfolgreicher Rotation wird die ursprüngliche Anfrage genau einmal mit dem neuen Access-Token wiederholt.
+Antwortet ein verwalteter Request mit HTTP 401 und ist ein Refresh-Token vorhanden, koordiniert der Client genau eine Rotation pro Tab. Die Web-Locks-API serialisiert Rotationen zwischen Tabs. Browser ohne Web Locks verwenden eine erneuerte `localStorage`-Lease als Fallback. Nach erfolgreicher Rotation wird die ursprüngliche Anfrage genau einmal mit dem neuen Access-Token wiederholt.
 
 Ein vom Backend abgelehnter Refresh-Token löscht die lokale Sitzung und veröffentlicht ein `session-expired`-Ereignis. Temporäre Netzwerkfehler löschen den gespeicherten Refresh-Token dagegen nicht. Die React-Sitzungsintegration und die sichtbaren Authentifizierungsseiten bauen auf diesem Verhalten auf.
 

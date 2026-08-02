@@ -112,6 +112,14 @@ function getSessionEndFeedback(
         title: 'Sitzung abgelaufen',
         tone: 'warning' as const,
       }
+    case 'session-ended-in-another-tab':
+      return {
+        dedupeKey: 'session-ended-in-another-tab',
+        description:
+          'Die gemeinsam gespeicherte Anmeldung wurde in einem anderen Tab beendet.',
+        title: 'Sitzung beendet',
+        tone: 'warning' as const,
+      }
     case 'logout-all-complete':
       return {
         dedupeKey: 'all-sessions-ended',

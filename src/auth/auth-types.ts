@@ -49,6 +49,7 @@ export type AuthSessionEndReason =
   | 'logout-all-complete'
   | 'logout-all-local-only'
   | 'refresh-rejected'
+  | 'session-ended-in-another-tab'
 
 export type RequestPasswordResetInput = Readonly<{
   email: string

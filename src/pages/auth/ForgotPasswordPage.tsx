@@ -15,6 +15,7 @@ import {
 } from '@/auth/password-recovery-form'
 import { isAuthorityUser } from '@/auth/permissions'
 import { AuthPageLayout } from '@/pages/auth/AuthPageLayout'
+import { FormFieldScope } from '@/shared/forms/FormFieldScope'
 import { ControlledTextField } from '@/shared/forms/ControlledTextField'
 import { getFormErrorSummary } from '@/shared/forms/form-errors'
 import { createZodResolver } from '@/shared/forms/zod-resolver'
@@ -129,31 +130,33 @@ export function ForgotPasswordPage({
           }
         })}
       >
-        <FormErrorSummary
-          errors={formErrors}
-          focusKey={submitCount}
-          shouldFocus
-        />
+        <FormFieldScope>
+          <FormErrorSummary
+            errors={formErrors}
+            focusKey={submitCount}
+            shouldFocus
+          />
 
-        <ControlledTextField
-          autoComplete="email"
-          control={control}
-          description="Verwende die E-Mail-Adresse des Kontos."
-          isRequired
-          label="E-Mail-Adresse"
-          name="email"
-          placeholder="name@behoerde.de"
-          type="email"
-        />
+          <ControlledTextField
+            autoComplete="email"
+            control={control}
+            description="Verwende die E-Mail-Adresse des Kontos."
+            isRequired
+            label="E-Mail-Adresse"
+            name="email"
+            placeholder="name@behoerde.de"
+            type="email"
+          />
 
-        <FormActions>
-          <FormSubmitButton
-            isSubmitting={isSubmitting}
-            pendingLabel="Anfrage wird gesendet …"
-          >
-            Einmalcode anfordern
-          </FormSubmitButton>
-        </FormActions>
+          <FormActions>
+            <FormSubmitButton
+              isSubmitting={isSubmitting}
+              pendingLabel="Anfrage wird gesendet …"
+            >
+              Einmalcode anfordern
+            </FormSubmitButton>
+          </FormActions>
+        </FormFieldScope>
       </form>
     </AuthPageLayout>
   )

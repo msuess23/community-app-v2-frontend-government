@@ -1,6 +1,8 @@
 export const REFRESH_TOKEN_STORAGE_KEY =
   'community-app-authority-client.refresh-token'
 
+const STORED_REFRESH_TOKEN_VERSION = 1
+
 export type RefreshTokenPersistence = 'persistent' | 'session'
 
 export type AuthTokens = {
@@ -12,9 +14,18 @@ export type TokenSnapshot = Readonly<{
   accessToken: string | null
   refreshToken: string | null
   refreshTokenPersistence: RefreshTokenPersistence | null
+  sessionId: string | null
 }>
 
-export type TokenStoreListener = (snapshot: TokenSnapshot) => void
+export type TokenStoreChange = Readonly<{
+  previousSnapshot: TokenSnapshot
+  source: 'external' | 'local'
+}>
+
+export type TokenStoreListener = (
+  snapshot: TokenSnapshot,
+  change: TokenStoreChange,
+) => void
 
 type StorageEventTarget = Pick<
   EventTarget,
@@ -22,13 +33,25 @@ type StorageEventTarget = Pick<
 >
 
 type TokenStoreOptions = {
+  createSessionId?: () => string
   eventTarget?: StorageEventTarget
   localStorage?: Storage
   sessionStorage?: Storage
 }
 
+type SetTokenOptions = Readonly<{
+  sessionId?: string
+}>
+
+type StoredRefreshSession = Readonly<{
+  refreshToken: string
+  sessionId: string
+}>
+
+/** Stores browser authentication tokens and publishes immutable session snapshots. */
 export class TokenStore {
   private accessToken: string | null = null
+  private readonly createSessionId: () => string
   private readonly eventTarget?: StorageEventTarget
   private readonly listeners = new Set<TokenStoreListener>()
   private readonly localStorage?: Storage
@@ -39,6 +62,7 @@ export class TokenStore {
     this.localStorage = options.localStorage
     this.sessionStorage = options.sessionStorage
     this.eventTarget = options.eventTarget
+    this.createSessionId = options.createSessionId ?? createBrowserSessionId
     this.snapshot = this.createSnapshot()
     this.eventTarget?.addEventListener('storage', this.handleStorageEvent)
   }
@@ -61,12 +85,14 @@ export class TokenStore {
     }
 
     this.accessToken = accessToken
-    this.publishSnapshot()
+    this.publishSnapshot('local')
   }
 
+  /** Persists a token pair and optionally preserves an existing logical session ID. */
   setTokens(
     tokens: AuthTokens,
     persistence: RefreshTokenPersistence = 'session',
+    options: SetTokenOptions = {},
   ): void {
     const storage =
       persistence === 'persistent' ? this.localStorage : this.sessionStorage
@@ -77,17 +103,25 @@ export class TokenStore {
       )
     }
 
+    const sessionId = options.sessionId ?? this.createSessionId()
+
     try {
       this.removeStoredRefreshTokens()
-      storage.setItem(REFRESH_TOKEN_STORAGE_KEY, tokens.refreshToken)
+      storage.setItem(
+        REFRESH_TOKEN_STORAGE_KEY,
+        serializeRefreshSession({
+          refreshToken: tokens.refreshToken,
+          sessionId,
+        }),
+      )
     } catch (error) {
       this.accessToken = null
-      this.publishSnapshot()
+      this.publishSnapshot('local')
       throw error
     }
 
     this.accessToken = tokens.accessToken
-    this.publishSnapshot()
+    this.publishSnapshot('local')
   }
 
   clear(): void {
@@ -100,9 +134,29 @@ export class TokenStore {
       this.removeStoredRefreshTokens()
     } finally {
       if (hadTokens) {
-        this.publishSnapshot()
+        this.publishSnapshot('local')
       }
     }
+  }
+
+  /** Re-reads the shared persistent session after cross-tab synchronization. */
+  synchronizePersistentSession(): TokenSnapshot {
+    // A tab-local login is independent from all persistent storage changes.
+    if (readStoredRefreshSession(this.sessionStorage) !== null) {
+      return this.snapshot
+    }
+
+    const previousSessionId = this.snapshot.sessionId
+    const nextSession = readStoredRefreshSession(this.localStorage)
+
+    // A rotation of the same logical session does not invalidate this tab's
+    // access token. Replacing or removing the account does.
+    if (previousSessionId !== nextSession?.sessionId) {
+      this.accessToken = null
+    }
+
+    this.publishSnapshot('external')
+    return this.snapshot
   }
 
   subscribe(listener: TokenStoreListener): () => void {
@@ -130,50 +184,46 @@ export class TokenStore {
       return
     }
 
-    // sessionStorage represents an independent tab-local session. A change to
-    // the shared persistent token must not replace that session.
-    if (readStorage(this.sessionStorage) !== null) {
-      return
-    }
-
-    // A persistent refresh token changed in another tab. The access token in
-    // this tab may now belong to an obsolete token generation and is discarded.
-    this.accessToken = null
-    this.publishSnapshot()
+    this.synchronizePersistentSession()
   }
 
   private createSnapshot(): TokenSnapshot {
-    const sessionRefreshToken = readStorage(this.sessionStorage)
+    const sessionRefreshSession = readStoredRefreshSession(this.sessionStorage)
 
-    if (sessionRefreshToken !== null) {
+    if (sessionRefreshSession !== null) {
       return Object.freeze({
         accessToken: this.accessToken,
-        refreshToken: sessionRefreshToken,
+        refreshToken: sessionRefreshSession.refreshToken,
         refreshTokenPersistence: 'session' as const,
+        sessionId: sessionRefreshSession.sessionId,
       })
     }
 
-    const persistentRefreshToken = readStorage(this.localStorage)
+    const persistentRefreshSession = readStoredRefreshSession(this.localStorage)
 
     return Object.freeze({
       accessToken: this.accessToken,
-      refreshToken: persistentRefreshToken,
+      refreshToken: persistentRefreshSession?.refreshToken ?? null,
       refreshTokenPersistence:
-        persistentRefreshToken === null ? null : ('persistent' as const),
+        persistentRefreshSession === null ? null : ('persistent' as const),
+      sessionId: persistentRefreshSession?.sessionId ?? null,
     })
   }
 
-  private publishSnapshot(): void {
+  /** Publishes a changed immutable snapshot with its local or external origin. */
+  private publishSnapshot(source: TokenStoreChange['source']): void {
+    const previousSnapshot = this.snapshot
     const nextSnapshot = this.createSnapshot()
 
-    if (snapshotsEqual(this.snapshot, nextSnapshot)) {
+    if (snapshotsEqual(previousSnapshot, nextSnapshot)) {
       return
     }
 
     this.snapshot = nextSnapshot
+    const change = Object.freeze({ previousSnapshot, source })
 
     for (const listener of this.listeners) {
-      listener(this.snapshot)
+      listener(this.snapshot, change)
     }
   }
 
@@ -224,14 +274,83 @@ function getWindowStorage(
   }
 }
 
-function readStorage(storage: Storage | undefined): string | null {
+/** Creates a non-secret identifier for one logical browser login. */
+function createBrowserSessionId(): string {
   try {
-    return storage?.getItem(REFRESH_TOKEN_STORAGE_KEY) ?? null
+    return crypto.randomUUID()
   } catch {
-    return null
+    return `session-${Date.now()}-${Math.random().toString(36).slice(2)}`
   }
 }
 
+/** Serializes the refresh token and its stable session identity atomically. */
+function serializeRefreshSession(session: StoredRefreshSession): string {
+  return JSON.stringify({
+    refreshToken: session.refreshToken,
+    sessionId: session.sessionId,
+    version: STORED_REFRESH_TOKEN_VERSION,
+  })
+}
+
+/** Reads both the current envelope and the raw-token format used by older clients. */
+function readStoredRefreshSession(
+  storage: Storage | undefined,
+): StoredRefreshSession | null {
+  let storedValue: string | null
+
+  try {
+    storedValue = storage?.getItem(REFRESH_TOKEN_STORAGE_KEY) ?? null
+  } catch {
+    return null
+  }
+
+  if (!storedValue) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(storedValue) as unknown
+
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      'version' in parsed &&
+      parsed.version === STORED_REFRESH_TOKEN_VERSION &&
+      'refreshToken' in parsed &&
+      typeof parsed.refreshToken === 'string' &&
+      parsed.refreshToken.length > 0 &&
+      'sessionId' in parsed &&
+      typeof parsed.sessionId === 'string' &&
+      parsed.sessionId.length > 0
+    ) {
+      return Object.freeze({
+        refreshToken: parsed.refreshToken,
+        sessionId: parsed.sessionId,
+      })
+    }
+  } catch {
+    // A raw value is a legacy refresh token and is migrated on the next rotation.
+  }
+
+  return Object.freeze({
+    refreshToken: storedValue,
+    sessionId: createLegacySessionId(storedValue),
+  })
+}
+
+/** Creates a stable fingerprint without retaining the retired token as metadata. */
+function createLegacySessionId(refreshToken: string): string {
+  let hash = 0xcbf29ce484222325n
+
+  for (const character of refreshToken) {
+    hash ^= BigInt(character.codePointAt(0) ?? 0)
+    hash = BigInt.asUintN(64, hash * 0x100000001b3n)
+  }
+
+  return `legacy-${hash.toString(16).padStart(16, '0')}`
+}
+
+/** Compares immutable token snapshots before notifying subscribers. */
 function snapshotsEqual(
   left: TokenSnapshot,
   right: TokenSnapshot,
@@ -239,6 +358,7 @@ function snapshotsEqual(
   return (
     left.accessToken === right.accessToken &&
     left.refreshToken === right.refreshToken &&
-    left.refreshTokenPersistence === right.refreshTokenPersistence
+    left.refreshTokenPersistence === right.refreshTokenPersistence &&
+    left.sessionId === right.sessionId
   )
 }

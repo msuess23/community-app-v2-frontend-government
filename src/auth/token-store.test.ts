@@ -17,7 +17,7 @@ afterEach(() => {
 })
 
 describe('TokenStore', () => {
-  it('keeps the access token in memory and stores the refresh token per tab by default', () => {
+  it('keeps the access token in memory and stores the refresh session per tab by default', () => {
     const sessionStorage = new MemoryStorage()
     const localStorage = new MemoryStorage()
     const store = createStore({ localStorage, sessionStorage })
@@ -31,17 +31,25 @@ describe('TokenStore', () => {
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
       refreshTokenPersistence: 'session',
+      sessionId: 'session-id',
     })
-    expect(sessionStorage.getItem(REFRESH_TOKEN_STORAGE_KEY)).toBe(
-      'refresh-token',
-    )
+    expect(readStoredSession(sessionStorage)).toEqual({
+      refreshToken: 'refresh-token',
+      sessionId: 'session-id',
+      version: 1,
+    })
     expect(localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY)).toBeNull()
   })
 
-  it('stores a persistent refresh token in localStorage and removes a previous session token', () => {
+  it('stores a persistent refresh session and removes a previous tab-local session', () => {
     const sessionStorage = new MemoryStorage()
     const localStorage = new MemoryStorage()
-    const store = createStore({ localStorage, sessionStorage })
+    const sessionIds = ['first-session', 'second-session']
+    const store = createStore({
+      createSessionId: () => sessionIds.shift() ?? 'fallback-session',
+      localStorage,
+      sessionStorage,
+    })
 
     store.setTokens(
       {
@@ -62,11 +70,42 @@ describe('TokenStore', () => {
       accessToken: 'second-access-token',
       refreshToken: 'persistent-refresh-token',
       refreshTokenPersistence: 'persistent',
+      sessionId: 'second-session',
     })
     expect(sessionStorage.getItem(REFRESH_TOKEN_STORAGE_KEY)).toBeNull()
-    expect(localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY)).toBe(
-      'persistent-refresh-token',
+    expect(readStoredSession(localStorage)).toMatchObject({
+      refreshToken: 'persistent-refresh-token',
+      sessionId: 'second-session',
+    })
+  })
+
+  it('preserves a logical session ID when a refresh rotation supplies it', () => {
+    const store = createStore({
+      localStorage: new MemoryStorage(),
+      sessionStorage: new MemoryStorage(),
+    })
+
+    store.setTokens(
+      {
+        accessToken: 'old-access-token',
+        refreshToken: 'old-refresh-token',
+      },
+      'persistent',
     )
+    store.setTokens(
+      {
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+      },
+      'persistent',
+      { sessionId: 'session-id' },
+    )
+
+    expect(store.getSnapshot()).toMatchObject({
+      accessToken: 'new-access-token',
+      refreshToken: 'new-refresh-token',
+      sessionId: 'session-id',
+    })
   })
 
   it('keeps the current session when persistent storage is unavailable', () => {
@@ -91,10 +130,11 @@ describe('TokenStore', () => {
       accessToken: 'access-token',
       refreshToken: 'session-refresh-token',
       refreshTokenPersistence: 'session',
+      sessionId: 'session-id',
     })
   })
 
-  it('restores only the refresh token when a store is created', () => {
+  it('restores a legacy raw refresh token until the next rotation migrates it', () => {
     const sessionStorage = new MemoryStorage()
     sessionStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, 'stored-refresh-token')
 
@@ -107,10 +147,11 @@ describe('TokenStore', () => {
       accessToken: null,
       refreshToken: 'stored-refresh-token',
       refreshTokenPersistence: 'session',
+      sessionId: expect.stringMatching(/^legacy-[a-f0-9]{16}$/),
     })
   })
 
-  it('clears the in-memory access token and both refresh-token locations', () => {
+  it('clears the in-memory access token and both refresh-session locations', () => {
     const sessionStorage = new MemoryStorage()
     const localStorage = new MemoryStorage()
     localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, 'stale-local-token')
@@ -126,6 +167,7 @@ describe('TokenStore', () => {
       accessToken: null,
       refreshToken: null,
       refreshTokenPersistence: null,
+      sessionId: null,
     })
     expect(sessionStorage.getItem(REFRESH_TOKEN_STORAGE_KEY)).toBeNull()
     expect(localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY)).toBeNull()
@@ -154,11 +196,12 @@ describe('TokenStore', () => {
         accessToken: 'access-token',
         refreshToken: null,
         refreshTokenPersistence: null,
+        sessionId: null,
       },
     ])
   })
 
-  it('drops an access token when the shared persistent refresh token changes in another tab', () => {
+  it('keeps the current account during another tab rotation of the same session', () => {
     const eventTarget = new EventTarget()
     const localStorage = new MemoryStorage()
     const store = createStore({
@@ -175,13 +218,66 @@ describe('TokenStore', () => {
       'persistent',
     )
 
-    localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, 'rotated-refresh-token')
+    writeStoredSession(localStorage, 'rotated-refresh-token', 'session-id')
+    dispatchStorageEvent(eventTarget, localStorage)
+
+    expect(store.getSnapshot()).toEqual({
+      accessToken: 'access-token',
+      refreshToken: 'rotated-refresh-token',
+      refreshTokenPersistence: 'persistent',
+      sessionId: 'session-id',
+    })
+  })
+
+  it('re-reads a rotated persistent session even before a storage event arrives', () => {
+    const localStorage = new MemoryStorage()
+    const store = createStore({
+      localStorage,
+      sessionStorage: new MemoryStorage(),
+    })
+
+    store.setTokens(
+      {
+        accessToken: 'access-token',
+        refreshToken: 'old-refresh-token',
+      },
+      'persistent',
+    )
+    writeStoredSession(localStorage, 'rotated-refresh-token', 'session-id')
+
+    expect(store.synchronizePersistentSession()).toEqual({
+      accessToken: 'access-token',
+      refreshToken: 'rotated-refresh-token',
+      refreshTokenPersistence: 'persistent',
+      sessionId: 'session-id',
+    })
+  })
+
+  it('drops the access token when another tab replaces the persistent account', () => {
+    const eventTarget = new EventTarget()
+    const localStorage = new MemoryStorage()
+    const store = createStore({
+      eventTarget,
+      localStorage,
+      sessionStorage: new MemoryStorage(),
+    })
+
+    store.setTokens(
+      {
+        accessToken: 'access-token',
+        refreshToken: 'old-refresh-token',
+      },
+      'persistent',
+    )
+
+    writeStoredSession(localStorage, 'other-refresh-token', 'other-session')
     dispatchStorageEvent(eventTarget, localStorage)
 
     expect(store.getSnapshot()).toEqual({
       accessToken: null,
-      refreshToken: 'rotated-refresh-token',
+      refreshToken: 'other-refresh-token',
       refreshTokenPersistence: 'persistent',
+      sessionId: 'other-session',
     })
   })
 
@@ -189,35 +285,36 @@ describe('TokenStore', () => {
     const eventTarget = new EventTarget()
     const localStorage = new MemoryStorage()
     const sessionStorage = new MemoryStorage()
-    const store = createStore({
-      eventTarget,
-      localStorage,
-      sessionStorage,
-    })
+    const store = createStore({ eventTarget, localStorage, sessionStorage })
 
     store.setTokens({
       accessToken: 'access-token',
       refreshToken: 'session-refresh-token',
     })
-    localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, 'other-tab-token')
+    writeStoredSession(localStorage, 'other-tab-token', 'other-session')
     dispatchStorageEvent(eventTarget, localStorage)
 
     expect(store.getSnapshot()).toEqual({
       accessToken: 'access-token',
       refreshToken: 'session-refresh-token',
       refreshTokenPersistence: 'session',
+      sessionId: 'session-id',
     })
   })
 })
 
 type CreateStoreOptions = {
+  createSessionId?: () => string
   eventTarget?: EventTarget
   localStorage?: Storage
   sessionStorage?: Storage
 }
 
 function createStore(options: CreateStoreOptions) {
-  const store = createTokenStore(options)
+  const store = createTokenStore({
+    createSessionId: options.createSessionId ?? (() => 'session-id'),
+    ...options,
+  })
   stores.push(store)
   return store
 }
@@ -229,15 +326,29 @@ function dispatchStorageEvent(
   const event = new Event('storage')
 
   Object.defineProperties(event, {
-    key: {
-      value: REFRESH_TOKEN_STORAGE_KEY,
-    },
-    storageArea: {
-      value: storageArea,
-    },
+    key: { value: REFRESH_TOKEN_STORAGE_KEY },
+    storageArea: { value: storageArea },
   })
 
   eventTarget.dispatchEvent(event)
+}
+
+/** Reads the serialized refresh-session envelope from the test storage. */
+function readStoredSession(storage: Storage): unknown {
+  const value = storage.getItem(REFRESH_TOKEN_STORAGE_KEY)
+  return value ? JSON.parse(value) : null
+}
+
+/** Replaces the shared persistent session for a simulated external tab. */
+function writeStoredSession(
+  storage: Storage,
+  refreshToken: string,
+  sessionId: string,
+): void {
+  storage.setItem(
+    REFRESH_TOKEN_STORAGE_KEY,
+    JSON.stringify({ refreshToken, sessionId, version: 1 }),
+  )
 }
 
 class MemoryStorage implements Storage {

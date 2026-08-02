@@ -1,13 +1,18 @@
 import { environment } from '@/config/environment'
 
 const ABSOLUTE_URL_PATTERN = /^[a-z][a-z\d+.-]*:\/\//i
+const PROTOCOL_RELATIVE_URL_PATTERN = /^\/\//
 const RELATIVE_ORIGIN = 'https://client.invalid'
 
+/** Resolves an API path against the configured backend base URL. */
 export function resolveApiUrl(
   requestUrl: string,
   baseUrl = environment.apiBaseUrl,
 ): string {
-  if (ABSOLUTE_URL_PATTERN.test(requestUrl)) {
+  if (
+    ABSOLUTE_URL_PATTERN.test(requestUrl) ||
+    PROTOCOL_RELATIVE_URL_PATTERN.test(requestUrl)
+  ) {
     return requestUrl
   }
 
@@ -32,6 +37,23 @@ export function resolveApiUrl(
   return `${request.pathname}${request.search}${request.hash}`
 }
 
+/** Checks whether managed credentials may be attached to the resolved request. */
+export function isTrustedApiUrl(
+  requestUrl: string,
+  baseUrl = environment.apiBaseUrl,
+  clientOrigin = getBrowserOrigin(),
+): boolean {
+  try {
+    const origin = clientOrigin ?? RELATIVE_ORIGIN
+    const resolvedRequest = new URL(resolveApiUrl(requestUrl, baseUrl), origin)
+    const resolvedBase = new URL(baseUrl, origin)
+
+    return resolvedRequest.origin === resolvedBase.origin
+  } catch {
+    return false
+  }
+}
+
 function containsBasePath(pathname: string, basePath: string): boolean {
   return (
     basePath === '' ||
@@ -51,4 +73,17 @@ function joinPaths(left: string, right: string): string {
 
 function removeTrailingSlash(value: string): string {
   return value.replace(/\/+$/, '')
+}
+
+/** Reads the current client origin when URL resolution runs in a browser. */
+function getBrowserOrigin(): string | undefined {
+  if (typeof window === 'undefined') {
+    return undefined
+  }
+
+  try {
+    return window.location.origin
+  } catch {
+    return undefined
+  }
 }

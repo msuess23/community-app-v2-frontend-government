@@ -12,7 +12,10 @@ import type {
   UpdateCurrentUserInput,
 } from '@/auth/auth-types'
 import { SessionEventBus } from '@/auth/session-events'
-import { createTokenStore } from '@/auth/token-store'
+import {
+  createTokenStore,
+  REFRESH_TOKEN_STORAGE_KEY,
+} from '@/auth/token-store'
 
 const AUTH_USER: AuthUser = {
   email: 'admin@test.com',
@@ -80,6 +83,7 @@ describe('AuthSession', () => {
       accessToken: 'login-access',
       refreshToken: 'login-refresh',
       refreshTokenPersistence: 'persistent',
+      sessionId: 'session-id',
     })
     expect(fixture.queryClient.cancelQueries).toHaveBeenCalledOnce()
     expect(fixture.queryClient.clear).toHaveBeenCalledOnce()
@@ -105,6 +109,7 @@ describe('AuthSession', () => {
       accessToken: null,
       refreshToken: null,
       refreshTokenPersistence: null,
+      sessionId: null,
     })
     expect(fixture.session.getSnapshot().status).toBe('anonymous')
   })
@@ -160,6 +165,96 @@ describe('AuthSession', () => {
     expect(fixture.queryClient.clear).toHaveBeenCalled()
     expect(fixture.session.getSnapshot().status).toBe('anonymous')
     expect(fixture.session.consumeEndReason()).toBe('refresh-rejected')
+    stop()
+  })
+
+  it('keeps the authenticated user when another tab rotates the same persistent session', async () => {
+    const fixture = createFixture()
+    await fixture.session.login({
+      email: 'admin@test.com',
+      password: 'secret-password',
+      rememberMe: true,
+    })
+    const cacheClearCount = fixture.queryClient.clear.mock.calls.length
+    const stop = fixture.session.start()
+
+    writePersistentSession(
+      fixture.localStorage,
+      'rotated-refresh-token',
+      'session-id',
+    )
+    dispatchStorageEvent(fixture.eventTarget, fixture.localStorage)
+
+    expect(fixture.session.getSnapshot()).toEqual({
+      status: 'authenticated',
+      user: AUTH_USER,
+    })
+    expect(fixture.refresh).not.toHaveBeenCalled()
+    expect(fixture.queryClient.clear).toHaveBeenCalledTimes(cacheClearCount)
+    stop()
+  })
+
+  it('ends the local session when another tab removes the persistent login', async () => {
+    const fixture = createFixture()
+    await fixture.session.login({
+      email: 'admin@test.com',
+      password: 'secret-password',
+      rememberMe: true,
+    })
+    const cacheClearCount = fixture.queryClient.clear.mock.calls.length
+    const stop = fixture.session.start()
+
+    fixture.localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY)
+    dispatchStorageEvent(fixture.eventTarget, fixture.localStorage)
+
+    expect(fixture.session.getSnapshot()).toEqual({
+      status: 'anonymous',
+      user: null,
+    })
+    expect(fixture.session.consumeEndReason()).toBe(
+      'session-ended-in-another-tab',
+    )
+    expect(fixture.queryClient.clear).toHaveBeenCalledTimes(cacheClearCount + 1)
+    stop()
+  })
+
+  it('clears cached data and restores a replacement account from another tab', async () => {
+    const fixture = createFixture()
+    await fixture.session.login({
+      email: 'admin@test.com',
+      password: 'secret-password',
+      rememberMe: true,
+    })
+    vi.mocked(fixture.api.getCurrentUser).mockResolvedValueOnce(CITIZEN_USER)
+    fixture.refresh.mockImplementationOnce(async () => {
+      fixture.store.setTokens(
+        {
+          accessToken: 'replacement-access-token',
+          refreshToken: 'replacement-rotated-token',
+        },
+        'persistent',
+        { sessionId: 'replacement-session' },
+      )
+      return true
+    })
+    const cacheClearCount = fixture.queryClient.clear.mock.calls.length
+    const stop = fixture.session.start()
+
+    writePersistentSession(
+      fixture.localStorage,
+      'replacement-refresh-token',
+      'replacement-session',
+    )
+    dispatchStorageEvent(fixture.eventTarget, fixture.localStorage)
+
+    expect(fixture.session.getSnapshot().status).toBe('initializing')
+    await vi.waitFor(() => {
+      expect(fixture.session.getSnapshot()).toEqual({
+        status: 'authenticated',
+        user: CITIZEN_USER,
+      })
+    })
+    expect(fixture.queryClient.clear).toHaveBeenCalledTimes(cacheClearCount + 1)
     stop()
   })
 
@@ -250,6 +345,7 @@ type FixtureOptions = Readonly<{
 function createFixture(options: FixtureOptions = {}) {
   const sessionStorage = new MemoryStorage()
   const localStorage = new MemoryStorage()
+  const eventTarget = new EventTarget()
 
   if (options.storedRefreshToken) {
     sessionStorage.setItem(
@@ -258,7 +354,12 @@ function createFixture(options: FixtureOptions = {}) {
     )
   }
 
-  const store = createTokenStore({ localStorage, sessionStorage })
+  const store = createTokenStore({
+    createSessionId: () => 'session-id',
+    eventTarget,
+    localStorage,
+    sessionStorage,
+  })
   const api: AuthApi = {
     getCurrentUser: vi.fn(async () => AUTH_USER),
     login: vi.fn(async (_input: LoginInput) => ({
@@ -286,7 +387,9 @@ function createFixture(options: FixtureOptions = {}) {
 
   return {
     api,
+    eventTarget,
     events,
+    localStorage,
     queryClient,
     refresh,
     session,
@@ -304,6 +407,31 @@ function deferred<T>(): {
   })
 
   return { promise, resolve }
+}
+
+/** Writes the persistent refresh-session envelope used by another simulated tab. */
+function writePersistentSession(
+  storage: Storage,
+  refreshToken: string,
+  sessionId: string,
+): void {
+  storage.setItem(
+    REFRESH_TOKEN_STORAGE_KEY,
+    JSON.stringify({ refreshToken, sessionId, version: 1 }),
+  )
+}
+
+/** Publishes a browser-like storage event to the active token store. */
+function dispatchStorageEvent(
+  eventTarget: EventTarget,
+  storageArea: Storage,
+): void {
+  const event = new Event('storage')
+  Object.defineProperties(event, {
+    key: { value: REFRESH_TOKEN_STORAGE_KEY },
+    storageArea: { value: storageArea },
+  })
+  eventTarget.dispatchEvent(event)
 }
 
 class MemoryStorage implements Storage {

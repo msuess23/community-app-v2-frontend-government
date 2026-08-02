@@ -11,6 +11,7 @@ import {
 } from '@/auth/auth-form'
 import { isAuthorityUser } from '@/auth/permissions'
 import { AuthPageLayout } from '@/pages/auth/AuthPageLayout'
+import { FormFieldScope } from '@/shared/forms/FormFieldScope'
 import { ControlledTextField } from '@/shared/forms/ControlledTextField'
 import { getFormErrorSummary } from '@/shared/forms/form-errors'
 import { createZodResolver } from '@/shared/forms/zod-resolver'
@@ -90,65 +91,67 @@ export function RegisterPage() {
           }
         })}
       >
-        <FormErrorSummary
-          errors={formErrors}
-          focusKey={submitCount}
-          shouldFocus
-        />
+        <FormFieldScope>
+          <FormErrorSummary
+            errors={formErrors}
+            focusKey={submitCount}
+            shouldFocus
+          />
 
-        <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <ControlledTextField
+              autoComplete="given-name"
+              control={control}
+              isRequired
+              label="Vorname"
+              name="firstName"
+            />
+            <ControlledTextField
+              autoComplete="family-name"
+              control={control}
+              isRequired
+              label="Nachname"
+              name="lastName"
+            />
+          </div>
+
           <ControlledTextField
-            autoComplete="given-name"
+            autoComplete="email"
             control={control}
             isRequired
-            label="Vorname"
-            name="firstName"
+            label="E-Mail-Adresse"
+            name="email"
+            type="email"
           />
+
           <ControlledTextField
-            autoComplete="family-name"
+            autoComplete="new-password"
+            control={control}
+            description="Mindestens acht Zeichen und höchstens 72 UTF-8-Byte."
+            isRequired
+            label="Passwort"
+            name="password"
+            type="password"
+          />
+
+          <ControlledTextField
+            autoComplete="new-password"
             control={control}
             isRequired
-            label="Nachname"
-            name="lastName"
+            label="Passwort bestätigen"
+            name="passwordConfirmation"
+            type="password"
           />
-        </div>
 
-        <ControlledTextField
-          autoComplete="email"
-          control={control}
-          isRequired
-          label="E-Mail-Adresse"
-          name="email"
-          type="email"
-        />
-
-        <ControlledTextField
-          autoComplete="new-password"
-          control={control}
-          description="Mindestens acht Zeichen und höchstens 72 UTF-8-Byte."
-          isRequired
-          label="Passwort"
-          name="password"
-          type="password"
-        />
-
-        <ControlledTextField
-          autoComplete="new-password"
-          control={control}
-          isRequired
-          label="Passwort bestätigen"
-          name="passwordConfirmation"
-          type="password"
-        />
-
-        <FormActions>
-          <FormSubmitButton
-            isSubmitting={isSubmitting}
-            pendingLabel="Konto wird erstellt …"
-          >
-            Konto erstellen
-          </FormSubmitButton>
-        </FormActions>
+          <FormActions>
+            <FormSubmitButton
+              isSubmitting={isSubmitting}
+              pendingLabel="Konto wird erstellt …"
+            >
+              Konto erstellen
+            </FormSubmitButton>
+          </FormActions>
+        </FormFieldScope>
       </form>
     </AuthPageLayout>
   )

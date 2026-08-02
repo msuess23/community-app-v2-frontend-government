@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { useFeedback } from '@/shared/feedback/feedback-context'
+import { FormFieldScope } from '@/shared/forms/FormFieldScope'
 import { ControlledFileUploadField } from '@/shared/forms/ControlledFileUploadField'
 import { ControlledRadioGroupField } from '@/shared/forms/ControlledRadioGroupField'
 import { ControlledSelectField } from '@/shared/forms/ControlledSelectField'
@@ -83,124 +84,126 @@ export function FormWorkflowExample() {
         })
       })}
     >
-      <FormErrorSummary
-        errors={getFormErrorSummary(errors)}
-        focusKey={submitCount}
-        shouldFocus
-      />
+      <FormFieldScope>
+        <FormErrorSummary
+          errors={getFormErrorSummary(errors)}
+          focusKey={submitCount}
+          shouldFocus
+        />
 
-      <FormSection
-        description={
-          <p>
-            Der Entwicklungsbaustein zeigt Felder, die später in fachlichen
-            Erfassungs- und Aktionsdialogen wiederverwendet werden.
-          </p>
-        }
-        headingLevel={3}
-        requiredFieldsHint
-        title="Beispielvorgang"
-      >
-        <div className="grid gap-5 md:grid-cols-2">
-          <ControlledTextField
+        <FormSection
+          description={
+            <p>
+              Der Entwicklungsbaustein zeigt Felder, die später in fachlichen
+              Erfassungs- und Aktionsdialogen wiederverwendet werden.
+            </p>
+          }
+          headingLevel={3}
+          requiredFieldsHint
+          title="Beispielvorgang"
+        >
+          <div className="grid gap-5 md:grid-cols-2">
+            <ControlledTextField
+              control={control}
+              isRequired
+              label="Betreff"
+              name="subject"
+            />
+            <ControlledSelectField
+              control={control}
+              description="Die Auswahl bleibt bewusst statisch; entfernte Suchauswahlen erhalten später eine Combobox."
+              label="Bereich"
+              name="category"
+              options={[
+                { label: 'Allgemeine Verwaltung', value: 'general' },
+                { label: 'Straßen und Verkehr', value: 'traffic' },
+                { label: 'Umwelt und Ordnung', value: 'environment' },
+              ]}
+              placeholder="Bereich auswählen"
+              required
+            />
+          </div>
+
+          <ControlledTextAreaField
             control={control}
+            description="Beschreibe den Sachverhalt so, dass die nächste bearbeitende Person ihn nachvollziehen kann."
             isRequired
-            label="Betreff"
-            name="subject"
+            label="Beschreibung"
+            name="description"
+            rows={6}
           />
-          <ControlledSelectField
+
+          <ControlledRadioGroupField
             control={control}
-            description="Die Auswahl bleibt bewusst statisch; entfernte Suchauswahlen erhalten später eine Combobox."
-            label="Bereich"
-            name="category"
+            description="Alle Möglichkeiten sind gleichzeitig sichtbar und per Tastatur erreichbar."
+            isRequired
+            label="Priorität"
+            name="priority"
             options={[
-              { label: 'Allgemeine Verwaltung', value: 'general' },
-              { label: 'Straßen und Verkehr', value: 'traffic' },
-              { label: 'Umwelt und Ordnung', value: 'environment' },
+              {
+                description: 'Bearbeitung im regulären Arbeitsvorrat',
+                label: 'Normal',
+                value: 'normal',
+              },
+              {
+                description: 'Zeitnahe Prüfung erforderlich',
+                label: 'Dringend',
+                value: 'urgent',
+              },
             ]}
-            placeholder="Bereich auswählen"
-            required
+            orientation="horizontal"
           />
-        </div>
 
-        <ControlledTextAreaField
-          control={control}
-          description="Beschreibe den Sachverhalt so, dass die nächste bearbeitende Person ihn nachvollziehen kann."
-          isRequired
-          label="Beschreibung"
-          name="description"
-          rows={6}
-        />
+          <div className="grid gap-5 sm:grid-cols-2">
+            <ControlledTextField
+              control={control}
+              isRequired
+              label="Fälligkeitsdatum"
+              name="dueDate"
+              type="date"
+            />
+            <ControlledTextField
+              control={control}
+              description="Optional; die Zeitzoneninterpretation erfolgt erst beim Fachvertrag."
+              label="Fälligkeitszeit"
+              name="dueTime"
+              type="time"
+            />
+          </div>
 
-        <ControlledRadioGroupField
-          control={control}
-          description="Alle Möglichkeiten sind gleichzeitig sichtbar und per Tastatur erreichbar."
-          isRequired
-          label="Priorität"
-          name="priority"
-          options={[
-            {
-              description: 'Bearbeitung im regulären Arbeitsvorrat',
-              label: 'Normal',
-              value: 'normal',
-            },
-            {
-              description: 'Zeitnahe Prüfung erforderlich',
-              label: 'Dringend',
-              value: 'urgent',
-            },
-          ]}
-          orientation="horizontal"
-        />
-
-        <div className="grid gap-5 sm:grid-cols-2">
-          <ControlledTextField
+          <ControlledFileUploadField
+            accept="image/png,image/jpeg,application/pdf"
             control={control}
-            isRequired
-            label="Fälligkeitsdatum"
-            name="dueDate"
-            type="date"
+            description="Beispielhaft sind Bilder und PDF-Dateien erlaubt. Die Komponente lädt noch nichts hoch."
+            label="Anlagen"
+            multiple
+            name="files"
           />
-          <ControlledTextField
-            control={control}
-            description="Optional; die Zeitzoneninterpretation erfolgt erst beim Fachvertrag."
-            label="Fälligkeitszeit"
-            name="dueTime"
-            type="time"
-          />
-        </div>
+        </FormSection>
 
-        <ControlledFileUploadField
-          accept="image/png,image/jpeg,application/pdf"
-          control={control}
-          description="Beispielhaft sind Bilder und PDF-Dateien erlaubt. Die Komponente lädt noch nichts hoch."
-          label="Anlagen"
-          multiple
-          name="files"
-        />
-      </FormSection>
-
-      <FormActions>
-        <LinkButton to="/" variant="ghost">
-          Navigation testen
-        </LinkButton>
-        <Button
-          isDisabled={!isDirty || isSubmitting}
-          onPress={() => reset(defaultValues)}
-          type="button"
-          variant="outline"
-        >
-          <RotateCcw aria-hidden="true" size={18} />
-          Zurücksetzen
-        </Button>
-        <FormSubmitButton
-          isDisabled={!isDirty}
-          isSubmitting={isSubmitting}
-          pendingLabel="Speichern läuft …"
-        >
-          <Save aria-hidden="true" size={18} />
-          Beispiel speichern
-        </FormSubmitButton>
-      </FormActions>
+        <FormActions>
+          <LinkButton to="/" variant="ghost">
+            Navigation testen
+          </LinkButton>
+          <Button
+            isDisabled={!isDirty || isSubmitting}
+            onPress={() => reset(defaultValues)}
+            type="button"
+            variant="outline"
+          >
+            <RotateCcw aria-hidden="true" size={18} />
+            Zurücksetzen
+          </Button>
+          <FormSubmitButton
+            isDisabled={!isDirty}
+            isSubmitting={isSubmitting}
+            pendingLabel="Speichern läuft …"
+          >
+            <Save aria-hidden="true" size={18} />
+            Beispiel speichern
+          </FormSubmitButton>
+        </FormActions>
+      </FormFieldScope>
     </form>
   )
 }

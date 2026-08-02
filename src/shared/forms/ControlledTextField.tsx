@@ -5,7 +5,7 @@ import {
   type FieldValues,
 } from 'react-hook-form'
 
-import { fieldNameToId } from '@/shared/forms/field-name'
+import { useFormFieldId } from '@/shared/forms/FormFieldScope'
 import { TextField, type TextFieldProps } from '@/shared/ui/TextField'
 
 export interface ControlledTextFieldProps<
@@ -31,7 +31,7 @@ export function ControlledTextField<TFieldValues extends FieldValues>({
   name,
   ...props
 }: ControlledTextFieldProps<TFieldValues>) {
-  const fieldId = id ?? fieldNameToId(name)
+  const fieldId = useFormFieldId(name, id)
 
   return (
     <Controller

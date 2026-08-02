@@ -44,8 +44,9 @@ export class RefreshCoordinator {
       return this.inFlight
     }
 
+    const expectedSessionId = this.store.getSnapshot().sessionId
     const refreshPromise = this.lock
-      .runExclusive(() => this.rotateCurrentToken())
+      .runExclusive(() => this.rotateCurrentToken(expectedSessionId))
       .finally(() => {
         if (this.inFlight === refreshPromise) {
           this.inFlight = null
@@ -56,28 +57,37 @@ export class RefreshCoordinator {
     return refreshPromise
   }
 
-  private async rotateCurrentToken(): Promise<boolean> {
-    const initialSnapshot = this.store.getSnapshot()
+  /** Rotates the latest stored token only for the session that requested it. */
+  private async rotateCurrentToken(
+    expectedSessionId: string | null,
+  ): Promise<boolean> {
+    const initialSnapshot = this.store.synchronizePersistentSession()
     const refreshToken = initialSnapshot.refreshToken
     const persistence = initialSnapshot.refreshTokenPersistence
+    const sessionId = initialSnapshot.sessionId
 
-    if (!refreshToken || !persistence) {
+    if (
+      !refreshToken ||
+      !persistence ||
+      !sessionId ||
+      sessionId !== expectedSessionId
+    ) {
       return false
     }
 
     try {
       const tokens = await this.refreshTokens(refreshToken)
 
-      if (!this.sessionMatches(refreshToken, persistence)) {
+      if (!this.sessionMatches(refreshToken, persistence, sessionId)) {
         return false
       }
 
-      this.store.setTokens(tokens, persistence)
+      this.store.setTokens(tokens, persistence, { sessionId })
       return true
     } catch (error) {
       if (
         isRejectedRefresh(error) &&
-        this.sessionMatches(refreshToken, persistence)
+        this.sessionMatches(refreshToken, persistence, sessionId)
       ) {
         // Publish the reason before clearing storage so the session can retain it.
         this.events.emit({
@@ -94,12 +104,14 @@ export class RefreshCoordinator {
   private sessionMatches(
     refreshToken: string,
     persistence: 'persistent' | 'session',
+    sessionId: string,
   ): boolean {
     const currentSnapshot = this.store.getSnapshot()
 
     return (
       currentSnapshot.refreshToken === refreshToken &&
-      currentSnapshot.refreshTokenPersistence === persistence
+      currentSnapshot.refreshTokenPersistence === persistence &&
+      currentSnapshot.sessionId === sessionId
     )
   }
 }

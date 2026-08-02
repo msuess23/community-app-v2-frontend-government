@@ -1,4 +1,5 @@
 import { isApiError } from '@/api/client/api-error'
+import { isTrustedApiUrl } from '@/api/client/api-url'
 import { throwIfRequestAborted } from '@/api/client/request-error'
 import {
   executeApiRequest,
@@ -22,18 +23,33 @@ export type ApiRequestOptions = TransportRequestOptions & {
 
 export type { ApiResponseType, BodyType, ErrorType }
 
+/** Prevents managed credentials from being sent to an unconfigured origin. */
+export class UntrustedApiUrlError extends Error {
+  readonly url: string
+
+  constructor(url: string) {
+    super(
+      "Managed authentication is restricted to the configured API origin. Use authentication: 'none' for an intentional external request.",
+    )
+    this.name = 'UntrustedApiUrlError'
+    this.url = url
+  }
+}
+
 export type ApiFetch = <T>(
   url: string,
   options?: ApiRequestOptions,
 ) => Promise<T>
 
 type ApiFetchDependencies = {
+  isTrustedUrl?: (url: string) => boolean
   refresh?: Pick<RefreshCoordinator, 'refresh'>
   request?: ApiRequestExecutor
   tokens?: Pick<TokenStore, 'getAccessToken' | 'getRefreshToken'>
 }
 
 export function createApiFetch({
+  isTrustedUrl = isTrustedApiUrl,
   refresh = refreshCoordinator,
   request = executeApiRequest,
   tokens = tokenStore,
@@ -43,6 +59,11 @@ export function createApiFetch({
     options: ApiRequestOptions = {},
   ): Promise<T> {
     const { authentication = 'auto', ...requestOptions } = options
+
+    if (authentication === 'auto' && !isTrustedUrl(url)) {
+      throw new UntrustedApiUrlError(url)
+    }
+
     const headers = new Headers(requestOptions.headers)
     const usesManagedAuthentication =
       authentication === 'auto' && !headers.has('Authorization')
@@ -55,6 +76,7 @@ export function createApiFetch({
       return (await request(url, {
         ...requestOptions,
         headers,
+        redirect: authentication === 'auto' ? 'error' : requestOptions.redirect,
       })) as T
     } catch (error) {
       throwIfRequestAborted(requestOptions.signal)
@@ -85,6 +107,7 @@ export function createApiFetch({
       return (await request(url, {
         ...requestOptions,
         headers: retryHeaders,
+        redirect: 'error',
       })) as T
     }
   }

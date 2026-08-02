@@ -22,6 +22,7 @@ import {
   type RefreshTokenPersistence,
   type TokenSnapshot,
   type TokenStore,
+  type TokenStoreChange,
 } from '@/auth/token-store'
 
 const ANONYMOUS_STATE: AuthState = Object.freeze({
@@ -106,8 +107,8 @@ export class AuthSession {
     const unsubscribeEvents = this.events.subscribe((event) => {
       this.clearLocalSession(event.reason)
     })
-    const unsubscribeStore = this.store.subscribe((snapshot) => {
-      this.handleTokenSnapshot(snapshot)
+    const unsubscribeStore = this.store.subscribe((snapshot, change) => {
+      this.handleTokenSnapshot(snapshot, change)
     })
 
     return () => {
@@ -279,10 +280,48 @@ export class AuthSession {
     }
   }
 
-  private handleTokenSnapshot(snapshot: TokenSnapshot): void {
-    if (snapshot.refreshToken === null) {
-      this.clearLocalSession()
+  /** Reacts only to externally published persistent-session changes. */
+  private handleTokenSnapshot(
+    snapshot: TokenSnapshot,
+    change: TokenStoreChange,
+  ): void {
+    if (change.source !== 'external') {
+      return
     }
+
+    const sessionIdentityChanged =
+      change.previousSnapshot.sessionId !== snapshot.sessionId
+
+    if (!sessionIdentityChanged) {
+      return
+    }
+
+    if (snapshot.refreshToken === null) {
+      this.clearLocalSession('session-ended-in-another-tab')
+      return
+    }
+
+    void this.synchronizeExternalSession().catch(() => undefined)
+  }
+
+  /** Rebuilds user state after another tab replaces the shared persistent login. */
+  private synchronizeExternalSession(): Promise<AuthUser | null> {
+    const operationVersion = ++this.operationVersion
+    this.initialization = null
+    this.lastEndReason = null
+    this.resetQueryCache()
+    this.publish(INITIALIZING_STATE)
+
+    const synchronization = this.restoreSession(operationVersion).finally(
+      () => {
+        if (this.initialization === synchronization) {
+          this.initialization = null
+        }
+      },
+    )
+
+    this.initialization = synchronization
+    return synchronization
   }
 
   private publish(state: AuthState): void {

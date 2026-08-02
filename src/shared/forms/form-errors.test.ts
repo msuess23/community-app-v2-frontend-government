@@ -27,11 +27,11 @@ describe('getFormErrorSummary', () => {
 
     expect(getFormErrorSummary(errors)).toEqual([
       {
-        fieldId: 'field-email',
+        fieldName: 'email',
         message: 'Die E-Mail-Adresse ist ungültig.',
       },
       {
-        fieldId: 'field-profile-firstName',
+        fieldName: 'profile.firstName',
         message: 'Der Vorname fehlt.',
       },
     ])

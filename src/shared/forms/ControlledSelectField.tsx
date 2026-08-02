@@ -5,7 +5,7 @@ import {
   type FieldValues,
 } from 'react-hook-form'
 
-import { fieldNameToId } from '@/shared/forms/field-name'
+import { useFormFieldId } from '@/shared/forms/FormFieldScope'
 import { SelectField, type SelectFieldProps } from '@/shared/ui/SelectField'
 
 export interface ControlledSelectFieldProps<
@@ -32,7 +32,7 @@ export function ControlledSelectField<TFieldValues extends FieldValues>({
   name,
   ...props
 }: ControlledSelectFieldProps<TFieldValues>) {
-  const fieldId = id ?? fieldNameToId(name)
+  const fieldId = useFormFieldId(name, id)
 
   return (
     <Controller

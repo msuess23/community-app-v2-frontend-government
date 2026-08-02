@@ -15,6 +15,7 @@ import {
 } from '@/auth/password-recovery-form'
 import { isAuthorityUser } from '@/auth/permissions'
 import { AuthPageLayout } from '@/pages/auth/AuthPageLayout'
+import { FormFieldScope } from '@/shared/forms/FormFieldScope'
 import { ControlledTextField } from '@/shared/forms/ControlledTextField'
 import { getFormErrorSummary } from '@/shared/forms/form-errors'
 import { createZodResolver } from '@/shared/forms/zod-resolver'
@@ -98,59 +99,61 @@ export function ResetPasswordPage({
           }
         })}
       >
-        <FormErrorSummary
-          errors={formErrors}
-          focusKey={submitCount}
-          shouldFocus
-        />
+        <FormFieldScope>
+          <FormErrorSummary
+            errors={formErrors}
+            focusKey={submitCount}
+            shouldFocus
+          />
 
-        <ControlledTextField
-          autoComplete="email"
-          control={control}
-          isRequired
-          label="E-Mail-Adresse"
-          name="email"
-          type="email"
-        />
+          <ControlledTextField
+            autoComplete="email"
+            control={control}
+            isRequired
+            label="E-Mail-Adresse"
+            name="email"
+            type="email"
+          />
 
-        <ControlledTextField
-          autoComplete="one-time-code"
-          control={control}
-          description="Der Code besteht aus genau sechs Ziffern."
-          isRequired
-          label="Einmalcode"
-          maxLength={6}
-          name="otp"
-          type="text"
-        />
+          <ControlledTextField
+            autoComplete="one-time-code"
+            control={control}
+            description="Der Code besteht aus genau sechs Ziffern."
+            isRequired
+            label="Einmalcode"
+            maxLength={6}
+            name="otp"
+            type="text"
+          />
 
-        <ControlledTextField
-          autoComplete="new-password"
-          control={control}
-          description="Mindestens acht Zeichen und höchstens 72 UTF-8-Byte."
-          isRequired
-          label="Neues Passwort"
-          name="newPassword"
-          type="password"
-        />
+          <ControlledTextField
+            autoComplete="new-password"
+            control={control}
+            description="Mindestens acht Zeichen und höchstens 72 UTF-8-Byte."
+            isRequired
+            label="Neues Passwort"
+            name="newPassword"
+            type="password"
+          />
 
-        <ControlledTextField
-          autoComplete="new-password"
-          control={control}
-          isRequired
-          label="Neues Passwort bestätigen"
-          name="passwordConfirmation"
-          type="password"
-        />
+          <ControlledTextField
+            autoComplete="new-password"
+            control={control}
+            isRequired
+            label="Neues Passwort bestätigen"
+            name="passwordConfirmation"
+            type="password"
+          />
 
-        <FormActions>
-          <FormSubmitButton
-            isSubmitting={isSubmitting}
-            pendingLabel="Passwort wird geändert …"
-          >
-            Passwort ändern
-          </FormSubmitButton>
-        </FormActions>
+          <FormActions>
+            <FormSubmitButton
+              isSubmitting={isSubmitting}
+              pendingLabel="Passwort wird geändert …"
+            >
+              Passwort ändern
+            </FormSubmitButton>
+          </FormActions>
+        </FormFieldScope>
       </form>
     </AuthPageLayout>
   )

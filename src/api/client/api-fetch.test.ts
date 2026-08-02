@@ -4,6 +4,7 @@ import { ApiError } from '@/api/client/api-error'
 import {
   createApiFetch,
   type ApiRequestOptions,
+  UntrustedApiUrlError,
 } from '@/api/client/api-fetch'
 import type { ApiRequestExecutor } from '@/api/client/api-request'
 
@@ -18,6 +19,49 @@ describe('apiFetch authentication', () => {
     await apiFetch('/users/me')
 
     expect(readAuthorization(request, 0)).toBe('Bearer access-token')
+  })
+
+  it('rejects managed authentication for an untrusted absolute URL', async () => {
+    const request = createRequestMock({ ok: true })
+    const apiFetch = createApiFetch({
+      isTrustedUrl: () => false,
+      request,
+      tokens: createTokenReader('access-token', 'refresh-token'),
+    })
+
+    await expect(
+      apiFetch('https://files.example.test/document'),
+    ).rejects.toBeInstanceOf(UntrustedApiUrlError)
+    expect(request).not.toHaveBeenCalled()
+  })
+
+  it('allows an intentional external request only without managed authentication', async () => {
+    const request = createRequestMock({ ok: true })
+    const apiFetch = createApiFetch({
+      isTrustedUrl: () => false,
+      request,
+      tokens: createTokenReader('access-token', 'refresh-token'),
+    })
+
+    await apiFetch('https://files.example.test/public', {
+      authentication: 'none',
+    })
+
+    expect(readAuthorization(request, 0)).toBeNull()
+    expect(request.mock.calls[0]?.[1]?.redirect).toBeUndefined()
+  })
+
+  it('prevents redirects for managed authenticated requests', async () => {
+    const request = createRequestMock({ ok: true })
+    const apiFetch = createApiFetch({
+      isTrustedUrl: () => true,
+      request,
+      tokens: createTokenReader('access-token', 'refresh-token'),
+    })
+
+    await apiFetch('/users/me')
+
+    expect(request.mock.calls[0]?.[1]?.redirect).toBe('error')
   })
 
   it('does not replace an explicitly supplied authorization header', async () => {

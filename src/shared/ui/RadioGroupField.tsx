@@ -13,6 +13,7 @@ export interface RadioGroupFieldProps {
   className?: string
   description?: ReactNode
   errorMessage?: ReactNode
+  id?: string
   isDisabled?: boolean
   isInvalid?: boolean
   isRequired?: boolean
@@ -30,6 +31,7 @@ export function RadioGroupField({
   className,
   description,
   errorMessage,
+  id,
   isDisabled = false,
   isInvalid = false,
   isRequired = false,
@@ -42,12 +44,14 @@ export function RadioGroupField({
   value,
 }: RadioGroupFieldProps) {
   const generatedId = useId()
-  const descriptionId = description ? `${generatedId}-description` : undefined
-  const errorId = isInvalid && errorMessage ? `${generatedId}-error` : undefined
+  const fieldId = id ?? generatedId
+  const descriptionId = description ? `${fieldId}-description` : undefined
+  const errorId = isInvalid && errorMessage ? `${fieldId}-error` : undefined
   const describedBy = [descriptionId, errorId].filter(Boolean).join(' ')
 
   return (
     <fieldset
+      id={fieldId}
       aria-describedby={describedBy || undefined}
       aria-invalid={isInvalid || undefined}
       className={cn('grid gap-3', className)}
@@ -78,7 +82,7 @@ export function RadioGroupField({
         )}
       >
         {options.map((option, index) => {
-          const optionId = `${generatedId}-option-${index}`
+          const optionId = `${fieldId}-option-${index}`
 
           return (
             <label

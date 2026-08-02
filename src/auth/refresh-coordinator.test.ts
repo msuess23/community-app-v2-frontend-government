@@ -6,12 +6,18 @@ import {
   type TokenRefreshFunction,
 } from '@/auth/refresh-coordinator'
 import {
+  AUTH_REFRESH_FALLBACK_LOCK_KEY,
   AUTH_REFRESH_LOCK_NAME,
   createRefreshLock,
+  createStorageRefreshLock,
   type RefreshLock,
 } from '@/auth/refresh-lock'
 import { SessionEventBus } from '@/auth/session-events'
-import { createTokenStore, type TokenStore } from '@/auth/token-store'
+import {
+  createTokenStore,
+  REFRESH_TOKEN_STORAGE_KEY,
+  type TokenStore,
+} from '@/auth/token-store'
 
 describe('RefreshCoordinator', () => {
   it('returns false without calling the API when no refresh session exists', async () => {
@@ -43,6 +49,78 @@ describe('RefreshCoordinator', () => {
       accessToken: 'new-access-token',
       refreshToken: 'new-refresh-token',
       refreshTokenPersistence: 'persistent',
+      sessionId: 'session-id',
+    })
+  })
+
+  it('uses the latest shared token after waiting for the cross-tab lock', async () => {
+    const localStorage = new MemoryStorage()
+    const store = createTokenStore({
+      createSessionId: () => 'session-id',
+      localStorage,
+      sessionStorage: new MemoryStorage(),
+    })
+    store.setTokens(
+      {
+        accessToken: 'old-access-token',
+        refreshToken: 'old-refresh-token',
+      },
+      'persistent',
+    )
+    const refreshTokens = vi.fn<TokenRefreshFunction>().mockResolvedValue({
+      accessToken: 'new-access-token',
+      refreshToken: 'new-refresh-token',
+    })
+    const lock: RefreshLock = {
+      runExclusive: async (task) => {
+        writePersistentSession(
+          localStorage,
+          'rotated-by-other-tab',
+          'session-id',
+        )
+        return task()
+      },
+    }
+    const coordinator = createCoordinator({ lock, refreshTokens, store })
+
+    await expect(coordinator.refresh()).resolves.toBe(true)
+    expect(refreshTokens).toHaveBeenCalledWith('rotated-by-other-tab')
+  })
+
+  it('does not continue a request after another tab replaces the account', async () => {
+    const localStorage = new MemoryStorage()
+    const store = createTokenStore({
+      createSessionId: () => 'session-id',
+      localStorage,
+      sessionStorage: new MemoryStorage(),
+    })
+    store.setTokens(
+      {
+        accessToken: 'old-access-token',
+        refreshToken: 'old-refresh-token',
+      },
+      'persistent',
+    )
+    const refreshTokens = vi.fn<TokenRefreshFunction>()
+    const lock: RefreshLock = {
+      runExclusive: async (task) => {
+        writePersistentSession(
+          localStorage,
+          'replacement-refresh-token',
+          'replacement-session',
+        )
+        return task()
+      },
+    }
+    const coordinator = createCoordinator({ lock, refreshTokens, store })
+
+    await expect(coordinator.refresh()).resolves.toBe(false)
+    expect(refreshTokens).not.toHaveBeenCalled()
+    expect(store.getSnapshot()).toEqual({
+      accessToken: null,
+      refreshToken: 'replacement-refresh-token',
+      refreshTokenPersistence: 'persistent',
+      sessionId: 'replacement-session',
     })
   })
 
@@ -89,6 +167,7 @@ describe('RefreshCoordinator', () => {
       accessToken: null,
       refreshToken: null,
       refreshTokenPersistence: null,
+      sessionId: null,
     })
     expect(listener).toHaveBeenCalledWith({
       reason: 'refresh-rejected',
@@ -112,6 +191,7 @@ describe('RefreshCoordinator', () => {
       accessToken: 'old-access-token',
       refreshToken: 'old-refresh-token',
       refreshTokenPersistence: 'session',
+      sessionId: 'session-id',
     })
   })
 
@@ -138,20 +218,79 @@ describe('RefreshCoordinator', () => {
       accessToken: null,
       refreshToken: null,
       refreshTokenPersistence: null,
+      sessionId: null,
     })
+  })
+
+  it('serializes refresh work through the storage fallback', async () => {
+    const storage = new MemoryStorage()
+    const firstStarted = createDeferred<void>()
+    const releaseFirst = createDeferred<void>()
+    const order: string[] = []
+    const firstLock = createStorageRefreshLock({
+      createOwnerId: () => 'first-owner',
+      leaseDurationMs: 5_000,
+      retryDelayMs: 1,
+      settleDelayMs: 1,
+      storage,
+    })
+    const secondLock = createStorageRefreshLock({
+      createOwnerId: () => 'second-owner',
+      leaseDurationMs: 5_000,
+      retryDelayMs: 1,
+      settleDelayMs: 1,
+      storage,
+    })
+
+    const first = firstLock.runExclusive(async () => {
+      order.push('first-start')
+      firstStarted.resolve()
+      await releaseFirst.promise
+      order.push('first-end')
+    })
+    await firstStarted.promise
+    const second = secondLock.runExclusive(async () => {
+      order.push('second-start')
+      order.push('second-end')
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    expect(order).toEqual(['first-start'])
+    releaseFirst.resolve()
+    await Promise.all([first, second])
+
+    expect(order).toEqual([
+      'first-start',
+      'first-end',
+      'second-start',
+      'second-end',
+    ])
+    expect(storage.getItem(AUTH_REFRESH_FALLBACK_LOCK_KEY)).toBeNull()
+  })
+
+  it('falls back to the task when shared storage is unavailable', async () => {
+    const storage = new ThrowingStorage()
+    const lock = createStorageRefreshLock({ storage })
+
+    await expect(lock.runExclusive(async () => 'result')).resolves.toBe(
+      'result',
+    )
   })
 
   it('uses the shared browser lock when it is available', async () => {
     const requestSpy = vi.fn<(name: string) => void>()
-    const lock = createRefreshLock({
-      request: async <Result>(
-        name: string,
-        task: () => Promise<Result>,
-      ): Promise<Result> => {
-        requestSpy(name)
-        return task()
+    const lock = createRefreshLock(
+      {
+        request: async <Result>(
+          name: string,
+          task: () => Promise<Result>,
+        ): Promise<Result> => {
+          requestSpy(name)
+          return task()
+        },
       },
-    })
+      null,
+    )
 
     await expect(lock.runExclusive(async () => 'result')).resolves.toBe(
       'result',
@@ -170,9 +309,7 @@ type CoordinatorOverrides = {
 function createCoordinator(overrides: CoordinatorOverrides = {}) {
   return new RefreshCoordinator({
     events: overrides.events ?? new SessionEventBus(),
-    lock:
-      overrides.lock ??
-      createRefreshLock(null),
+    lock: overrides.lock ?? createRefreshLock(null, null),
     refreshTokens:
       overrides.refreshTokens ??
       vi.fn<TokenRefreshFunction>().mockResolvedValue({
@@ -185,6 +322,7 @@ function createCoordinator(overrides: CoordinatorOverrides = {}) {
 
 function createStore(): TokenStore {
   return createTokenStore({
+    createSessionId: () => 'session-id',
     localStorage: new MemoryStorage(),
     sessionStorage: new MemoryStorage(),
   })
@@ -208,6 +346,18 @@ function createDeferred<Value>() {
   })
 
   return { promise, reject, resolve }
+}
+
+/** Writes a persistent refresh-session envelope without dispatching an event. */
+function writePersistentSession(
+  storage: Storage,
+  refreshToken: string,
+  sessionId: string,
+): void {
+  storage.setItem(
+    REFRESH_TOKEN_STORAGE_KEY,
+    JSON.stringify({ refreshToken, sessionId, version: 1 }),
+  )
 }
 
 class MemoryStorage implements Storage {
@@ -235,5 +385,32 @@ class MemoryStorage implements Storage {
 
   setItem(key: string, value: string): void {
     this.values.set(key, value)
+  }
+}
+
+/** Simulates privacy settings that deny access to shared browser storage. */
+class ThrowingStorage implements Storage {
+  get length(): number {
+    return 0
+  }
+
+  clear(): void {
+    throw new Error('Storage unavailable')
+  }
+
+  getItem(): string | null {
+    throw new Error('Storage unavailable')
+  }
+
+  key(): string | null {
+    return null
+  }
+
+  removeItem(): void {
+    throw new Error('Storage unavailable')
+  }
+
+  setItem(): void {
+    throw new Error('Storage unavailable')
   }
 }

@@ -17,6 +17,7 @@ import {
 import { getSafeReturnTo } from '@/auth/auth-redirect'
 import { isAuthorityUser } from '@/auth/permissions'
 import { AuthPageLayout } from '@/pages/auth/AuthPageLayout'
+import { FormFieldScope } from '@/shared/forms/FormFieldScope'
 import { ControlledCheckboxField } from '@/shared/forms/ControlledCheckboxField'
 import { ControlledTextField } from '@/shared/forms/ControlledTextField'
 import { getFormErrorSummary } from '@/shared/forms/form-errors'
@@ -112,64 +113,66 @@ export function LoginPage() {
           }
         })}
       >
-        {successMessage ? (
-          <p
-            className="bg-tertiary-container text-on-tertiary-container rounded-lg p-4 text-sm font-medium"
-            role="status"
-          >
-            {successMessage}
+        <FormFieldScope>
+          {successMessage ? (
+            <p
+              className="bg-tertiary-container text-on-tertiary-container rounded-lg p-4 text-sm font-medium"
+              role="status"
+            >
+              {successMessage}
+            </p>
+          ) : null}
+
+          <FormErrorSummary
+            errors={formErrors}
+            focusKey={submitCount}
+            shouldFocus
+          />
+
+          <ControlledTextField
+            autoComplete="email"
+            control={control}
+            isRequired
+            label="E-Mail-Adresse"
+            name="email"
+            placeholder="name@behoerde.de"
+            type="email"
+          />
+
+          <ControlledTextField
+            autoComplete="current-password"
+            control={control}
+            isRequired
+            label="Passwort"
+            name="password"
+            type="password"
+          />
+
+          <p className="text-right text-sm">
+            <Link
+              className="text-primary focus-visible:outline-primary rounded-sm font-semibold underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+              to="/password-forgotten"
+            >
+              Passwort vergessen?
+            </Link>
           </p>
-        ) : null}
 
-        <FormErrorSummary
-          errors={formErrors}
-          focusKey={submitCount}
-          shouldFocus
-        />
+          <ControlledCheckboxField
+            control={control}
+            description="Nur auf einem privaten oder dienstlich verwalteten Gerät aktivieren."
+            label="Angemeldet bleiben"
+            name="rememberMe"
+          />
 
-        <ControlledTextField
-          autoComplete="email"
-          control={control}
-          isRequired
-          label="E-Mail-Adresse"
-          name="email"
-          placeholder="name@behoerde.de"
-          type="email"
-        />
-
-        <ControlledTextField
-          autoComplete="current-password"
-          control={control}
-          isRequired
-          label="Passwort"
-          name="password"
-          type="password"
-        />
-
-        <p className="text-right text-sm">
-          <Link
-            className="text-primary focus-visible:outline-primary rounded-sm font-semibold underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
-            to="/password-forgotten"
-          >
-            Passwort vergessen?
-          </Link>
-        </p>
-
-        <ControlledCheckboxField
-          control={control}
-          description="Nur auf einem privaten oder dienstlich verwalteten Gerät aktivieren."
-          label="Angemeldet bleiben"
-          name="rememberMe"
-        />
-
-        <FormActions>
-          <FormSubmitButton
-            isSubmitting={isSubmitting}
-            pendingLabel="Anmeldung läuft …"
-          >
-            Anmelden
-          </FormSubmitButton>
-        </FormActions>
+          <FormActions>
+            <FormSubmitButton
+              isSubmitting={isSubmitting}
+              pendingLabel="Anmeldung läuft …"
+            >
+              Anmelden
+            </FormSubmitButton>
+          </FormActions>
+        </FormFieldScope>
       </form>
     </AuthPageLayout>
   )

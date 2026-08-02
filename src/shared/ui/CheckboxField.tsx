@@ -23,14 +23,16 @@ export function CheckboxField({
   className,
   description,
   errorMessage,
+  id,
   isInvalid,
   label,
   ...props
 }: CheckboxFieldProps) {
   const generatedId = useId()
-  const labelId = `${generatedId}-label`
-  const descriptionId = description ? `${generatedId}-description` : undefined
-  const errorId = isInvalid && errorMessage ? `${generatedId}-error` : undefined
+  const fieldId = id ?? generatedId
+  const labelId = `${fieldId}-label`
+  const descriptionId = description ? `${fieldId}-description` : undefined
+  const errorId = isInvalid && errorMessage ? `${fieldId}-error` : undefined
   const describedBy = [ariaDescribedBy, descriptionId, errorId]
     .filter(Boolean)
     .join(' ')
@@ -38,6 +40,7 @@ export function CheckboxField({
   return (
     <AriaCheckbox
       {...props}
+      id={fieldId}
       aria-describedby={describedBy || undefined}
       aria-errormessage={errorId}
       aria-labelledby={ariaLabelledBy ?? labelId}
