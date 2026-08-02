@@ -1,4 +1,5 @@
 import { isApiError } from '@/api/client/api-error'
+import { throwIfRequestAborted } from '@/api/client/request-error'
 import {
   executeApiRequest,
   type ApiRequestExecutor,
@@ -56,6 +57,8 @@ export function createApiFetch({
         headers,
       })) as T
     } catch (error) {
+      throwIfRequestAborted(requestOptions.signal)
+
       if (
         !shouldRefresh({
           error,
@@ -68,6 +71,8 @@ export function createApiFetch({
       }
 
       const refreshed = await refresh.refresh()
+      throwIfRequestAborted(requestOptions.signal)
+
       const accessToken = tokens.getAccessToken()
 
       if (!refreshed || !accessToken) {

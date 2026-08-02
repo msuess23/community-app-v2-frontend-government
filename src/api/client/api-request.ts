@@ -4,6 +4,7 @@ import {
   createNetworkApiError,
 } from '@/api/client/api-error'
 import { resolveApiUrl } from '@/api/client/api-url'
+import { isAbortError } from '@/api/client/request-error'
 
 export type ApiResponseType =
   | 'arrayBuffer'
@@ -127,13 +128,4 @@ function isJsonContentType(contentType: string): boolean {
 
 function isFormData(body: BodyInit | null | undefined): body is FormData {
   return typeof FormData !== 'undefined' && body instanceof FormData
-}
-
-function isAbortError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'name' in error &&
-    error.name === 'AbortError'
-  )
 }

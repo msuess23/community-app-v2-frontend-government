@@ -36,23 +36,31 @@ Vitest sammelt ausschließlich Tests unter `src/`. Die Playwright-Spezifikatione
 
 ## OpenAPI-Client
 
-Bei laufendem Backend kann die OpenAPI-Spezifikation geladen und der Orval-Client erzeugt werden:
+Der versionierte Vertrag unter `openapi/openapi.json` erlaubt eine reproduzierbare Orval-Generierung ohne laufendes Backend:
+
+```bash
+npm run api:validate
+npm run api:generate
+```
+
+Bei einer bewussten Backend-Synchronisation kann der Snapshot aktualisiert und der Client anschließend neu erzeugt werden:
 
 ```bash
 npm run api:sync
 ```
 
-Generierte Dateien unter `src/api/generated` werden nicht manuell bearbeitet.
+`OPENAPI_URL` überschreibt bei Bedarf den Standard `http://localhost:8000/api/v1/openapi.json`. Änderungen am Snapshot und an den generierten Dateien sollen gemeinsam geprüft werden. Dateien unter `src/api/generated` werden nicht manuell bearbeitet.
 
 ## Aktuelle Struktur
 
 ```text
 src/
+├── api/       # Transport, Fehlernormalisierung und spätere generierte Clients
 ├── app/       # Router, Provider und anwendungsweite Infrastruktur
 ├── config/    # geprüfte Laufzeitkonfiguration
 ├── pages/     # seitenbezogene Komponenten
-├── shared/    # fachlich unabhängige Layout- und UI-Bausteine
-└── test/      # gemeinsame Testhelfer und Test-Setup
+├── shared/    # fachlich unabhängige Layout-, Daten- und UI-Bausteine
+└── test/      # gemeinsame Testhelfer, MSW-Server und Test-Setup
 ```
 
 Fachliche Features und die dazugehörige API-Kommunikation werden in getrennten Patches ergänzt.
@@ -76,6 +84,7 @@ src/shared/
 │   └── zod-resolver.ts
 ├── lib/
 │   └── cn.ts
+├── remote-data/   # Query Keys, Cache-Lifecycle und Datenzustände
 └── ui/
     ├── Button.tsx
     ├── Card.tsx
@@ -90,6 +99,8 @@ src/shared/
 Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Text- und Checkboxfelder basieren auf React Aria Components und stellen sichtbare Beschriftungen, Beschreibungen, Fehlerzustände und ausreichend große Interaktionsflächen bereit. Unter `src/shared/forms` liegen die schmalen React-Hook-Form-Adapter sowie die gemeinsame Zod-Validierung und Fehlerzusammenfassung. Zusätzliche Varianten werden erst ergänzt, wenn ein konkreter Anwendungsfall sie benötigt.
 
 Globale Rückmeldungen werden über `useFeedback()` ausgelöst. Kritische Meldungen bleiben bis zum Schließen sichtbar; wiederholte Meldungen können dedupliziert werden. Folgenreiche Aktionen verwenden `useConfirmation()` statt `window.confirm()`. Typische Transportfehler werden über `getApiErrorPresentation()` beziehungsweise `useApiFeedback()` in sichere, lokalisierte Meldungen überführt. Der genaue Vertrag ist unter `docs/global-feedback-and-confirmation.md` dokumentiert.
+
+Gemeinsame Remote-Data-Bausteine liegen unter `src/shared/remote-data`. Sie definieren Query-Key-Hierarchien, sichere Retry-Regeln, serverbestätigte Cache-Aktualisierung sowie zugängliche Lade-, Leer-, Refetch- und Fehlerzustände. Featuremodule bauen darauf auf, statt eigene Query-Lebenszyklen zu implementieren. Details stehen unter `docs/remote-data-query-and-lifecycle.md`.
 
 ## API-Transport
 

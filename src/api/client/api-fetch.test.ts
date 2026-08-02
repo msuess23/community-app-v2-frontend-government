@@ -60,6 +60,19 @@ describe('apiFetch authentication', () => {
     expect(refresh.refresh).not.toHaveBeenCalled()
   })
 
+  it('preserves the abort signal supplied by a query', async () => {
+    const controller = new AbortController()
+    const request = createRequestMock({ ok: true })
+    const apiFetch = createApiFetch({
+      request,
+      tokens: createTokenReader('access-token', 'refresh-token'),
+    })
+
+    await apiFetch('/tickets', { signal: controller.signal })
+
+    expect(request.mock.calls[0]?.[1]?.signal).toBe(controller.signal)
+  })
+
   it('refreshes after one unauthorized response and retries once', async () => {
     let accessToken = 'old-access-token'
     const request = vi
@@ -91,6 +104,32 @@ describe('apiFetch authentication', () => {
     expect(request).toHaveBeenCalledTimes(2)
     expect(readAuthorization(request, 0)).toBe('Bearer old-access-token')
     expect(readAuthorization(request, 1)).toBe('Bearer new-access-token')
+  })
+
+  it('does not retry after the owning query was cancelled during refresh', async () => {
+    const controller = new AbortController()
+    const unauthorized = new ApiError({
+      message: 'Unauthorized',
+      status: 401,
+    })
+    const request = vi.fn<ApiRequestExecutor>().mockRejectedValue(unauthorized)
+    const refresh = {
+      refresh: vi.fn(async () => {
+        controller.abort()
+        return true
+      }),
+    }
+    const apiFetch = createApiFetch({
+      refresh,
+      request,
+      tokens: createTokenReader('access-token', 'refresh-token'),
+    })
+
+    await expect(
+      apiFetch('/tickets', { signal: controller.signal }),
+    ).rejects.toMatchObject({ name: 'AbortError' })
+    expect(refresh.refresh).toHaveBeenCalledOnce()
+    expect(request).toHaveBeenCalledOnce()
   })
 
   it('does not retry a second unauthorized response', async () => {

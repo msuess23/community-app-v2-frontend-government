@@ -2,6 +2,7 @@ import { ArrowRight, Check, Trash2 } from 'lucide-react'
 
 import { FeedbackAndConfirmationExample } from '@/pages/ui-kit/FeedbackAndConfirmationExample'
 import { LoginFormExample } from '@/pages/ui-kit/LoginFormExample'
+import { RemoteDataLifecycleExample } from '@/pages/ui-kit/RemoteDataLifecycleExample'
 import { Button } from '@/shared/ui/Button'
 import { CheckboxField } from '@/shared/ui/CheckboxField'
 import { Card } from '@/shared/ui/Card'
@@ -129,6 +130,22 @@ export function UiKitPage() {
             Entscheidungen ab.
           </p>
           <FeedbackAndConfirmationExample />
+        </Card>
+      </section>
+
+      <section aria-labelledby="remote-data-heading" className="space-y-5">
+        <h2
+          className="text-on-surface text-2xl font-semibold tracking-tight"
+          id="remote-data-heading"
+        >
+          Remote-Datenzustände
+        </h2>
+        <Card>
+          <p className="text-on-surface-variant mb-5 leading-7">
+            Datenansichten unterscheiden initiales Laden, leere Ergebnisse,
+            blockierende Fehler und fehlgeschlagene Hintergrundaktualisierungen.
+          </p>
+          <RemoteDataLifecycleExample />
         </Card>
       </section>
 

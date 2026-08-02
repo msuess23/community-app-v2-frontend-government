@@ -1,4 +1,7 @@
 import '@testing-library/jest-dom/vitest'
+import { afterAll, afterEach, beforeAll } from 'vitest'
+
+import { mockApiServer } from '@/test/server'
 
 /** Opens a dialog in jsdom when the browser-native method is unavailable. */
 function showModal(this: HTMLDialogElement): void {
@@ -25,3 +28,15 @@ if (typeof HTMLDialogElement !== 'undefined') {
     HTMLDialogElement.prototype.close = closeDialog
   }
 }
+
+beforeAll(() => {
+  mockApiServer.listen({ onUnhandledRequest: 'error' })
+})
+
+afterEach(() => {
+  mockApiServer.resetHandlers()
+})
+
+afterAll(() => {
+  mockApiServer.close()
+})

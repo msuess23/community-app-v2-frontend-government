@@ -15,11 +15,12 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "api:validate": "node scripts/validate-openapi.mjs",
     "api:pull": "node scripts/pull-openapi.mjs",
-    "api:generate": "orval",
+    "api:generate": "npm run api:validate && orval",
     "api:sync": "npm run api:pull && npm run api:generate",
     "preview": "vite preview",
-    "verify": "npm run lint && npm run format:check && npm run test && npm run build"
+    "verify": "npm run api:validate && npm run lint && npm run format:check && npm run test && npm run build"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
