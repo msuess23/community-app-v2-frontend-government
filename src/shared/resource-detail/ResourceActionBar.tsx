@@ -12,6 +12,10 @@ import {
 } from 'react'
 
 import {
+  ResourceActionDialogContext,
+  type ResourceActionDialogContextValue,
+} from '@/shared/resource-detail/resource-action-dialog-context'
+import {
   resolveAllowedResourceActions,
   type ResourceActionCloseGuard,
   type ResourceActionDefinition,
@@ -183,6 +187,11 @@ function ResourceActionDialog<TAction extends string>({
     [],
   )
 
+  const dialogContext = useMemo<ResourceActionDialogContextValue>(
+    () => ({ close, registerCloseGuard }),
+    [close, registerCloseGuard],
+  )
+
   /** Requests a guarded close and serializes repeated dismissal gestures. */
   const requestClose = useCallback(async (): Promise<void> => {
     if (closeRequestPendingRef.current) {
@@ -265,11 +274,9 @@ function ResourceActionDialog<TAction extends string>({
 
           <div className="mt-6">
             {isAvailable ? (
-              action.render({
-                action: action.action,
-                close,
-                registerCloseGuard,
-              })
+              <ResourceActionDialogContext.Provider value={dialogContext}>
+                {action.render({ action: action.action })}
+              </ResourceActionDialogContext.Provider>
             ) : (
               <div
                 className="border-secondary bg-secondary-container text-on-secondary-container rounded-lg border p-4"

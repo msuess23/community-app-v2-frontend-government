@@ -9,6 +9,7 @@ import {
   type ResourceEvent,
 } from '@/shared/resource-detail/event-renderer-registry'
 import { ResourceActionBar } from '@/shared/resource-detail/ResourceActionBar'
+import { useResourceActionDialog } from '@/shared/resource-detail/resource-action-dialog-context'
 import { createResourceActionRegistry } from '@/shared/resource-detail/resource-action-registry'
 import {
   ResourceDetailLayout,
@@ -90,16 +91,14 @@ export function ResourceDetailFoundationExample() {
           dialogTitle: 'Hauptbearbeitung zuweisen',
           icon: <UserRoundPlus aria-hidden="true" size={18} />,
           label: 'Zuweisen',
-          render: ({ close }) => (
+          render: () => (
             <ExampleActionContent
-              cancel={close}
               confirm={() => {
                 setAllowedActions(['COMPLETE'])
                 notify({
                   title: 'Beispielzuweisung gespeichert',
                   tone: 'success',
                 })
-                close()
               }}
               confirmLabel="Zuweisung speichern"
             >
@@ -116,9 +115,8 @@ export function ResourceDetailFoundationExample() {
           dialogTitle: 'Anliegen abschließen',
           icon: <CheckCircle2 aria-hidden="true" size={18} />,
           label: 'Abschließen',
-          render: ({ close }) => (
+          render: () => (
             <ExampleActionContent
-              cancel={close}
               confirm={() => {
                 setStatus('COMPLETED')
                 setAllowedActions([])
@@ -137,7 +135,6 @@ export function ResourceDetailFoundationExample() {
                   title: 'Beispielanliegen abgeschlossen',
                   tone: 'success',
                 })
-                close()
               }}
               confirmLabel="Abschluss bestätigen"
             >
@@ -228,7 +225,6 @@ export function ResourceDetailFoundationExample() {
 }
 
 interface ExampleActionContentProps {
-  cancel: () => void
   children: ReactNode
   confirm: () => void
   confirmLabel: string
@@ -236,19 +232,26 @@ interface ExampleActionContentProps {
 
 /** Provides compact example content while real features own their action forms. */
 function ExampleActionContent({
-  cancel,
   children,
   confirm,
   confirmLabel,
 }: ExampleActionContentProps) {
+  const { close } = useResourceActionDialog()
+
+  /** Commits the example action before closing the shared workflow dialog. */
+  function handleConfirm(): void {
+    confirm()
+    close()
+  }
+
   return (
     <div className="space-y-5">
       <p className="text-on-surface-variant leading-7">{children}</p>
       <FormActions>
-        <Button onPress={cancel} variant="outline">
+        <Button onPress={close} variant="outline">
           Abbrechen
         </Button>
-        <Button onPress={confirm}>{confirmLabel}</Button>
+        <Button onPress={handleConfirm}>{confirmLabel}</Button>
       </FormActions>
     </div>
   )

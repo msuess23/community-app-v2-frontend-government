@@ -53,7 +53,7 @@ The bar:
 
 Unknown actions must never be guessed from the current role. A newer backend may expose a command that the deployed frontend does not understand; hiding that command is safer than submitting an invented payload.
 
-Each feature owns the form rendered inside an action dialog. The shared dialog supplies accessible modal behavior, a force-close callback for successful completion and `registerCloseGuard()` for edited forms. A feature should register its dirty-state confirmation in an effect and remove it on cleanup. Escape and the close button respect that guard; a successful server action may call `close()` after its state has been committed. Feature forms continue to use the common form workflow and validation primitives.
+Each feature owns the form rendered inside an action dialog. The shared dialog supplies accessible modal behavior through `useResourceActionDialog()` and lets edited forms register a guard with `useResourceActionCloseGuard()`. The guard hook manages registration and cleanup for the mounted action content. Escape and the close button respect that guard; a successful server action may call `close()` after its state has been committed. Feature forms continue to use the common form workflow and validation primitives.
 
 ## Mutation lifecycle
 

@@ -21,7 +21,14 @@ export interface DataViewSearchFieldProps {
 }
 
 /** Provides a labelled, debounced search control for server-backed list views. */
-export function DataViewSearchField({
+export function DataViewSearchField(props: DataViewSearchFieldProps) {
+  // Remounting the stateful control synchronizes intentional external URL changes
+  // without a cascading state update inside an effect.
+  return <DataViewSearchControl key={props.value} {...props} />
+}
+
+/** Owns one search draft until the controlled value changes externally. */
+function DataViewSearchControl({
   debounceMs = 400,
   description = 'Die Suche wird nach einer kurzen Eingabepause ausgeführt.',
   label = 'Suche',
@@ -59,12 +66,6 @@ export function DataViewSearchField({
     },
     [clearPendingCommit, onSearch],
   )
-
-  useEffect(() => {
-    const normalizedValue = normalizeSearch(value)
-    lastCommittedValueRef.current = normalizedValue
-    setDraft(value)
-  }, [value])
 
   useEffect(() => {
     const normalizedDraft = normalizeSearch(draft)

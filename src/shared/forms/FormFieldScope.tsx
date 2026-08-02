@@ -1,18 +1,10 @@
-import {
-  createContext,
-  useContext,
-  useId,
-  useMemo,
-  type ReactNode,
-} from 'react'
+import { useId, useMemo, type ReactNode } from 'react'
 
 import { fieldNameToId, normalizeFieldName } from '@/shared/forms/field-name'
-
-type FormFieldScopeValue = Readonly<{
-  getFieldId: (name: string) => string
-}>
-
-const FormFieldScopeContext = createContext<FormFieldScopeValue | null>(null)
+import {
+  FormFieldScopeContext,
+  type FormFieldScopeValue,
+} from '@/shared/forms/form-field-scope-context'
 
 export type FormFieldScopeProps = Readonly<{
   children: ReactNode
@@ -35,16 +27,4 @@ export function FormFieldScope({ children, id }: FormFieldScopeProps) {
       {children}
     </FormFieldScopeContext.Provider>
   )
-}
-
-/** Resolves a field ID from the nearest form scope or a legacy fallback. */
-export function useFormFieldId(name: string, explicitId?: string): string {
-  const scope = useContext(FormFieldScopeContext)
-  return explicitId ?? scope?.getFieldId(name) ?? fieldNameToId(name)
-}
-
-/** Resolves field names for error summaries without requiring hook calls per item. */
-export function useFormFieldIdResolver(): (name: string) => string {
-  const scope = useContext(FormFieldScopeContext)
-  return scope?.getFieldId ?? fieldNameToId
 }

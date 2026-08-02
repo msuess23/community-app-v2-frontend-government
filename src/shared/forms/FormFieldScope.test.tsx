@@ -1,10 +1,8 @@
 import { within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import {
-  FormFieldScope,
-  useFormFieldId,
-} from '@/shared/forms/FormFieldScope'
+import { FormFieldScope } from '@/shared/forms/FormFieldScope'
+import { useFormFieldId } from '@/shared/forms/form-field-scope-context'
 import { FormErrorSummary } from '@/shared/ui/FormErrorSummary'
 import { TextField } from '@/shared/ui/TextField'
 import { renderWithProviders } from '@/test/render'

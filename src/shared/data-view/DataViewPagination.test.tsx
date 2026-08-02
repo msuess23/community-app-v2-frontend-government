@@ -2,11 +2,11 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
+import { DataViewPagination } from '@/shared/data-view/DataViewPagination'
 import {
-  DataViewPagination,
   getPageCount,
   getVisiblePages,
-} from '@/shared/data-view/DataViewPagination'
+} from '@/shared/data-view/pagination'
 import { renderWithProviders } from '@/test/render'
 
 describe('DataViewPagination', () => {

@@ -6,8 +6,6 @@ export type ResourceActionCloseGuard = () => boolean | Promise<boolean>
 
 export type ResourceActionRenderContext<TAction extends string> = Readonly<{
   action: TAction
-  close: () => void
-  registerCloseGuard: (guard: ResourceActionCloseGuard | null) => void
 }>
 
 export type ResourceActionDefinition<TAction extends string> = Readonly<{

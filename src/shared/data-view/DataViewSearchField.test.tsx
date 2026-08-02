@@ -53,4 +53,17 @@ describe('DataViewSearchField', () => {
     expect(onSearch).toHaveBeenLastCalledWith('')
     expect(searchbox).toHaveFocus()
   })
+
+  it('adopts a search value restored from external URL navigation', () => {
+    const onSearch = vi.fn()
+    const { rerender } = renderWithProviders(
+      <DataViewSearchField onSearch={onSearch} value="Alt" />,
+    )
+
+    rerender(<DataViewSearchField onSearch={onSearch} value="Neu" />)
+
+    expect(screen.getByRole('searchbox', { name: 'Suche' })).toHaveValue('Neu')
+    expect(onSearch).not.toHaveBeenCalled()
+  })
+
 })

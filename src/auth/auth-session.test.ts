@@ -5,12 +5,7 @@ import {
   AuthSession,
   type AuthStateListener,
 } from '@/auth/auth-session'
-import type {
-  AuthUser,
-  LoginInput,
-  RegisterInput,
-  UpdateCurrentUserInput,
-} from '@/auth/auth-types'
+import type { AuthUser } from '@/auth/auth-types'
 import { SessionEventBus } from '@/auth/session-events'
 import {
   createTokenStore,
@@ -362,14 +357,14 @@ function createFixture(options: FixtureOptions = {}) {
   })
   const api: AuthApi = {
     getCurrentUser: vi.fn(async () => AUTH_USER),
-    login: vi.fn(async (_input: LoginInput) => ({
+    login: vi.fn(async () => ({
       accessToken: 'login-access',
       refreshToken: 'login-refresh',
     })),
-    logout: vi.fn(async (_refreshToken: string) => undefined),
+    logout: vi.fn(async () => undefined),
     logoutAll: vi.fn(async () => undefined),
-    register: vi.fn(async (_input: RegisterInput) => CITIZEN_USER),
-    updateCurrentUser: vi.fn(async (_input: UpdateCurrentUserInput) => AUTH_USER),
+    register: vi.fn(async () => CITIZEN_USER),
+    updateCurrentUser: vi.fn(async () => AUTH_USER),
   }
   const queryClient = {
     cancelQueries: vi.fn(async () => undefined),

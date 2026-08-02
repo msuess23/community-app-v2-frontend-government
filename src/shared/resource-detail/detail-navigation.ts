@@ -40,6 +40,18 @@ function isSafeInternalLocation(value: string): boolean {
     value.startsWith('/') &&
     !value.startsWith('//') &&
     !value.includes('\\') &&
-    !/[\u0000-\u001f\u007f]/.test(value)
+    !containsAsciiControlCharacter(value)
   )
+}
+
+/** Detects control characters without embedding them in a regular expression. */
+function containsAsciiControlCharacter(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index)
+    if (code <= 0x1f || code === 0x7f) {
+      return true
+    }
+  }
+
+  return false
 }

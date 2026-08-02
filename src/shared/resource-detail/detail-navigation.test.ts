@@ -33,5 +33,11 @@ describe('resource detail navigation', () => {
         '/tickets',
       ),
     ).toBe('/tickets')
+    expect(
+      resolveResourceDetailReturnTo(
+        { from: '/tickets\nexternal' },
+        '/tickets',
+      ),
+    ).toBe('/tickets')
   })
 })

@@ -5,7 +5,7 @@ import {
   type FieldValues,
 } from 'react-hook-form'
 
-import { useFormFieldId } from '@/shared/forms/FormFieldScope'
+import { useFormFieldId } from '@/shared/forms/form-field-scope-context'
 import {
   FileUploadField,
   type FileUploadFieldProps,

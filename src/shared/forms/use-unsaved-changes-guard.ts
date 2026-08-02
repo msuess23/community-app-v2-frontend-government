@@ -48,7 +48,10 @@ export function useUnsavedChangesGuard({
   const handledNavigationRef = useRef<string | null>(null)
   const pendingConfirmationRef = useRef(false)
   const messageRef = useRef(message)
-  messageRef.current = message
+
+  useEffect(() => {
+    messageRef.current = message
+  }, [message])
 
   const shouldBlock = useCallback<BlockerFunction>(
     ({ currentLocation, nextLocation }) =>
@@ -58,7 +61,11 @@ export function useUnsavedChangesGuard({
   )
   const blocker = useBlocker(shouldBlock)
   const blockerRef = useRef(blocker)
-  blockerRef.current = blocker
+
+  useEffect(() => {
+    blockerRef.current = blocker
+  }, [blocker])
+
   const blockedLocationKey =
     blocker.state === 'blocked' ? serializeLocation(blocker.location) : null
 

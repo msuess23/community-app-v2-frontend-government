@@ -5,7 +5,7 @@ import {
   type ReactNode,
 } from 'react'
 
-import { useFormFieldIdResolver } from '@/shared/forms/FormFieldScope'
+import { useFormFieldIdResolver } from '@/shared/forms/form-field-scope-context'
 import { cn } from '@/shared/lib/cn'
 
 export interface FormErrorSummaryItem {

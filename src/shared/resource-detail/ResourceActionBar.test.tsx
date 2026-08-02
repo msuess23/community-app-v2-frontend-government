@@ -1,13 +1,14 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { vi } from 'vitest'
 
 import { ResourceActionBar } from '@/shared/resource-detail/ResourceActionBar'
 import {
-  createResourceActionRegistry,
-  type ResourceActionCloseGuard,
-} from '@/shared/resource-detail/resource-action-registry'
+  useResourceActionCloseGuard,
+  useResourceActionDialog,
+} from '@/shared/resource-detail/resource-action-dialog-context'
+import { createResourceActionRegistry } from '@/shared/resource-detail/resource-action-registry'
 import { Button } from '@/shared/ui/Button'
 import { renderWithProviders } from '@/test/render'
 
@@ -19,12 +20,7 @@ const registry = createResourceActionRegistry<Action>([
     description: 'Die Aktion aktualisiert anschließend die Serverprojektion.',
     dialogTitle: 'Anliegen abschließen',
     label: 'Abschließen',
-    render: ({ close }) => (
-      <div>
-        <p>Aktionsinhalt</p>
-        <Button onPress={close}>Fertig</Button>
-      </div>
-    ),
+    render: () => <CompletableActionContent />,
   },
 ])
 
@@ -91,9 +87,7 @@ describe('ResourceActionBar', () => {
         action: 'COMPLETE',
         dialogTitle: 'Geschützte Aktion',
         label: 'Öffnen',
-        render: ({ registerCloseGuard }) => (
-          <GuardedActionContent registerCloseGuard={registerCloseGuard} />
-        ),
+        render: () => <GuardedActionContent />,
       },
     ])
 
@@ -130,18 +124,22 @@ describe('ResourceActionBar', () => {
   })
 })
 
-interface GuardedActionContentProps {
-  registerCloseGuard: (guard: ResourceActionCloseGuard | null) => void
+/** Closes the shared dialog through its feature-facing context hook. */
+function CompletableActionContent() {
+  const { close } = useResourceActionDialog()
+
+  return (
+    <div>
+      <p>Aktionsinhalt</p>
+      <Button onPress={close}>Fertig</Button>
+    </div>
+  )
 }
 
 /** Registers the edited-form guard after the action content has mounted. */
-function GuardedActionContent({
-  registerCloseGuard,
-}: GuardedActionContentProps) {
-  useEffect(() => {
-    registerCloseGuard(() => false)
-    return () => registerCloseGuard(null)
-  }, [registerCloseGuard])
+function GuardedActionContent() {
+  const preventClose = useCallback(() => false, [])
+  useResourceActionCloseGuard(preventClose)
 
   return <p>Ungespeicherte Aktionsdaten</p>
 }
