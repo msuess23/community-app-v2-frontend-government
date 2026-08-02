@@ -5,6 +5,7 @@ import { FeedbackAndConfirmationExample } from '@/pages/ui-kit/FeedbackAndConfir
 import { FormWorkflowExample } from '@/pages/ui-kit/FormWorkflowExample'
 import { LoginFormExample } from '@/pages/ui-kit/LoginFormExample'
 import { RemoteDataLifecycleExample } from '@/pages/ui-kit/RemoteDataLifecycleExample'
+import { ResourceDetailFoundationExample } from '@/pages/ui-kit/ResourceDetailFoundationExample'
 import { Button } from '@/shared/ui/Button'
 import { CheckboxField } from '@/shared/ui/CheckboxField'
 import { Card } from '@/shared/ui/Card'
@@ -165,6 +166,22 @@ export function UiKitPage() {
           </p>
           <DataViewFoundationExample />
         </Card>
+      </section>
+
+      <section aria-labelledby="resource-detail-heading" className="space-y-5">
+        <h2
+          className="text-on-surface text-2xl font-semibold tracking-tight"
+          id="resource-detail-heading"
+        >
+          Detailansichten, Aktionen und Ereignisse
+        </h2>
+        <div className="border-outline-variant bg-surface-container-lowest rounded-2xl border p-4 sm:p-6">
+          <p className="text-on-surface-variant mb-6 leading-7">
+            Ressourcenansichten trennen die aktuelle Projektion von
+            servergesteuerten Aktionen und dem unveränderlichen Ereignisstrom.
+          </p>
+          <ResourceDetailFoundationExample />
+        </div>
       </section>
 
       <section aria-labelledby="forms-heading" className="space-y-5">

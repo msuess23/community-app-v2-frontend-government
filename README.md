@@ -81,6 +81,7 @@ src/shared/
 ├── lib/
 │   └── cn.ts
 ├── remote-data/   # Query Keys, Cache-Lifecycle und Datenzustände
+├── resource-detail/ # Detaillayouts, Aktionen und Ereignis-Timelines
 └── ui/
     ├── Button.tsx
     ├── Card.tsx
@@ -104,6 +105,8 @@ Globale Rückmeldungen werden über `useFeedback()` ausgelöst. Kritische Meldun
 Gemeinsame Remote-Data-Bausteine liegen unter `src/shared/remote-data`. Sie definieren Query-Key-Hierarchien, sichere Retry-Regeln, serverbestätigte Cache-Aktualisierung sowie zugängliche Lade-, Leer-, Refetch- und Fehlerzustände. Featuremodule bauen darauf auf, statt eigene Query-Lebenszyklen zu implementieren. Details stehen unter `docs/remote-data-query-and-lifecycle.md`.
 
 Listenansichten verwenden die Grundlagen unter `src/shared/data-view`: URL-gesteuerte Suche, Filter, Sortierung und Pagination sowie eine semantische Tabelle mit gleichwertiger mobiler Kartenansicht. Zentrale Datum-/Zeit- und Zahlenformatierung liegt unter `src/shared/format`. Der Komponentenvertrag und die Barrierefreiheitsanforderungen sind unter `docs/data-view-foundation.md` beschrieben.
+
+Detailseiten verwenden die Grundlagen unter `src/shared/resource-detail`: explizite Rücksprungziele, benannte Inhaltsabschnitte, semantische Metadaten, servergesteuerte Aktionsregistrierung, serverbestätigte Mutationsabläufe und erweiterbare Ereignis-Timelines. Unbekannte Backendaktionen werden nicht geraten, unbekannte Ereignisse erhalten eine sichere Fallbackdarstellung. Der Vertrag ist unter `docs/resource-detail-actions-and-event-timeline.md` dokumentiert.
 
 ## API-Transport
 
