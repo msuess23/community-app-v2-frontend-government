@@ -29,6 +29,7 @@ const defaultValues: RegisterFormValues = {
   passwordConfirmation: '',
 }
 
+/** Creates the citizen account that an administrator can promote to an authority role. */
 export function RegisterPage() {
   const { isAuthenticated, register, user } = useAuth()
   const navigate = useNavigate()
@@ -50,7 +51,7 @@ export function RegisterPage() {
 
   if (isAuthenticated) {
     return (
-      <Navigate replace to={isAuthorityUser(user) ? '/' : '/forbidden'} />
+      <Navigate replace to={isAuthorityUser(user) ? '/' : '/access-pending'} />
     )
   }
 

@@ -21,6 +21,9 @@ const ANONYMOUS_AUTH: AuthContextValue = {
   }),
   logout: vi.fn(async () => undefined),
   logoutAll: vi.fn(async () => undefined),
+  refreshCurrentUser: vi.fn(async () => {
+    throw new Error('Not used in this test.')
+  }),
   register: vi.fn(async () => {
     throw new Error('Not used in this test.')
   }),
@@ -113,7 +116,10 @@ function renderRecoveryRoutes(
         element: <ResetPasswordPage api={api} />,
       },
       { path: '/login', element: <LoginPage /> },
-      { path: '/forbidden', element: <h1>Zugriff nicht erlaubt</h1> },
+      {
+        path: '/access-pending',
+        element: <h1>Zugang noch nicht freigeschaltet</h1>,
+      },
       { path: '/', element: <h1>Behördenclient</h1> },
     ],
     { initialEntries: [initialEntry] },

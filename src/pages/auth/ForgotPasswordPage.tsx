@@ -32,6 +32,7 @@ export type ForgotPasswordPageProps = Readonly<{
   api?: PasswordRecoveryApi
 }>
 
+/** Requests a password-reset code without revealing whether an account exists. */
 export function ForgotPasswordPage({
   api = passwordRecoveryApi,
 }: ForgotPasswordPageProps = {}) {
@@ -54,7 +55,7 @@ export function ForgotPasswordPage({
   })
 
   if (isAuthenticated) {
-    return <Navigate replace to={isAuthorityUser(user) ? '/' : '/forbidden'} />
+    return <Navigate replace to={isAuthorityUser(user) ? '/' : '/access-pending'} />
   }
 
   const footer = (

@@ -13,6 +13,7 @@ export type AuthContextValue = Readonly<{
   login: (input: LoginInput) => Promise<AuthUser>
   logout: () => Promise<void>
   logoutAll: () => Promise<void>
+  refreshCurrentUser: () => Promise<AuthUser>
   register: (input: RegisterInput) => Promise<AuthUser>
   state: AuthState
   user: AuthUser | null
@@ -20,6 +21,7 @@ export type AuthContextValue = Readonly<{
 
 export const AuthContext = createContext<AuthContextValue | null>(null)
 
+/** Returns the authentication API and current session state for UI components. */
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext)
 

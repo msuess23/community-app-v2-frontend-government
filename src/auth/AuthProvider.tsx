@@ -17,6 +17,7 @@ export type AuthProviderProps = Readonly<{
   session?: AuthSession
 }>
 
+/** Exposes the active authentication session to the React application tree. */
 export function AuthProvider({ children, session }: AuthProviderProps) {
   const queryClient = useQueryClient()
   const defaultSession = useMemo(
@@ -44,6 +45,7 @@ export function AuthProvider({ children, session }: AuthProviderProps) {
       login: (input) => activeSession.login(input),
       logout: () => activeSession.logout(),
       logoutAll: () => activeSession.logoutAll(),
+      refreshCurrentUser: () => activeSession.refreshCurrentUser(),
       register: (input) => activeSession.register(input),
       state,
       user: state.user,

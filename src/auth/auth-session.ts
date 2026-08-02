@@ -44,6 +44,7 @@ type AuthSessionOptions = Readonly<{
   store?: TokenStore
 }>
 
+/** Indicates that a newer authentication action invalidated an in-flight operation. */
 export class AuthOperationSupersededError extends Error {
   constructor() {
     super('The authentication operation was superseded by a newer action.')
@@ -51,6 +52,7 @@ export class AuthOperationSupersededError extends Error {
   }
 }
 
+/** Coordinates authentication state, token storage and user profile restoration. */
 export class AuthSession {
   private readonly api: AuthApi
   private readonly events: SessionEventBus
@@ -159,6 +161,26 @@ export class AuthSession {
 
   register(input: RegisterInput): Promise<AuthUser> {
     return this.api.register(input)
+  }
+
+  /**
+   * Reloads the authenticated profile so role assignments become visible without a new login.
+   */
+  async refreshCurrentUser(): Promise<AuthUser> {
+    if (this.snapshot.status !== 'authenticated') {
+      throw new Error('Cannot refresh the user profile without an active session.')
+    }
+
+    const operationVersion = this.operationVersion
+    const user = await this.api.getCurrentUser()
+    this.assertCurrentOperation(operationVersion)
+
+    if (this.snapshot.status !== 'authenticated') {
+      throw new AuthOperationSupersededError()
+    }
+
+    this.publishAuthenticated(user)
+    return user
   }
 
   async logout(): Promise<void> {

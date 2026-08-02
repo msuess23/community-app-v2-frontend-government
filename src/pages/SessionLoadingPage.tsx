@@ -1,9 +1,12 @@
+/** Displays an accessible status while a persisted session is restored. */
 export function SessionLoadingPage() {
   return (
-    <div
+    <main
       aria-live="polite"
-      className="mx-auto flex min-h-64 max-w-md flex-col items-center justify-center gap-4 text-center"
+      className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center gap-4 px-4 text-center"
+      id="main-content"
       role="status"
+      tabIndex={-1}
     >
       <span
         aria-hidden="true"
@@ -15,6 +18,6 @@ export function SessionLoadingPage() {
           Bitte einen Moment warten.
         </p>
       </div>
-    </div>
+    </main>
   )
 }

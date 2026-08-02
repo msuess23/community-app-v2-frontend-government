@@ -29,6 +29,7 @@ export type ResetPasswordPageProps = Readonly<{
   api?: PasswordRecoveryApi
 }>
 
+/** Replaces an account password after validating the emailed one-time code. */
 export function ResetPasswordPage({
   api = passwordRecoveryApi,
 }: ResetPasswordPageProps = {}) {
@@ -59,7 +60,7 @@ export function ResetPasswordPage({
   })
 
   if (isAuthenticated) {
-    return <Navigate replace to={isAuthorityUser(user) ? '/' : '/forbidden'} />
+    return <Navigate replace to={isAuthorityUser(user) ? '/' : '/access-pending'} />
   }
 
   const formErrors = [

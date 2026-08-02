@@ -11,6 +11,7 @@ export interface PageHeaderProps {
   title: ReactNode
 }
 
+/** Renders the primary page heading, supporting actions and route-focus management. */
 export function PageHeader({
   actions,
   className,
@@ -34,7 +35,9 @@ export function PageHeader({
         ) : null}
         <h1
           className="text-on-surface text-3xl font-bold tracking-tight sm:text-4xl"
+          data-page-heading
           id={headingId}
+          tabIndex={-1}
         >
           {title}
         </h1>

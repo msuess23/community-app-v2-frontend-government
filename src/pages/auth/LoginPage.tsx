@@ -34,6 +34,7 @@ const defaultValues: LoginFormValues = {
   rememberMe: false,
 }
 
+/** Authenticates registered accounts and routes them to the permitted application area. */
 export function LoginPage() {
   const { isAuthenticated, login, user } = useAuth()
   const location = useLocation()
@@ -46,7 +47,7 @@ export function LoginPage() {
   const registrationCompleted = searchParams.get('registered') === '1'
   const passwordResetCompleted = searchParams.get('passwordReset') === '1'
   const successMessage = registrationCompleted
-    ? 'Das Bürgerkonto wurde erstellt. Du kannst dich jetzt anmelden.'
+    ? 'Das Bürgerkonto wurde erstellt. Nach der Freischaltung durch die Administration kannst du den Behördenclient nutzen.'
     : passwordResetCompleted
       ? 'Das Passwort wurde geändert. Du kannst dich jetzt anmelden.'
       : undefined
@@ -67,7 +68,7 @@ export function LoginPage() {
     return (
       <Navigate
         replace
-        to={isAuthorityUser(user) ? returnTo : '/forbidden'}
+        to={isAuthorityUser(user) ? returnTo : '/access-pending'}
       />
     )
   }
@@ -79,7 +80,7 @@ export function LoginPage() {
 
   return (
     <AuthPageLayout
-      description="Melde dich mit deinem Behördenkonto an."
+      description="Melde dich mit deinem registrierten Konto an."
       footer={
         <p>
           Noch kein Bürgerkonto?{' '}
@@ -103,7 +104,7 @@ export function LoginPage() {
             const authenticatedUser = await login(toLoginInput(values))
 
             navigate(
-              isAuthorityUser(authenticatedUser) ? returnTo : '/forbidden',
+              isAuthorityUser(authenticatedUser) ? returnTo : '/access-pending',
               { replace: true },
             )
           } catch (error) {

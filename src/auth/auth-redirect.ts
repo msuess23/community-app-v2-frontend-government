@@ -4,7 +4,8 @@ type ReturnLocation = Readonly<{
   search?: string
 }>
 
-const AUTH_ENTRY_PATHS = new Set([
+const NON_RETURN_PATHS = new Set([
+  '/access-pending',
   '/login',
   '/password-forgotten',
   '/password-reset',
@@ -12,12 +13,18 @@ const AUTH_ENTRY_PATHS = new Set([
 ])
 const INTERNAL_ORIGIN = 'https://community-app.invalid'
 
+/**
+ * Creates a login URL that preserves the requested internal destination.
+ */
 export function createLoginPath(location: ReturnLocation): string {
   const returnTo = `${location.pathname}${location.search ?? ''}${location.hash ?? ''}`
 
   return `/login?returnTo=${encodeURIComponent(returnTo)}`
 }
 
+/**
+ * Accepts only safe internal return targets that do not reopen entry routes.
+ */
 export function getSafeReturnTo(
   candidate: string | null | undefined,
   fallback = '/',
@@ -36,7 +43,7 @@ export function getSafeReturnTo(
 
     if (
       parsed.origin !== INTERNAL_ORIGIN ||
-      AUTH_ENTRY_PATHS.has(parsed.pathname)
+      NON_RETURN_PATHS.has(parsed.pathname)
     ) {
       return fallback
     }

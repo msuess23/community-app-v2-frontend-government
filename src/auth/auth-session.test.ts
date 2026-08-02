@@ -153,6 +153,33 @@ describe('AuthSession', () => {
     stop()
   })
 
+  it('reloads the authenticated profile after an administrator changes the role', async () => {
+    const fixture = createFixture()
+
+    await fixture.session.login({
+      email: 'admin@test.com',
+      password: 'secret-password',
+      rememberMe: false,
+    })
+    vi.mocked(fixture.api.getCurrentUser).mockResolvedValueOnce(CITIZEN_USER)
+
+    await expect(fixture.session.refreshCurrentUser()).resolves.toEqual(
+      CITIZEN_USER,
+    )
+    expect(fixture.session.getSnapshot()).toEqual({
+      status: 'authenticated',
+      user: CITIZEN_USER,
+    })
+  })
+
+  it('rejects profile reloads without an authenticated session', async () => {
+    const fixture = createFixture()
+
+    await expect(fixture.session.refreshCurrentUser()).rejects.toThrow(
+      'without an active session',
+    )
+  })
+
   it('registers a citizen without changing the current session', async () => {
     const fixture = createFixture()
 

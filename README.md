@@ -55,11 +55,11 @@ src/
 └── test/      # gemeinsame Testhelfer und Test-Setup
 ```
 
-Fachliche Features, Authentifizierung und API-Kommunikation werden in getrennten Patches ergänzt.
+Fachliche Features und die dazugehörige API-Kommunikation werden in getrennten Patches ergänzt.
 
 ## Gemeinsame UI-Bausteine
 
-Die Route `/ui-kit` zeigt die aktuell verfügbaren gemeinsamen Komponenten und semantischen Designfarben. Die Farbpalette orientiert sich am bisherigen Bürgerclient; Komponenten verwenden ausschließlich semantische Tokens wie `primary`, `surface` oder `error` statt fachlich bedeutungsloser Farbnamen.
+Die Route `/ui-kit` zeigt in Entwicklungsbuilds die aktuell verfügbaren gemeinsamen Komponenten und semantischen Designfarben. Sie ist nicht Teil der regulären Produktionsanwendung. Die Farbpalette orientiert sich am bisherigen Bürgerclient; Komponenten verwenden ausschließlich semantische Tokens wie `primary`, `surface` oder `error` statt fachlich bedeutungsloser Farbnamen.
 
 Aktuell enthalten sind:
 
@@ -102,7 +102,7 @@ Der Orval-Mutator ergänzt bei verwalteten API-Aufrufen automatisch den aktuelle
 
 Antwortet ein verwalteter Request mit HTTP 401 und ist ein Refresh-Token vorhanden, koordiniert der Client genau eine Rotation pro Tab. Unterstützt der Browser die Web-Locks-API, werden Rotationen zusätzlich zwischen Tabs serialisiert. Nach erfolgreicher Rotation wird die ursprüngliche Anfrage genau einmal mit dem neuen Access-Token wiederholt.
 
-Ein vom Backend abgelehnter Refresh-Token löscht die lokale Sitzung und veröffentlicht ein `session-expired`-Ereignis. Temporäre Netzwerkfehler löschen den gespeicherten Refresh-Token dagegen nicht. Die React-Sitzungsintegration wird im folgenden Abschnitt beschrieben; sichtbare Login-Oberflächen werden später ergänzt.
+Ein vom Backend abgelehnter Refresh-Token löscht die lokale Sitzung und veröffentlicht ein `session-expired`-Ereignis. Temporäre Netzwerkfehler löschen den gespeicherten Refresh-Token dagegen nicht. Die React-Sitzungsintegration und die sichtbaren Authentifizierungsseiten bauen auf diesem Verhalten auf.
 
 ## Auth-Sitzung
 
@@ -119,4 +119,4 @@ Der Session-Core übernimmt:
 - Bereinigung des TanStack-Query-Caches beim Benutzerwechsel,
 - Reaktion auf abgelehnte Refresh-Tokens und tabübergreifenden Logout.
 
-Sichtbare Login-, Registrierungs- und Berechtigungsseiten werden in einem späteren UI-Patch ergänzt.
+Login, Registrierung, Passwort-Wiederherstellung und Rollenfreischaltung verwenden diesen Session-Core über den `AuthProvider`.

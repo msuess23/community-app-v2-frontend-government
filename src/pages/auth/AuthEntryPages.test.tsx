@@ -53,7 +53,7 @@ describe('auth entry pages', () => {
     ).toBeVisible()
   })
 
-  it('routes a citizen account to the forbidden page', async () => {
+  it('routes a citizen account to the access-pending page', async () => {
     const user = userEvent.setup()
 
     renderAuthRoutes('/login', {
@@ -68,7 +68,7 @@ describe('auth entry pages', () => {
     await user.click(screen.getByRole('button', { name: 'Anmelden' }))
 
     expect(
-      await screen.findByRole('heading', { name: 'Zugriff nicht erlaubt' }),
+      await screen.findByRole('heading', { name: 'Zugang noch nicht freigeschaltet' }),
     ).toBeVisible()
   })
 
@@ -102,7 +102,7 @@ describe('auth entry pages', () => {
     })
     expect(
       await screen.findByText(
-        'Das Bürgerkonto wurde erstellt. Du kannst dich jetzt anmelden.',
+        'Das Bürgerkonto wurde erstellt. Nach der Freischaltung durch die Administration kannst du den Behördenclient nutzen.',
       ),
     ).toBeVisible()
   })
@@ -111,6 +111,7 @@ describe('auth entry pages', () => {
     expect(getSafeReturnTo('https://example.com')).toBe('/')
     expect(getSafeReturnTo('//example.com')).toBe('/')
     expect(getSafeReturnTo('/login')).toBe('/')
+    expect(getSafeReturnTo('/access-pending')).toBe('/')
     expect(getSafeReturnTo('/infos?status=ACTIVE#result')).toBe(
       '/infos?status=ACTIVE#result',
     )
@@ -128,6 +129,7 @@ function renderAuthRoutes(initialEntry: string, overrides: AuthOverrides = {}) {
     login: overrides.login ?? vi.fn(async () => AUTHORITY_USER),
     logout: vi.fn(async () => undefined),
     logoutAll: vi.fn(async () => undefined),
+    refreshCurrentUser: vi.fn(async () => AUTHORITY_USER),
     register: overrides.register ?? vi.fn(async () => CITIZEN_USER),
     state: {
       status: 'anonymous',
@@ -144,8 +146,8 @@ function renderAuthRoutes(initialEntry: string, overrides: AuthOverrides = {}) {
         element: <h1>Ticketübersicht</h1>,
       },
       {
-        path: '/forbidden',
-        element: <h1>Zugriff nicht erlaubt</h1>,
+        path: '/access-pending',
+        element: <h1>Zugang noch nicht freigeschaltet</h1>,
       },
     ],
     { initialEntries: [initialEntry] },

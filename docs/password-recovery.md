@@ -7,7 +7,7 @@
 /password-reset
 ```
 
-Die Seiten sind öffentlich und verwenden den bestehenden Auth-Seitenaufbau. Bereits angemeldete Behördenkonten werden zur Anwendung, angemeldete Bürgerkonten zur 403-Seite weitergeleitet.
+Die Seiten sind öffentlich und verwenden den bestehenden Auth-Seitenaufbau. Bereits angemeldete Behördenkonten werden zur Anwendung, angemeldete Bürgerkonten zum Status ihrer noch ausstehenden Behördenfreischaltung weitergeleitet.
 
 ## FastAPI-Vertrag
 
