@@ -16,6 +16,7 @@ import { getRoleLabel } from '@/auth/role-labels'
 import { useConfirmation } from '@/shared/confirmation/confirmation-context'
 import { useFeedback } from '@/shared/feedback/feedback-context'
 import { ControlledTextField } from '@/shared/forms/ControlledTextField'
+import { useUnsavedChangesGuard } from '@/shared/forms/use-unsaved-changes-guard'
 import { getFormErrorSummary } from '@/shared/forms/form-errors'
 import { createZodResolver } from '@/shared/forms/zod-resolver'
 import { Button } from '@/shared/ui/Button'
@@ -25,6 +26,8 @@ import {
   FormErrorSummary,
   type FormErrorSummaryItem,
 } from '@/shared/ui/FormErrorSummary'
+import { FormSection } from '@/shared/ui/FormSection'
+import { FormSubmitButton } from '@/shared/ui/FormSubmitButton'
 import { PageHeader } from '@/shared/ui/PageHeader'
 
 /** Routes authenticated users to the account management content for their profile. */
@@ -56,7 +59,7 @@ function AuthenticatedAccountPage({ user }: AuthenticatedAccountPageProps) {
   >([])
   const {
     control,
-    formState: { errors, isDirty, isSubmitting },
+    formState: { errors, isDirty, isSubmitting, submitCount },
     handleSubmit,
     reset,
     setError,
@@ -65,7 +68,7 @@ function AuthenticatedAccountPage({ user }: AuthenticatedAccountPageProps) {
     mode: 'onSubmit',
     reValidateMode: 'onChange',
     resolver: createZodResolver(accountProfileFormSchema),
-    shouldFocusError: true,
+    shouldFocusError: false,
   })
 
   useEffect(() => {
@@ -75,6 +78,10 @@ function AuthenticatedAccountPage({ user }: AuthenticatedAccountPageProps) {
     }
   }, [isDirty, reset, user])
 
+  const { confirmDiscardChanges } = useUnsavedChangesGuard({
+    hasUnsavedChanges: isDirty,
+  })
+
   const formErrors = [
     ...submissionErrors,
     ...getFormErrorSummary(errors),
@@ -83,6 +90,18 @@ function AuthenticatedAccountPage({ user }: AuthenticatedAccountPageProps) {
 
   /** Ends only the browser session represented by this tab or remembered login. */
   async function handleCurrentSessionLogout(): Promise<void> {
+    const accepted = await confirmDiscardChanges({
+      confirmLabel: 'Abmelden und verwerfen',
+      description:
+        'Deine geänderten Profildaten wurden noch nicht gespeichert. Bei der Abmeldung gehen sie verloren.',
+      title: 'Trotz ungespeicherter Änderungen abmelden?',
+    })
+
+    if (!accepted) {
+      return
+    }
+
+    reset(toAccountProfileFormValues(user))
     setSessionAction('current')
 
     try {
@@ -106,6 +125,7 @@ function AuthenticatedAccountPage({ user }: AuthenticatedAccountPageProps) {
       return
     }
 
+    reset(toAccountProfileFormValues(user))
     setSessionAction('all')
 
     try {
@@ -125,20 +145,17 @@ function AuthenticatedAccountPage({ user }: AuthenticatedAccountPageProps) {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
         <Card>
-          <section aria-labelledby="profile-heading" className="space-y-6">
-            <div className="space-y-2">
-              <h2
-                className="text-2xl font-semibold tracking-tight"
-                id="profile-heading"
-              >
-                Persönliche Angaben
-              </h2>
-              <p className="text-on-surface-variant leading-7">
+          <FormSection
+            description={
+              <p>
                 Diese Namen werden in der Behördenanwendung zur Zuordnung deiner
                 Aktionen angezeigt.
               </p>
-            </div>
-
+            }
+            headingId="profile-heading"
+            requiredFieldsHint
+            title="Persönliche Angaben"
+          >
             <form
               className="space-y-5"
               noValidate
@@ -164,7 +181,11 @@ function AuthenticatedAccountPage({ user }: AuthenticatedAccountPageProps) {
                 }
               })}
             >
-              <FormErrorSummary errors={formErrors} />
+              <FormErrorSummary
+                errors={formErrors}
+                focusKey={submitCount}
+                shouldFocus
+              />
 
               <div className="grid gap-5 md:grid-cols-2">
                 <ControlledTextField
@@ -196,13 +217,17 @@ function AuthenticatedAccountPage({ user }: AuthenticatedAccountPageProps) {
                   <Undo2 aria-hidden="true" size={18} />
                   Änderungen verwerfen
                 </Button>
-                <Button isDisabled={!isDirty || isSubmitting} type="submit">
+                <FormSubmitButton
+                  isDisabled={!isDirty}
+                  isSubmitting={isSubmitting}
+                  pendingLabel="Speichern läuft …"
+                >
                   <Save aria-hidden="true" size={18} />
-                  {isSubmitting ? 'Speichern läuft …' : 'Änderungen speichern'}
-                </Button>
+                  Änderungen speichern
+                </FormSubmitButton>
               </FormActions>
             </form>
-          </section>
+          </FormSection>
         </Card>
 
         <Card variant="subtle">

@@ -138,6 +138,33 @@ describe('application routes', () => {
     expect(screen.getAllByText('Augusta Lovelace')).not.toHaveLength(0)
   })
 
+  it('protects profile edits before ending the current session', async () => {
+    const user = userEvent.setup()
+    const fixture = await createAuthFixture(ADMIN_USER)
+    renderRouter(appRoutes, ['/account'], fixture)
+
+    await screen.findByRole('heading', { level: 1, name: 'Mein Konto' })
+    const firstName = screen.getByRole('textbox', { name: 'Vorname' })
+    await user.clear(firstName)
+    await user.type(firstName, 'Augusta')
+    await user.click(
+      screen.getByRole('button', { name: 'Diese Sitzung abmelden' }),
+    )
+
+    const dialog = screen.getByRole('dialog', {
+      name: 'Trotz ungespeicherter Änderungen abmelden?',
+    })
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Weiter bearbeiten' }),
+    )
+
+    expect(fixture.api.logout).not.toHaveBeenCalled()
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Mein Konto' }),
+    ).toBeVisible()
+    expect(firstName).toHaveValue('Augusta')
+  })
+
   it('confirms and ends every account session from the account page', async () => {
     const user = userEvent.setup()
     const fixture = await createAuthFixture(ADMIN_USER)

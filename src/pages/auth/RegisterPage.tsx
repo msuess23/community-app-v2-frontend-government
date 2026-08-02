@@ -14,8 +14,8 @@ import { AuthPageLayout } from '@/pages/auth/AuthPageLayout'
 import { ControlledTextField } from '@/shared/forms/ControlledTextField'
 import { getFormErrorSummary } from '@/shared/forms/form-errors'
 import { createZodResolver } from '@/shared/forms/zod-resolver'
-import { Button } from '@/shared/ui/Button'
 import { FormActions } from '@/shared/ui/FormActions'
+import { FormSubmitButton } from '@/shared/ui/FormSubmitButton'
 import {
   FormErrorSummary,
   type FormErrorSummaryItem,
@@ -38,7 +38,7 @@ export function RegisterPage() {
   >([])
   const {
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, submitCount },
     handleSubmit,
     setError,
   } = useForm<RegisterFormValues>({
@@ -46,7 +46,7 @@ export function RegisterPage() {
     mode: 'onSubmit',
     reValidateMode: 'onChange',
     resolver: createZodResolver(registerFormSchema),
-    shouldFocusError: true,
+    shouldFocusError: false,
   })
 
   if (isAuthenticated) {
@@ -90,7 +90,11 @@ export function RegisterPage() {
           }
         })}
       >
-        <FormErrorSummary errors={formErrors} />
+        <FormErrorSummary
+          errors={formErrors}
+          focusKey={submitCount}
+          shouldFocus
+        />
 
         <div className="grid gap-5 sm:grid-cols-2">
           <ControlledTextField
@@ -138,9 +142,12 @@ export function RegisterPage() {
         />
 
         <FormActions>
-          <Button isDisabled={isSubmitting} type="submit">
-            {isSubmitting ? 'Konto wird erstellt …' : 'Konto erstellen'}
-          </Button>
+          <FormSubmitButton
+            isSubmitting={isSubmitting}
+            pendingLabel="Konto wird erstellt …"
+          >
+            Konto erstellen
+          </FormSubmitButton>
         </FormActions>
       </form>
     </AuthPageLayout>

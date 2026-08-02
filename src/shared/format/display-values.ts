@@ -95,3 +95,30 @@ function toValidDate(value: DateInput): Date | null {
   const date = value instanceof Date ? value : new Date(value)
   return Number.isNaN(date.getTime()) ? null : date
 }
+
+/** Formats a byte count for compact, locale-aware file metadata. */
+export function formatDisplayFileSize(bytes: number | null | undefined): string {
+  if (
+    bytes === null ||
+    bytes === undefined ||
+    !Number.isFinite(bytes) ||
+    bytes < 0
+  ) {
+    return EMPTY_VALUE
+  }
+
+  if (bytes === 0) {
+    return '0 Byte'
+  }
+
+  const units = ['Byte', 'KB', 'MB', 'GB'] as const
+  const unitIndex = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1,
+  )
+  const value = bytes / 1024 ** unitIndex
+
+  return `${new Intl.NumberFormat(DISPLAY_LOCALE, {
+    maximumFractionDigits: unitIndex === 0 ? 0 : 1,
+  }).format(value)} ${units[unitIndex]}`
+}

@@ -2,6 +2,7 @@ import { ArrowRight, Check, Trash2 } from 'lucide-react'
 
 import { DataViewFoundationExample } from '@/pages/ui-kit/DataViewFoundationExample'
 import { FeedbackAndConfirmationExample } from '@/pages/ui-kit/FeedbackAndConfirmationExample'
+import { FormWorkflowExample } from '@/pages/ui-kit/FormWorkflowExample'
 import { LoginFormExample } from '@/pages/ui-kit/LoginFormExample'
 import { RemoteDataLifecycleExample } from '@/pages/ui-kit/RemoteDataLifecycleExample'
 import { Button } from '@/shared/ui/Button'
@@ -206,6 +207,23 @@ export function UiKitPage() {
             </div>
           </Card>
         </div>
+      </section>
+
+      <section aria-labelledby="form-workflow-heading" className="space-y-5">
+        <h2
+          className="text-on-surface text-2xl font-semibold tracking-tight"
+          id="form-workflow-heading"
+        >
+          Formularabläufe
+        </h2>
+        <Card>
+          <p className="text-on-surface-variant mb-6 leading-7">
+            Längere Formulare kombinieren Abschnittsstruktur, zugängliche
+            Fehlerzusammenfassung, ausstehende Aktionen und Schutz vor dem
+            Verlassen mit ungespeicherten Änderungen.
+          </p>
+          <FormWorkflowExample />
+        </Card>
       </section>
 
       <section aria-labelledby="cards-heading" className="space-y-5">

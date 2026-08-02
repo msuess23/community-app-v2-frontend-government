@@ -18,8 +18,8 @@ import { AuthPageLayout } from '@/pages/auth/AuthPageLayout'
 import { ControlledTextField } from '@/shared/forms/ControlledTextField'
 import { getFormErrorSummary } from '@/shared/forms/form-errors'
 import { createZodResolver } from '@/shared/forms/zod-resolver'
-import { Button } from '@/shared/ui/Button'
 import { FormActions } from '@/shared/ui/FormActions'
+import { FormSubmitButton } from '@/shared/ui/FormSubmitButton'
 import {
   FormErrorSummary,
   type FormErrorSummaryItem,
@@ -48,7 +48,7 @@ export function ResetPasswordPage({
   }
   const {
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, submitCount },
     handleSubmit,
     setError,
   } = useForm<ResetPasswordFormValues>({
@@ -56,7 +56,7 @@ export function ResetPasswordPage({
     mode: 'onSubmit',
     reValidateMode: 'onChange',
     resolver: createZodResolver(resetPasswordFormSchema),
-    shouldFocusError: true,
+    shouldFocusError: false,
   })
 
   if (isAuthenticated) {
@@ -98,7 +98,11 @@ export function ResetPasswordPage({
           }
         })}
       >
-        <FormErrorSummary errors={formErrors} />
+        <FormErrorSummary
+          errors={formErrors}
+          focusKey={submitCount}
+          shouldFocus
+        />
 
         <ControlledTextField
           autoComplete="email"
@@ -140,9 +144,12 @@ export function ResetPasswordPage({
         />
 
         <FormActions>
-          <Button isDisabled={isSubmitting} type="submit">
-            {isSubmitting ? 'Passwort wird geändert …' : 'Passwort ändern'}
-          </Button>
+          <FormSubmitButton
+            isSubmitting={isSubmitting}
+            pendingLabel="Passwort wird geändert …"
+          >
+            Passwort ändern
+          </FormSubmitButton>
         </FormActions>
       </form>
     </AuthPageLayout>

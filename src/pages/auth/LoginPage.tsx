@@ -21,8 +21,8 @@ import { ControlledCheckboxField } from '@/shared/forms/ControlledCheckboxField'
 import { ControlledTextField } from '@/shared/forms/ControlledTextField'
 import { getFormErrorSummary } from '@/shared/forms/form-errors'
 import { createZodResolver } from '@/shared/forms/zod-resolver'
-import { Button } from '@/shared/ui/Button'
 import { FormActions } from '@/shared/ui/FormActions'
+import { FormSubmitButton } from '@/shared/ui/FormSubmitButton'
 import {
   FormErrorSummary,
   type FormErrorSummaryItem,
@@ -53,7 +53,7 @@ export function LoginPage() {
       : undefined
   const {
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, submitCount },
     handleSubmit,
     setError,
   } = useForm<LoginFormValues>({
@@ -61,7 +61,7 @@ export function LoginPage() {
     mode: 'onSubmit',
     reValidateMode: 'onChange',
     resolver: createZodResolver(loginFormSchema),
-    shouldFocusError: true,
+    shouldFocusError: false,
   })
 
   if (isAuthenticated) {
@@ -121,7 +121,11 @@ export function LoginPage() {
           </p>
         ) : null}
 
-        <FormErrorSummary errors={formErrors} />
+        <FormErrorSummary
+          errors={formErrors}
+          focusKey={submitCount}
+          shouldFocus
+        />
 
         <ControlledTextField
           autoComplete="email"
@@ -159,9 +163,12 @@ export function LoginPage() {
         />
 
         <FormActions>
-          <Button isDisabled={isSubmitting} type="submit">
-            {isSubmitting ? 'Anmeldung läuft …' : 'Anmelden'}
-          </Button>
+          <FormSubmitButton
+            isSubmitting={isSubmitting}
+            pendingLabel="Anmeldung läuft …"
+          >
+            Anmelden
+          </FormSubmitButton>
         </FormActions>
       </form>
     </AuthPageLayout>

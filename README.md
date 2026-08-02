@@ -77,13 +77,7 @@ src/shared/
 ├── data-view/     # URL-State, Filter, responsive Listen und Pagination
 ├── feedback/      # globale Statusmeldungen und API-Fehlerfeedback
 ├── format/        # zentrale Anzeigeformatierung für Datum und Zahlen
-├── forms/
-│   ├── ControlledCheckboxField.tsx
-│   ├── ControlledTextField.tsx
-│   ├── apply-submission-error.ts
-│   ├── field-name.ts
-│   ├── form-errors.ts
-│   └── zod-resolver.ts
+├── forms/         # Hook-Form-Adapter, Fehler- und Dirty-State-Workflow
 ├── lib/
 │   └── cn.ts
 ├── remote-data/   # Query Keys, Cache-Lifecycle und Datenzustände
@@ -93,12 +87,17 @@ src/shared/
     ├── CheckboxField.tsx
     ├── FormActions.tsx
     ├── FormErrorSummary.tsx
+    ├── FormSection.tsx
+    ├── FormSubmitButton.tsx
     ├── LinkButton.tsx
     ├── PageHeader.tsx
+    ├── RadioGroupField.tsx
+    ├── SelectField.tsx
+    ├── TextAreaField.tsx
     └── TextField.tsx
 ```
 
-Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Text- und Checkboxfelder basieren auf React Aria Components und stellen sichtbare Beschriftungen, Beschreibungen, Fehlerzustände und ausreichend große Interaktionsflächen bereit. Unter `src/shared/forms` liegen die schmalen React-Hook-Form-Adapter sowie die gemeinsame Zod-Validierung und Fehlerzusammenfassung. Zusätzliche Varianten werden erst ergänzt, wenn ein konkreter Anwendungsfall sie benötigt.
+Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Einzeilige und mehrzeilige Texteingaben, Checkboxen, native Selects, Radio-Gruppen und Datei-Auswahl stellen sichtbare Beschriftungen, Beschreibungen, Fehlerzustände und ausreichend große Interaktionsflächen bereit. Unter `src/shared/forms` liegen schmale React-Hook-Form-Adapter, gemeinsame Zod-Validierung, Fehlerzusammenfassung und der Schutz vor dem Verlassen ungespeicherter Formulare. Der Vertrag ist unter `docs/form-workflow-and-unsaved-changes.md` dokumentiert. Entfernte Suchauswahlen werden erst mit einem konkreten Feature als zugängliche Remote-Combobox ergänzt.
 
 Globale Rückmeldungen werden über `useFeedback()` ausgelöst. Kritische Meldungen bleiben bis zum Schließen sichtbar; wiederholte Meldungen können dedupliziert werden. Folgenreiche Aktionen verwenden `useConfirmation()` statt `window.confirm()`. Typische Transportfehler werden über `getApiErrorPresentation()` beziehungsweise `useApiFeedback()` in sichere, lokalisierte Meldungen überführt. Der genaue Vertrag ist unter `docs/global-feedback-and-confirmation.md` dokumentiert.
 

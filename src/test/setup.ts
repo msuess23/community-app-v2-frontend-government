@@ -19,6 +19,14 @@ function closeDialog(this: HTMLDialogElement, returnValue = ''): void {
   this.dispatchEvent(new Event('close'))
 }
 
+/** Provides visual-frame scheduling for focus lifecycle tests in jsdom. */
+if (!window.requestAnimationFrame) {
+  window.requestAnimationFrame = (callback: FrameRequestCallback): number =>
+    window.setTimeout(() => callback(performance.now()), 0)
+  window.cancelAnimationFrame = (handle: number): void =>
+    window.clearTimeout(handle)
+}
+
 if (typeof HTMLDialogElement !== 'undefined') {
   if (!HTMLDialogElement.prototype.showModal) {
     HTMLDialogElement.prototype.showModal = showModal

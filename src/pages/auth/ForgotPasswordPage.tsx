@@ -18,8 +18,8 @@ import { AuthPageLayout } from '@/pages/auth/AuthPageLayout'
 import { ControlledTextField } from '@/shared/forms/ControlledTextField'
 import { getFormErrorSummary } from '@/shared/forms/form-errors'
 import { createZodResolver } from '@/shared/forms/zod-resolver'
-import { Button } from '@/shared/ui/Button'
 import { FormActions } from '@/shared/ui/FormActions'
+import { FormSubmitButton } from '@/shared/ui/FormSubmitButton'
 import {
   FormErrorSummary,
   type FormErrorSummaryItem,
@@ -43,7 +43,7 @@ export function ForgotPasswordPage({
   >([])
   const {
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, submitCount },
     handleSubmit,
     setError,
   } = useForm<RequestPasswordResetFormValues>({
@@ -51,7 +51,7 @@ export function ForgotPasswordPage({
     mode: 'onSubmit',
     reValidateMode: 'onChange',
     resolver: createZodResolver(requestPasswordResetFormSchema),
-    shouldFocusError: true,
+    shouldFocusError: false,
   })
 
   if (isAuthenticated) {
@@ -129,7 +129,11 @@ export function ForgotPasswordPage({
           }
         })}
       >
-        <FormErrorSummary errors={formErrors} />
+        <FormErrorSummary
+          errors={formErrors}
+          focusKey={submitCount}
+          shouldFocus
+        />
 
         <ControlledTextField
           autoComplete="email"
@@ -143,9 +147,12 @@ export function ForgotPasswordPage({
         />
 
         <FormActions>
-          <Button isDisabled={isSubmitting} type="submit">
-            {isSubmitting ? 'Anfrage wird gesendet …' : 'Einmalcode anfordern'}
-          </Button>
+          <FormSubmitButton
+            isSubmitting={isSubmitting}
+            pendingLabel="Anfrage wird gesendet …"
+          >
+            Einmalcode anfordern
+          </FormSubmitButton>
         </FormActions>
       </form>
     </AuthPageLayout>
