@@ -102,7 +102,11 @@ export function ResourceActionBar<TAction extends string>({
   return (
     <>
       {actions.length > 0 ? (
-        <div aria-label={ariaLabel} className="flex flex-wrap gap-2" role="group">
+        <div
+          aria-label={ariaLabel}
+          className="flex flex-wrap gap-2"
+          role="group"
+        >
           {actions.map((action) => (
             <Button
               key={action.action}
@@ -284,8 +288,8 @@ function ResourceActionDialog<TAction extends string>({
               >
                 <p className="font-semibold">Aktion nicht mehr verfügbar</p>
                 <p className="mt-2 leading-7">
-                  Der Ressourcenstand wurde zwischenzeitlich aktualisiert. Schließe
-                  den Dialog und prüfe die jetzt verfügbaren Aktionen.
+                  Der Ressourcenstand wurde zwischenzeitlich aktualisiert.
+                  Schließe den Dialog und prüfe die jetzt verfügbaren Aktionen.
                 </p>
               </div>
             )}

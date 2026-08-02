@@ -3,11 +3,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/shared/lib/cn'
 
 export type DataViewStatusTone =
-  | 'danger'
-  | 'info'
-  | 'neutral'
-  | 'success'
-  | 'warning'
+  'danger' | 'info' | 'neutral' | 'success' | 'warning'
 
 export interface DataViewStatusBadgeProps {
   children: ReactNode
@@ -20,8 +16,7 @@ const toneStyles: Record<DataViewStatusTone, string> = {
   info: 'border-primary bg-primary-container text-on-primary-container',
   neutral:
     'border-outline-variant bg-surface-container text-on-surface-variant',
-  success:
-    'border-tertiary bg-tertiary-container text-on-tertiary-container',
+  success: 'border-tertiary bg-tertiary-container text-on-tertiary-container',
   warning:
     'border-secondary bg-secondary-container text-on-secondary-container',
 }

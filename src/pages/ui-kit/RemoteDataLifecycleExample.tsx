@@ -71,7 +71,7 @@ export function RemoteDataLifecycleExample() {
         query={query}
       >
         {(items) => (
-          <ul className="divide-outline-variant divide-y rounded-lg border border-outline-variant">
+          <ul className="divide-outline-variant border-outline-variant divide-y rounded-lg border">
             {items.map((item) => (
               <li className="p-4" key={item.id}>
                 {item.title}

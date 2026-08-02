@@ -50,9 +50,7 @@ export function getDocumentTitle(
     .map((match) => getPageTitle(match.handle))
     .find((title): title is string => Boolean(title))
 
-  return pageTitle
-    ? `${pageTitle} · ${APPLICATION_TITLE}`
-    : APPLICATION_TITLE
+  return pageTitle ? `${pageTitle} · ${APPLICATION_TITLE}` : APPLICATION_TITLE
 }
 
 /**

@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  isAbortError,
-  throwIfRequestAborted,
-} from '@/api/client/request-error'
+import { isAbortError, throwIfRequestAborted } from '@/api/client/request-error'
 
 describe('isAbortError', () => {
   it('recognizes DOM and compatible abort failures', () => {
@@ -16,7 +13,6 @@ describe('isAbortError', () => {
     expect(isAbortError(null)).toBe(false)
   })
 })
-
 
 describe('throwIfRequestAborted', () => {
   it('throws the signal reason after cancellation', () => {
@@ -36,7 +32,9 @@ describe('throwIfRequestAborted', () => {
   })
 
   it('does nothing while the request remains active', () => {
-    expect(() => throwIfRequestAborted(new AbortController().signal)).not.toThrow()
+    expect(() =>
+      throwIfRequestAborted(new AbortController().signal),
+    ).not.toThrow()
     expect(() => throwIfRequestAborted(undefined)).not.toThrow()
   })
 })

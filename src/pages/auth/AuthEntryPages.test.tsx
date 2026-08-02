@@ -4,10 +4,7 @@ import { createMemoryRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 import { describe, expect, it, vi } from 'vitest'
 
-import {
-  AuthContext,
-  type AuthContextValue,
-} from '@/auth/auth-context'
+import { AuthContext, type AuthContextValue } from '@/auth/auth-context'
 import { getSafeReturnTo } from '@/auth/auth-redirect'
 import type { AuthUser } from '@/auth/auth-types'
 import { LoginPage } from '@/pages/auth/LoginPage'
@@ -40,7 +37,9 @@ describe('auth entry pages', () => {
       'admin@test.com',
     )
     await user.type(screen.getByLabelText(/^Passwort/), 'secret-password')
-    await user.click(screen.getByRole('checkbox', { name: 'Angemeldet bleiben' }))
+    await user.click(
+      screen.getByRole('checkbox', { name: 'Angemeldet bleiben' }),
+    )
     await user.click(screen.getByRole('button', { name: 'Anmelden' }))
 
     expect(login).toHaveBeenCalledWith({
@@ -68,7 +67,9 @@ describe('auth entry pages', () => {
     await user.click(screen.getByRole('button', { name: 'Anmelden' }))
 
     expect(
-      await screen.findByRole('heading', { name: 'Zugang noch nicht freigeschaltet' }),
+      await screen.findByRole('heading', {
+        name: 'Zugang noch nicht freigeschaltet',
+      }),
     ).toBeVisible()
   })
 
@@ -87,7 +88,10 @@ describe('auth entry pages', () => {
       screen.getByRole('textbox', { name: 'E-Mail-Adresse' }),
       'citizen@test.com',
     )
-    await user.type(screen.getByLabelText(/^Passwort(?! bestätigen)/), 'secret-password')
+    await user.type(
+      screen.getByLabelText(/^Passwort(?! bestätigen)/),
+      'secret-password',
+    )
     await user.type(
       screen.getByLabelText(/^Passwort bestätigen/),
       'secret-password',
@@ -118,9 +122,7 @@ describe('auth entry pages', () => {
   })
 })
 
-type AuthOverrides = Partial<
-  Pick<AuthContextValue, 'login' | 'register'>
->
+type AuthOverrides = Partial<Pick<AuthContextValue, 'login' | 'register'>>
 
 function renderAuthRoutes(initialEntry: string, overrides: AuthOverrides = {}) {
   const authValue: AuthContextValue = {

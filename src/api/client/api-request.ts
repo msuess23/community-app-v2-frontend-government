@@ -7,11 +7,7 @@ import { resolveApiUrl } from '@/api/client/api-url'
 import { isAbortError } from '@/api/client/request-error'
 
 export type ApiResponseType =
-  | 'arrayBuffer'
-  | 'arraybuffer'
-  | 'blob'
-  | 'json'
-  | 'text'
+  'arrayBuffer' | 'arraybuffer' | 'blob' | 'json' | 'text'
 
 export type ApiRequestOptions = RequestInit & {
   responseType?: ApiResponseType

@@ -38,9 +38,7 @@ function MutationHarness({ mutationFn }: MutationHarnessProps) {
   })
 
   return (
-    <Button onPress={() => mutation.mutate()}>
-      Serveraktion ausführen
-    </Button>
+    <Button onPress={() => mutation.mutate()}>Serveraktion ausführen</Button>
   )
 }
 
@@ -93,7 +91,9 @@ describe('useResourceActionMutation', () => {
     expect(cancelQueries).toHaveBeenCalledWith({ queryKey: eventKey })
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: detailKey })
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: eventKey })
-    expect(screen.queryByText('Technical workflow details')).not.toBeInTheDocument()
+    expect(
+      screen.queryByText('Technical workflow details'),
+    ).not.toBeInTheDocument()
   })
 })
 

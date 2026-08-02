@@ -28,14 +28,9 @@ export type ResourceActionCachePlan = Readonly<{
 export type ResourceActionSuccessFeedback = Omit<FeedbackInput, 'tone'>
 
 export interface ResourceActionMutationOptions<TData, TVariables> {
-  conflictQueryKeys?: (
-    variables: TVariables,
-  ) => ReadonlyArray<QueryKey>
+  conflictQueryKeys?: (variables: TVariables) => ReadonlyArray<QueryKey>
   errorPresentation?: ApiErrorPresentationOptions
-  getCachePlan?: (
-    data: TData,
-    variables: TVariables,
-  ) => ResourceActionCachePlan
+  getCachePlan?: (data: TData, variables: TVariables) => ResourceActionCachePlan
   mutationFn: (variables: TVariables) => Promise<TData>
   mutationKey?: MutationKey
   onError?: (error: unknown, variables: TVariables) => Promise<void> | void

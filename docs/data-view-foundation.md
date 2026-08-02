@@ -26,10 +26,7 @@ Featuremodule sollen ihre Konfiguration außerhalb der React-Komponente oder üb
 const ticketListUrlConfig = {
   defaultPageSize: 20,
   defaultSort: { direction: 'desc', field: 'updatedAt' },
-  filters: [
-    { key: 'status', multiple: true },
-    { key: 'officeId' },
-  ],
+  filters: [{ key: 'status', multiple: true }, { key: 'officeId' }],
   pageSizeOptions: [10, 20, 50],
   sortFields: ['createdAt', 'title', 'updatedAt'],
 } as const

@@ -95,9 +95,7 @@ describe('shared form fields', () => {
     )
 
     expect(screen.getByText('nachweis.pdf')).toBeVisible()
-    await user.click(
-      screen.getByRole('button', { name: 'Auswahl entfernen' }),
-    )
+    await user.click(screen.getByRole('button', { name: 'Auswahl entfernen' }))
     expect(screen.queryByText('nachweis.pdf')).not.toBeInTheDocument()
   })
 })

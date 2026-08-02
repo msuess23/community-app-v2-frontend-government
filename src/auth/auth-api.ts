@@ -84,9 +84,7 @@ export function createAuthApi(request: ApiFetch = apiFetch): AuthApi {
     },
 
     /** Updates profile fields owned by the authenticated account. */
-    async updateCurrentUser(
-      input: UpdateCurrentUserInput,
-    ): Promise<AuthUser> {
+    async updateCurrentUser(input: UpdateCurrentUserInput): Promise<AuthUser> {
       const response = await request<unknown>('/users/me', {
         body: JSON.stringify({
           first_name: input.firstName.trim(),
@@ -112,7 +110,9 @@ export function createPasswordRecoveryApi(
   request: ApiFetch = apiFetch,
 ): PasswordRecoveryApi {
   return {
-    async requestPasswordReset(input: RequestPasswordResetInput): Promise<void> {
+    async requestPasswordReset(
+      input: RequestPasswordResetInput,
+    ): Promise<void> {
       await request('/auth/forgot-password-request', {
         authentication: 'none',
         body: JSON.stringify({ email: normalizeEmail(input.email) }),

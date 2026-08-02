@@ -351,10 +351,7 @@ function createLegacySessionId(refreshToken: string): string {
 }
 
 /** Compares immutable token snapshots before notifying subscribers. */
-function snapshotsEqual(
-  left: TokenSnapshot,
-  right: TokenSnapshot,
-): boolean {
+function snapshotsEqual(left: TokenSnapshot, right: TokenSnapshot): boolean {
   return (
     left.accessToken === right.accessToken &&
     left.refreshToken === right.refreshToken &&

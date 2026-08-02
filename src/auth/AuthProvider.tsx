@@ -8,10 +8,7 @@ import {
 } from 'react'
 
 import { AuthContext, type AuthContextValue } from '@/auth/auth-context'
-import {
-  createAuthSession,
-  type AuthSession,
-} from '@/auth/auth-session'
+import { createAuthSession, type AuthSession } from '@/auth/auth-session'
 import {
   useFeedback,
   type FeedbackInput,

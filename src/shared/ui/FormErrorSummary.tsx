@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  type MouseEvent,
-  type ReactNode,
-} from 'react'
+import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react'
 
 import { useFormFieldIdResolver } from '@/shared/forms/form-field-scope-context'
 import { cn } from '@/shared/lib/cn'

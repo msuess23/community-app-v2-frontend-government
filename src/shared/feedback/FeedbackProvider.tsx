@@ -105,7 +105,11 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
         className="pointer-events-none fixed inset-x-4 bottom-4 z-[80] flex max-h-[calc(100vh-2rem)] flex-col items-end gap-3 overflow-y-auto sm:left-auto sm:w-full sm:max-w-md"
       >
         {messages.map((message) => (
-          <FeedbackNotice dismiss={dismiss} key={message.id} message={message} />
+          <FeedbackNotice
+            dismiss={dismiss}
+            key={message.id}
+            message={message}
+          />
         ))}
       </div>
     </FeedbackContext.Provider>
@@ -153,7 +157,7 @@ function FeedbackNotice({ dismiss, message }: FeedbackNoticeProps) {
         </div>
         <Button
           aria-label={`Benachrichtigung „${message.title}“ schließen`}
-          className="-m-2 shrink-0 text-current hover:bg-black/5 active:bg-black/10 focus-visible:outline-current"
+          className="-m-2 shrink-0 text-current hover:bg-black/5 focus-visible:outline-current active:bg-black/10"
           onPress={() => dismiss(message.id)}
           size="sm"
           variant="ghost"

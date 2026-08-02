@@ -15,14 +15,14 @@ This foundation defines how editable workflows behave before feature-specific ti
 
 The visual controls live under `src/shared/ui` and their React Hook Form adapters under `src/shared/forms`.
 
-| Control | Purpose |
-| --- | --- |
-| `TextField` / `ControlledTextField` | single-line text, email, password, date, time, and other native input types |
-| `TextAreaField` / `ControlledTextAreaField` | descriptions, comments, reasons, and other multiline text |
-| `SelectField` / `ControlledSelectField` | finite, already-loaded option sets using the platform-native select behavior |
-| `RadioGroupField` / `ControlledRadioGroupField` | small mutually exclusive option sets that should remain visible together |
-| `FileUploadField` / `ControlledFileUploadField` | local file selection and review before a feature mutation uploads data |
-| `CheckboxField` / `ControlledCheckboxField` | independent boolean decisions |
+| Control                                         | Purpose                                                                      |
+| ----------------------------------------------- | ---------------------------------------------------------------------------- |
+| `TextField` / `ControlledTextField`             | single-line text, email, password, date, time, and other native input types  |
+| `TextAreaField` / `ControlledTextAreaField`     | descriptions, comments, reasons, and other multiline text                    |
+| `SelectField` / `ControlledSelectField`         | finite, already-loaded option sets using the platform-native select behavior |
+| `RadioGroupField` / `ControlledRadioGroupField` | small mutually exclusive option sets that should remain visible together     |
+| `FileUploadField` / `ControlledFileUploadField` | local file selection and review before a feature mutation uploads data       |
+| `CheckboxField` / `ControlledCheckboxField`     | independent boolean decisions                                                |
 
 `ControlledChangeReasonField` applies the common label, explanation, required marker, and 500-character limit for administrative audit reasons. Feature schemas should compose `changeReasonSchema` and call `normalizeChangeReason()` before creating a request payload.
 

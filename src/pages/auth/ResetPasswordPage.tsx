@@ -2,10 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 
-import {
-  passwordRecoveryApi,
-  type PasswordRecoveryApi,
-} from '@/auth/auth-api'
+import { passwordRecoveryApi, type PasswordRecoveryApi } from '@/auth/auth-api'
 import { useAuth } from '@/auth/auth-context'
 import {
   applyResetPasswordError,
@@ -61,13 +58,12 @@ export function ResetPasswordPage({
   })
 
   if (isAuthenticated) {
-    return <Navigate replace to={isAuthorityUser(user) ? '/' : '/access-pending'} />
+    return (
+      <Navigate replace to={isAuthorityUser(user) ? '/' : '/access-pending'} />
+    )
   }
 
-  const formErrors = [
-    ...submissionErrors,
-    ...getFormErrorSummary(errors),
-  ]
+  const formErrors = [...submissionErrors, ...getFormErrorSummary(errors)]
 
   return (
     <AuthPageLayout

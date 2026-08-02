@@ -30,6 +30,8 @@ describe('password recovery routing', () => {
 
   it('does not accept recovery entry pages as post-login targets', () => {
     expect(getSafeReturnTo('/password-forgotten')).toBe('/')
-    expect(getSafeReturnTo('/password-reset?email=test%40example.com')).toBe('/')
+    expect(getSafeReturnTo('/password-reset?email=test%40example.com')).toBe(
+      '/',
+    )
   })
 })

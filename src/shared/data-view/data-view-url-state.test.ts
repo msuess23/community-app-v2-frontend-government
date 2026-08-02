@@ -9,10 +9,7 @@ import {
 const config = {
   defaultPageSize: 20,
   defaultSort: { direction: 'desc', field: 'updatedAt' },
-  filters: [
-    { key: 'status' },
-    { key: 'office', multiple: true },
-  ],
+  filters: [{ key: 'status' }, { key: 'office', multiple: true }],
   pageSizeOptions: [10, 20, 50],
   sortFields: ['title', 'updatedAt'],
 } as const

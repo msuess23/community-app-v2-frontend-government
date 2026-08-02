@@ -111,7 +111,7 @@ export function AppShellLayout() {
               className="relative ml-auto"
               onKeyDown={handleAccountMenuKeyDown}
             >
-              <summary className="focus-visible:outline-primary flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg px-2 py-1 text-left hover:bg-surface-container focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
+              <summary className="focus-visible:outline-primary hover:bg-surface-container flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg px-2 py-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
                 <span className="bg-primary-container text-on-primary-container flex size-9 shrink-0 items-center justify-center rounded-full">
                   <UserRound aria-hidden="true" size={19} />
                 </span>
@@ -136,7 +136,7 @@ export function AppShellLayout() {
                   <p className="font-semibold">
                     {user.firstName} {user.lastName}
                   </p>
-                  <p className="text-on-surface-variant mt-1 break-all text-sm">
+                  <p className="text-on-surface-variant mt-1 text-sm break-all">
                     {user.email}
                   </p>
                   <p className="text-on-surface-variant mt-1 text-sm">
@@ -145,9 +145,11 @@ export function AppShellLayout() {
                 </div>
 
                 <Link
-                  className="focus-visible:outline-primary mt-3 flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-primary hover:bg-primary-container focus-visible:outline-2 focus-visible:outline-offset-2"
+                  className="focus-visible:outline-primary text-primary hover:bg-primary-container mt-3 flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
                   onClick={(event) => {
-                    event.currentTarget.closest('details')?.removeAttribute('open')
+                    event.currentTarget
+                      .closest('details')
+                      ?.removeAttribute('open')
                   }}
                   to="/account"
                 >

@@ -1,10 +1,7 @@
 import type { UseFormSetError } from 'react-hook-form'
 import { z } from 'zod'
 
-import type {
-  AuthUser,
-  UpdateCurrentUserInput,
-} from '@/auth/auth-types'
+import type { AuthUser, UpdateCurrentUserInput } from '@/auth/auth-types'
 import { applySubmissionError } from '@/shared/forms/apply-submission-error'
 import type { FormErrorSummaryItem } from '@/shared/ui/FormErrorSummary'
 
@@ -21,9 +18,7 @@ export const accountProfileFormSchema = z.object({
     .max(100, 'Der Nachname darf höchstens 100 Zeichen haben.'),
 })
 
-export type AccountProfileFormValues = z.infer<
-  typeof accountProfileFormSchema
->
+export type AccountProfileFormValues = z.infer<typeof accountProfileFormSchema>
 
 /** Creates editable profile values from the authenticated user snapshot. */
 export function toAccountProfileFormValues(

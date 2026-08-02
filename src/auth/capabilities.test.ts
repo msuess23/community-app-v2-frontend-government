@@ -7,43 +7,44 @@ import {
 } from '@/auth/capabilities'
 import type { AuthUser, Role } from '@/auth/auth-types'
 
-const EXPECTED_CAPABILITIES: Readonly<Record<Role, readonly AppCapability[]>> = {
-  CITIZEN: [],
-  DISPATCHER: [
-    'accessAuthorityClient',
-    'viewTicketWorkspace',
-    'dispatchTickets',
-    'viewUsers',
-  ],
-  OFFICER: [
-    'accessAuthorityClient',
-    'viewTicketWorkspace',
-    'workOnTickets',
-    'viewAppointmentWorkspace',
-    'manageAppointmentSlots',
-    'manageAppointmentDocuments',
-    'manageInfos',
-    'viewUsers',
-  ],
-  MANAGER: [
-    'accessAuthorityClient',
-    'viewTicketWorkspace',
-    'workOnTickets',
-    'decideTicketEscalations',
-    'viewAppointmentWorkspace',
-    'manageAppointmentSlots',
-    'manageAppointmentDocuments',
-    'manageInfos',
-    'viewUsers',
-  ],
-  ADMIN: [
-    'accessAuthorityClient',
-    'manageInfos',
-    'viewUsers',
-    'manageUsers',
-    'manageOffices',
-  ],
-}
+const EXPECTED_CAPABILITIES: Readonly<Record<Role, readonly AppCapability[]>> =
+  {
+    CITIZEN: [],
+    DISPATCHER: [
+      'accessAuthorityClient',
+      'viewTicketWorkspace',
+      'dispatchTickets',
+      'viewUsers',
+    ],
+    OFFICER: [
+      'accessAuthorityClient',
+      'viewTicketWorkspace',
+      'workOnTickets',
+      'viewAppointmentWorkspace',
+      'manageAppointmentSlots',
+      'manageAppointmentDocuments',
+      'manageInfos',
+      'viewUsers',
+    ],
+    MANAGER: [
+      'accessAuthorityClient',
+      'viewTicketWorkspace',
+      'workOnTickets',
+      'decideTicketEscalations',
+      'viewAppointmentWorkspace',
+      'manageAppointmentSlots',
+      'manageAppointmentDocuments',
+      'manageInfos',
+      'viewUsers',
+    ],
+    ADMIN: [
+      'accessAuthorityClient',
+      'manageInfos',
+      'viewUsers',
+      'manageUsers',
+      'manageOffices',
+    ],
+  }
 
 describe('application capabilities', () => {
   it.each(Object.entries(EXPECTED_CAPABILITIES) as [Role, AppCapability[]][])(

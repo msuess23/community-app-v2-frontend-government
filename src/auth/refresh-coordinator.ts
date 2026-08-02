@@ -1,10 +1,7 @@
 import { isApiError } from '@/api/client/api-error'
 import { requestTokenRefresh } from '@/auth/refresh-api'
 import { refreshLock, type RefreshLock } from '@/auth/refresh-lock'
-import {
-  sessionEvents,
-  type SessionEventBus,
-} from '@/auth/session-events'
+import { sessionEvents, type SessionEventBus } from '@/auth/session-events'
 import {
   tokenStore,
   type AuthTokens,

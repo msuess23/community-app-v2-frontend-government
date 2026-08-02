@@ -72,7 +72,9 @@ export function ResourceDetailLayout({
       >
         <div className="min-w-0 space-y-6">{children}</div>
         {aside ? (
-          <aside className="min-w-0 space-y-6 xl:sticky xl:top-6">{aside}</aside>
+          <aside className="min-w-0 space-y-6 xl:sticky xl:top-6">
+            {aside}
+          </aside>
         ) : null}
       </div>
     </div>
@@ -161,7 +163,7 @@ export function ResourceMetadataList({
           <dt className="text-on-surface-variant text-sm font-medium">
             {item.label}
           </dt>
-          <dd className="text-on-surface break-words leading-6">
+          <dd className="text-on-surface leading-6 break-words">
             {item.value}
           </dd>
         </div>

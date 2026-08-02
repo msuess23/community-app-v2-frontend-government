@@ -1,8 +1,4 @@
-import type {
-  FieldPath,
-  FieldValues,
-  UseFormSetError,
-} from 'react-hook-form'
+import type { FieldPath, FieldValues, UseFormSetError } from 'react-hook-form'
 import { z } from 'zod'
 
 import { isApiError } from '@/api/client/api-error'
@@ -24,7 +20,10 @@ export const resetPasswordFormSchema = z
     otp: z
       .string()
       .trim()
-      .regex(/^\d{6}$/u, 'Der Einmalcode muss aus genau sechs Ziffern bestehen.'),
+      .regex(
+        /^\d{6}$/u,
+        'Der Einmalcode muss aus genau sechs Ziffern bestehen.',
+      ),
     passwordConfirmation: z.string(),
   })
   .refine((values) => values.newPassword === values.passwordConfirmation, {
@@ -84,12 +83,11 @@ export function applyResetPasswordError(
   })
 }
 
-type RecoveryErrorOptions<TFieldValues extends FieldValues> =
-  Readonly<{
-    fallbackMessage: string
-    fieldAliases: Readonly<Record<string, FieldPath<TFieldValues>>>
-    statusMessages: Readonly<Record<number, string>>
-  }>
+type RecoveryErrorOptions<TFieldValues extends FieldValues> = Readonly<{
+  fallbackMessage: string
+  fieldAliases: Readonly<Record<string, FieldPath<TFieldValues>>>
+  statusMessages: Readonly<Record<number, string>>
+}>
 
 function applyRecoveryError<TFieldValues extends FieldValues>(
   error: unknown,
@@ -104,9 +102,7 @@ function applyRecoveryError<TFieldValues extends FieldValues>(
   let hasUnmappedDetail = false
 
   for (const detail of error.details) {
-    const field = detail.field
-      ? options.fieldAliases[detail.field]
-      : undefined
+    const field = detail.field ? options.fieldAliases[detail.field] : undefined
 
     if (!field) {
       hasUnmappedDetail = true

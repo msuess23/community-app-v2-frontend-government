@@ -11,9 +11,9 @@ test('password recovery entry pages load', async ({ page }) => {
   await expect(
     page.getByRole('heading', { level: 1, name: 'Passwort zurücksetzen' }),
   ).toBeVisible()
-  await expect(page.getByRole('textbox', { name: 'E-Mail-Adresse' })).toHaveValue(
-    'citizen@test.com',
-  )
+  await expect(
+    page.getByRole('textbox', { name: 'E-Mail-Adresse' }),
+  ).toHaveValue('citizen@test.com')
 })
 
 test('password recovery entry has no serious accessibility violations', async ({

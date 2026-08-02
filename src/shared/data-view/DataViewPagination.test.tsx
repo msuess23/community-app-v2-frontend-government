@@ -3,10 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { DataViewPagination } from '@/shared/data-view/DataViewPagination'
-import {
-  getPageCount,
-  getVisiblePages,
-} from '@/shared/data-view/pagination'
+import { getPageCount, getVisiblePages } from '@/shared/data-view/pagination'
 import { renderWithProviders } from '@/test/render'
 
 describe('DataViewPagination', () => {

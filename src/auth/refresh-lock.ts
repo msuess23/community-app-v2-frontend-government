@@ -95,9 +95,12 @@ export function createStorageRefreshLock({
         return task()
       }
 
-      const heartbeat = setInterval(() => {
-        renewStorageLease(storage, ownerId, now() + leaseDurationMs)
-      }, Math.max(1_000, Math.floor(leaseDurationMs / 3)))
+      const heartbeat = setInterval(
+        () => {
+          renewStorageLease(storage, ownerId, now() + leaseDurationMs)
+        },
+        Math.max(1_000, Math.floor(leaseDurationMs / 3)),
+      )
 
       try {
         return await task()

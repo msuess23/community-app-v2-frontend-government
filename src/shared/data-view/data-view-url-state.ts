@@ -178,10 +178,7 @@ export function useDataViewUrlState<
 export function getSingleFilterValue<
   TFilterKey extends string,
   TSortField extends string,
->(
-  state: DataViewUrlState<TSortField, TFilterKey>,
-  key: TFilterKey,
-): string {
+>(state: DataViewUrlState<TSortField, TFilterKey>, key: TFilterKey): string {
   return state.filters[key]?.[0] ?? ''
 }
 
@@ -273,9 +270,7 @@ function clearOwnedParams<TFilterKey extends string>(
 /** Merges a partial filter update without mutating the current state. */
 function mergeFilters<TFilterKey extends string>(
   current: Readonly<Record<TFilterKey, readonly string[]>>,
-  update?: Partial<
-    Record<TFilterKey, string | readonly string[] | null>
-  >,
+  update?: Partial<Record<TFilterKey, string | readonly string[] | null>>,
 ): Readonly<Record<TFilterKey, readonly string[]>> {
   if (update === undefined) {
     return current
@@ -311,10 +306,7 @@ function parsePageSize<TSortField extends string, TFilterKey extends string>(
 function normalizePageSize<
   TSortField extends string,
   TFilterKey extends string,
->(
-  value: number,
-  config: DataViewUrlConfig<TSortField, TFilterKey>,
-): number {
+>(value: number, config: DataViewUrlConfig<TSortField, TFilterKey>): number {
   return config.pageSizeOptions.includes(value) ? value : config.defaultPageSize
 }
 

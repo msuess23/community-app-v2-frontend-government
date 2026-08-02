@@ -10,23 +10,27 @@ import {
   type ButtonVariant,
 } from '@/shared/ui/button-styles'
 
-export interface ButtonProps
-  extends Omit<AriaButtonProps, 'className' | 'ref'> {
+export interface ButtonProps extends Omit<
+  AriaButtonProps,
+  'className' | 'ref'
+> {
   className?: string
   size?: ButtonSize
   variant?: ButtonVariant
 }
 
 /** Renders the shared accessible action button and exposes its DOM focus target. */
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { className, size = 'md', variant = 'primary', ...props },
-  ref,
-) {
-  return (
-    <AriaButton
-      {...props}
-      className={buttonStyles({ className, size, variant })}
-      ref={ref}
-    />
-  )
-})
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  function Button(
+    { className, size = 'md', variant = 'primary', ...props },
+    ref,
+  ) {
+    return (
+      <AriaButton
+        {...props}
+        className={buttonStyles({ className, size, variant })}
+        ref={ref}
+      />
+    )
+  },
+)

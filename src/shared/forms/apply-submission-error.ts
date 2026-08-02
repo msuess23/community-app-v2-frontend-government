@@ -1,19 +1,14 @@
-import type {
-  FieldPath,
-  FieldValues,
-  UseFormSetError,
-} from 'react-hook-form'
+import type { FieldPath, FieldValues, UseFormSetError } from 'react-hook-form'
 
 import { isApiError } from '@/api/client/api-error'
 import type { FormErrorSummaryItem } from '@/shared/ui/FormErrorSummary'
 
-export type SubmissionErrorOptions<
-  TFieldValues extends FieldValues,
-> = Readonly<{
-  fallbackMessage: string
-  fieldAliases: Readonly<Record<string, FieldPath<TFieldValues>>>
-  statusMessages?: Readonly<Record<number, string>>
-}>
+export type SubmissionErrorOptions<TFieldValues extends FieldValues> =
+  Readonly<{
+    fallbackMessage: string
+    fieldAliases: Readonly<Record<string, FieldPath<TFieldValues>>>
+    statusMessages?: Readonly<Record<number, string>>
+  }>
 
 /**
  * Maps backend validation details to form fields and returns remaining form-level errors.
@@ -31,9 +26,7 @@ export function applySubmissionError<TFieldValues extends FieldValues>(
   let mappedFieldError = false
 
   for (const detail of error.details) {
-    const field = detail.field
-      ? options.fieldAliases[detail.field]
-      : undefined
+    const field = detail.field ? options.fieldAliases[detail.field] : undefined
 
     if (!field) {
       hasUnmappedDetail = true

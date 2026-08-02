@@ -1,16 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { AuthApi } from '@/auth/auth-api'
-import {
-  AuthSession,
-  type AuthStateListener,
-} from '@/auth/auth-session'
+import { AuthSession, type AuthStateListener } from '@/auth/auth-session'
 import type { AuthUser } from '@/auth/auth-types'
 import { SessionEventBus } from '@/auth/session-events'
-import {
-  createTokenStore,
-  REFRESH_TOKEN_STORAGE_KEY,
-} from '@/auth/token-store'
+import { createTokenStore, REFRESH_TOKEN_STORAGE_KEY } from '@/auth/token-store'
 
 const AUTH_USER: AuthUser = {
   email: 'admin@test.com',

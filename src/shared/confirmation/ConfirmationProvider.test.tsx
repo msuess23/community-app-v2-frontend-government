@@ -54,7 +54,9 @@ function QueuedConfirmationHarness() {
 
   return (
     <div>
-      <Button onPress={() => void requestSequence()}>Entscheidungen öffnen</Button>
+      <Button onPress={() => void requestSequence()}>
+        Entscheidungen öffnen
+      </Button>
       <p>{result}</p>
     </div>
   )

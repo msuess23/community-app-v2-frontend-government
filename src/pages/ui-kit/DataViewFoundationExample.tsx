@@ -112,10 +112,7 @@ export function DataViewFoundationExample() {
     })
   }, [search, sort, status])
 
-  const pageItems = filteredItems.slice(
-    (page - 1) * pageSize,
-    page * pageSize,
-  )
+  const pageItems = filteredItems.slice((page - 1) * pageSize, page * pageSize)
   const columns: readonly DataViewColumn<ExampleItem>[] = [
     {
       header: 'Anliegen',
@@ -254,7 +251,7 @@ export function DataViewFoundationExample() {
           items={pageItems}
         />
       ) : (
-        <p className="text-on-surface-variant rounded-xl border border-dashed border-outline p-6 text-center">
+        <p className="text-on-surface-variant border-outline rounded-xl border border-dashed p-6 text-center">
           Für diese Auswahl sind keine Beispielanliegen vorhanden.
         </p>
       )}

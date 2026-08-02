@@ -15,12 +15,7 @@ export interface ControlledRadioGroupFieldProps<
   TFieldValues extends FieldValues,
 > extends Omit<
   RadioGroupFieldProps,
-  | 'errorMessage'
-  | 'isInvalid'
-  | 'name'
-  | 'onBlur'
-  | 'onChange'
-  | 'value'
+  'errorMessage' | 'isInvalid' | 'name' | 'onBlur' | 'onChange' | 'value'
 > {
   control: Control<TFieldValues>
   name: FieldPath<TFieldValues>

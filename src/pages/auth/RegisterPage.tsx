@@ -56,10 +56,7 @@ export function RegisterPage() {
     )
   }
 
-  const formErrors = [
-    ...submissionErrors,
-    ...getFormErrorSummary(errors),
-  ]
+  const formErrors = [...submissionErrors, ...getFormErrorSummary(errors)]
 
   return (
     <AuthPageLayout

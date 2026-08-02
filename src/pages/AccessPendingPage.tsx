@@ -85,8 +85,8 @@ export function AccessPendingPage() {
         <div className="space-y-4">
           <p className="text-on-surface-variant leading-7">
             Eine Administration muss diesem Bürgerkonto zunächst die vorgesehene
-            Behördenrolle und gegebenenfalls eine Behörde zuordnen. Danach kannst
-            du den Zugang hier erneut prüfen oder dich neu anmelden.
+            Behördenrolle und gegebenenfalls eine Behörde zuordnen. Danach
+            kannst du den Zugang hier erneut prüfen oder dich neu anmelden.
           </p>
 
           {user ? (
@@ -104,7 +104,9 @@ export function AccessPendingPage() {
               onPress={() => void handleAccessCheck()}
             >
               <RefreshCw aria-hidden="true" size={18} />
-              {isCheckingAccess ? 'Zugang wird geprüft …' : 'Zugang erneut prüfen'}
+              {isCheckingAccess
+                ? 'Zugang wird geprüft …'
+                : 'Zugang erneut prüfen'}
             </Button>
             <Button
               isDisabled={isCheckingAccess || isLoggingOut}
@@ -112,7 +114,9 @@ export function AccessPendingPage() {
               variant="outline"
             >
               <LogOut aria-hidden="true" size={18} />
-              {isLoggingOut ? 'Abmeldung läuft …' : 'Abmelden und Konto wechseln'}
+              {isLoggingOut
+                ? 'Abmeldung läuft …'
+                : 'Abmelden und Konto wechseln'}
             </Button>
           </div>
         </div>

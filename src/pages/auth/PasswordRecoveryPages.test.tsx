@@ -5,10 +5,7 @@ import { RouterProvider } from 'react-router/dom'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { PasswordRecoveryApi } from '@/auth/auth-api'
-import {
-  AuthContext,
-  type AuthContextValue,
-} from '@/auth/auth-context'
+import { AuthContext, type AuthContextValue } from '@/auth/auth-context'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
@@ -57,10 +54,7 @@ describe('password recovery pages', () => {
     )
     expect(
       screen.getByRole('link', { name: 'Einmalcode eingeben' }),
-    ).toHaveAttribute(
-      'href',
-      '/password-reset?email=citizen%40test.com',
-    )
+    ).toHaveAttribute('href', '/password-reset?email=citizen%40test.com')
   })
 
   it('resets the password and returns to login with a success marker', async () => {
@@ -74,7 +68,10 @@ describe('password recovery pages', () => {
     expect(screen.getByRole('textbox', { name: 'E-Mail-Adresse' })).toHaveValue(
       'citizen@test.com',
     )
-    await user.type(screen.getByRole('textbox', { name: 'Einmalcode' }), '123456')
+    await user.type(
+      screen.getByRole('textbox', { name: 'Einmalcode' }),
+      '123456',
+    )
     await user.type(
       screen.getByLabelText(/^Neues Passwort/, {
         selector: 'input[name="newPassword"]',
@@ -94,7 +91,9 @@ describe('password recovery pages', () => {
       newPassword: 'secret-password',
       otp: '123456',
     })
-    expect(await screen.findByRole('heading', { name: 'Anmelden' })).toBeVisible()
+    expect(
+      await screen.findByRole('heading', { name: 'Anmelden' }),
+    ).toBeVisible()
     expect(
       screen.getByText(
         'Das Passwort wurde geändert. Du kannst dich jetzt anmelden.',
@@ -111,10 +110,7 @@ function createApi(): PasswordRecoveryApi {
   }
 }
 
-function renderRecoveryRoutes(
-  initialEntry: string,
-  api: PasswordRecoveryApi,
-) {
+function renderRecoveryRoutes(initialEntry: string, api: PasswordRecoveryApi) {
   const router = createMemoryRouter(
     [
       {

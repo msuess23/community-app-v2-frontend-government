@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
-import {
-  useBeforeUnload,
-  useBlocker,
-  type BlockerFunction,
-} from 'react-router'
+import { useBeforeUnload, useBlocker, type BlockerFunction } from 'react-router'
 
 import {
   useConfirmation,

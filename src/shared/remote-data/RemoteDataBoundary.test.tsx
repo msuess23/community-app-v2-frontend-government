@@ -60,9 +60,7 @@ describe('RemoteDataBoundary', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Serverfehler')
     expect(screen.queryByText('Internal details')).not.toBeInTheDocument()
 
-    await user.click(
-      screen.getByRole('button', { name: 'Erneut versuchen' }),
-    )
+    await user.click(screen.getByRole('button', { name: 'Erneut versuchen' }))
 
     expect(refetch).toHaveBeenCalledOnce()
   })

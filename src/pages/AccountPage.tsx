@@ -83,10 +83,7 @@ function AuthenticatedAccountPage({ user }: AuthenticatedAccountPageProps) {
     hasUnsavedChanges: isDirty,
   })
 
-  const formErrors = [
-    ...submissionErrors,
-    ...getFormErrorSummary(errors),
-  ]
+  const formErrors = [...submissionErrors, ...getFormErrorSummary(errors)]
   const isSessionActionPending = sessionAction !== null
 
   /** Ends only the browser session represented by this tab or remembered login. */
@@ -334,7 +331,7 @@ function AccountMetadata({ label, value }: AccountMetadataProps) {
   return (
     <div className="grid gap-1 py-3 first:pt-0 last:pb-0">
       <dt className="text-on-surface-variant font-medium">{label}</dt>
-      <dd className="break-words font-semibold">{value}</dd>
+      <dd className="font-semibold break-words">{value}</dd>
     </div>
   )
 }

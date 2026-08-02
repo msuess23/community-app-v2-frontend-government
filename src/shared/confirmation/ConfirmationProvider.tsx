@@ -29,9 +29,7 @@ type QueuedConfirmation = Readonly<{
 }>
 
 /** Coordinates confirmation requests so only one modal decision is shown at a time. */
-export function ConfirmationProvider({
-  children,
-}: ConfirmationProviderProps) {
+export function ConfirmationProvider({ children }: ConfirmationProviderProps) {
   const [queue, setQueue] = useState<QueuedConfirmation[]>([])
   const dialogRef = useRef<HTMLDialogElement>(null)
   const cancelButtonRef = useRef<HTMLButtonElement>(null)

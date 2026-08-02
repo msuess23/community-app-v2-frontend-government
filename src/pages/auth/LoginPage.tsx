@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import {
-  Link,
-  Navigate,
-  useLocation,
-  useNavigate,
-} from 'react-router'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 
 import { useAuth } from '@/auth/auth-context'
 import {
@@ -74,10 +69,7 @@ export function LoginPage() {
     )
   }
 
-  const formErrors = [
-    ...submissionErrors,
-    ...getFormErrorSummary(errors),
-  ]
+  const formErrors = [...submissionErrors, ...getFormErrorSummary(errors)]
 
   return (
     <AuthPageLayout

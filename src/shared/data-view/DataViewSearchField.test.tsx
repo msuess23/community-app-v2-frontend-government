@@ -65,5 +65,4 @@ describe('DataViewSearchField', () => {
     expect(screen.getByRole('searchbox', { name: 'Suche' })).toHaveValue('Neu')
     expect(onSearch).not.toHaveBeenCalled()
   })
-
 })

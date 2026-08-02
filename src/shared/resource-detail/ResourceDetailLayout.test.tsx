@@ -9,37 +9,40 @@ import { renderRouter } from '@/test/render'
 
 describe('ResourceDetailLayout', () => {
   it('provides return navigation, section anchors and semantic metadata', () => {
-    renderRouter([
-      {
-        path: '/tickets/ticket-1',
-        element: (
-          <ResourceDetailLayout
-            backLink={{
-              label: 'Zur Anliegenübersicht',
-              to: '/tickets?status=OPEN&page=3',
-            }}
-            navigationItems={[
-              { id: 'overview', label: 'Übersicht' },
-              { id: 'history', label: 'Ereignisse' },
-            ]}
-            status={<span>In Bearbeitung</span>}
-            title="Defekte Straßenbeleuchtung"
-          >
-            <ResourceDetailSection id="overview" title="Übersicht">
-              <ResourceMetadataList
-                items={[
-                  { label: 'Behörde', value: 'Tiefbauamt' },
-                  { label: 'Version', value: '3' },
-                ]}
-              />
-            </ResourceDetailSection>
-            <ResourceDetailSection id="history" title="Ereignisse">
-              <p>Noch keine Ereignisse</p>
-            </ResourceDetailSection>
-          </ResourceDetailLayout>
-        ),
-      },
-    ], ['/tickets/ticket-1'])
+    renderRouter(
+      [
+        {
+          path: '/tickets/ticket-1',
+          element: (
+            <ResourceDetailLayout
+              backLink={{
+                label: 'Zur Anliegenübersicht',
+                to: '/tickets?status=OPEN&page=3',
+              }}
+              navigationItems={[
+                { id: 'overview', label: 'Übersicht' },
+                { id: 'history', label: 'Ereignisse' },
+              ]}
+              status={<span>In Bearbeitung</span>}
+              title="Defekte Straßenbeleuchtung"
+            >
+              <ResourceDetailSection id="overview" title="Übersicht">
+                <ResourceMetadataList
+                  items={[
+                    { label: 'Behörde', value: 'Tiefbauamt' },
+                    { label: 'Version', value: '3' },
+                  ]}
+                />
+              </ResourceDetailSection>
+              <ResourceDetailSection id="history" title="Ereignisse">
+                <p>Noch keine Ereignisse</p>
+              </ResourceDetailSection>
+            </ResourceDetailLayout>
+          ),
+        },
+      ],
+      ['/tickets/ticket-1'],
+    )
 
     expect(
       screen.getByRole('heading', { name: 'Defekte Straßenbeleuchtung' }),

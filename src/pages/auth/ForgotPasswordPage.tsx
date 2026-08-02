@@ -2,10 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate } from 'react-router'
 
-import {
-  passwordRecoveryApi,
-  type PasswordRecoveryApi,
-} from '@/auth/auth-api'
+import { passwordRecoveryApi, type PasswordRecoveryApi } from '@/auth/auth-api'
 import { useAuth } from '@/auth/auth-context'
 import {
   applyRequestPasswordResetError,
@@ -56,7 +53,9 @@ export function ForgotPasswordPage({
   })
 
   if (isAuthenticated) {
-    return <Navigate replace to={isAuthorityUser(user) ? '/' : '/access-pending'} />
+    return (
+      <Navigate replace to={isAuthorityUser(user) ? '/' : '/access-pending'} />
+    )
   }
 
   const footer = (
@@ -80,7 +79,7 @@ export function ForgotPasswordPage({
       >
         <div className="space-y-5">
           <p
-            className="bg-tertiary-container text-on-tertiary-container rounded-lg p-4 text-sm font-medium leading-6"
+            className="bg-tertiary-container text-on-tertiary-container rounded-lg p-4 text-sm leading-6 font-medium"
             role="status"
           >
             Wenn für diese E-Mail-Adresse ein aktives Konto besteht, wurde ein
@@ -102,10 +101,7 @@ export function ForgotPasswordPage({
     )
   }
 
-  const formErrors = [
-    ...submissionErrors,
-    ...getFormErrorSummary(errors),
-  ]
+  const formErrors = [...submissionErrors, ...getFormErrorSummary(errors)]
 
   return (
     <AuthPageLayout
@@ -124,9 +120,7 @@ export function ForgotPasswordPage({
             await api.requestPasswordReset(input)
             setRequestedEmail(input.email)
           } catch (error) {
-            setSubmissionErrors(
-              applyRequestPasswordResetError(error, setError),
-            )
+            setSubmissionErrors(applyRequestPasswordResetError(error, setError))
           }
         })}
       >

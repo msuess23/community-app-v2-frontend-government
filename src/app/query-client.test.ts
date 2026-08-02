@@ -38,9 +38,9 @@ describe('shouldRetryQuery', () => {
     expect(shouldRetryQuery(0, new DOMException('Aborted', 'AbortError'))).toBe(
       false,
     )
-    expect(shouldRetryQuery(0, new Error('Unexpected implementation error'))).toBe(
-      false,
-    )
+    expect(
+      shouldRetryQuery(0, new Error('Unexpected implementation error')),
+    ).toBe(false)
     expect(
       shouldRetryQuery(
         1,

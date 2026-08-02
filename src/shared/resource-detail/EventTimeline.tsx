@@ -60,14 +60,16 @@ export function EventTimeline<TEvent extends ResourceEvent>({
       </ol>
 
       {hasOlderEvents && onLoadOlder ? (
-        <div className="flex justify-center border-t border-outline-variant pt-5">
+        <div className="border-outline-variant flex justify-center border-t pt-5">
           <Button
             aria-busy={isLoadingOlder || undefined}
             isDisabled={isLoadingOlder}
             onPress={onLoadOlder}
             variant="outline"
           >
-            {isLoadingOlder ? 'Ältere Ereignisse werden geladen …' : loadOlderLabel}
+            {isLoadingOlder
+              ? 'Ältere Ereignisse werden geladen …'
+              : loadOlderLabel}
           </Button>
         </div>
       ) : null}
@@ -173,7 +175,7 @@ function DevelopmentEventDetails({
       <summary className="cursor-pointer font-semibold">
         Entwicklungsdetails anzeigen
       </summary>
-      <pre className="mt-3 overflow-x-auto whitespace-pre-wrap text-xs leading-5">
+      <pre className="mt-3 overflow-x-auto text-xs leading-5 whitespace-pre-wrap">
         {serializeEventPayload(event.payload)}
       </pre>
     </details>

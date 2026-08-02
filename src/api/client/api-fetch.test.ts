@@ -202,9 +202,7 @@ describe('apiFetch authentication', () => {
       message: 'Unauthorized',
       status: 401,
     })
-    const request = vi
-      .fn<ApiRequestExecutor>()
-      .mockRejectedValue(unauthorized)
+    const request = vi.fn<ApiRequestExecutor>().mockRejectedValue(unauthorized)
     const refresh = { refresh: vi.fn() }
     const apiFetch = createApiFetch({
       refresh,
@@ -237,8 +235,7 @@ function readAuthorization(
   callIndex: number,
 ): string | null {
   const options = request.mock.calls[callIndex]?.[1] as
-    | ApiRequestOptions
-    | undefined
+    ApiRequestOptions | undefined
 
   return new Headers(options?.headers).get('Authorization')
 }

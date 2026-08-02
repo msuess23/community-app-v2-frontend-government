@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type {
-  ApiFetch,
-  ApiRequestOptions,
-} from '@/api/client/api-fetch'
+import type { ApiFetch, ApiRequestOptions } from '@/api/client/api-fetch'
 import { createAuthApi } from '@/auth/auth-api'
 
 const USER_RESPONSE = {

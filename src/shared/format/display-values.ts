@@ -97,7 +97,9 @@ function toValidDate(value: DateInput): Date | null {
 }
 
 /** Formats a byte count for compact, locale-aware file metadata. */
-export function formatDisplayFileSize(bytes: number | null | undefined): string {
+export function formatDisplayFileSize(
+  bytes: number | null | undefined,
+): string {
   if (
     bytes === null ||
     bytes === undefined ||

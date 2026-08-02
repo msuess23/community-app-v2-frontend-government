@@ -42,7 +42,9 @@ describe('FormErrorSummary', () => {
       screen.getByRole('link', { name: 'Die E-Mail-Adresse ist ungültig.' }),
     )
 
-    expect(screen.getByRole('textbox', { name: 'E-Mail-Adresse' })).toHaveFocus()
+    expect(
+      screen.getByRole('textbox', { name: 'E-Mail-Adresse' }),
+    ).toHaveFocus()
     expect(window.location.hash).toBe('')
   })
 
@@ -93,7 +95,9 @@ describe('FormErrorSummary', () => {
       </>,
     )
 
-    expect(screen.getByRole('textbox', { name: 'E-Mail-Adresse' })).toHaveFocus()
+    expect(
+      screen.getByRole('textbox', { name: 'E-Mail-Adresse' }),
+    ).toHaveFocus()
   })
 
   it('renders nothing without errors', () => {

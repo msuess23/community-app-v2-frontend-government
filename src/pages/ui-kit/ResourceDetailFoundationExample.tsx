@@ -59,7 +59,8 @@ const eventRegistry = createResourceEventRendererRegistry<ResourceEvent>([
   {
     eventType: 'TICKET_COMPLETED',
     render: () => ({
-      description: 'Die Bearbeitung wurde mit einer serverbestätigten Aktion abgeschlossen.',
+      description:
+        'Die Bearbeitung wurde mit einer serverbestätigten Aktion abgeschlossen.',
       title: 'Anliegen abgeschlossen',
       tone: 'success',
     }),

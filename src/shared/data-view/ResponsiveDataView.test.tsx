@@ -108,7 +108,9 @@ function createColumns(
     {
       header: 'Status',
       id: 'status',
-      render: () => <DataViewStatusBadge tone="info">Offen</DataViewStatusBadge>,
+      render: () => (
+        <DataViewStatusBadge tone="info">Offen</DataViewStatusBadge>
+      ),
     },
     {
       header: 'Behörde',

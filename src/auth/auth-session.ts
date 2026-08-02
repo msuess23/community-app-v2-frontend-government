@@ -13,10 +13,7 @@ import {
   refreshCoordinator,
   type RefreshCoordinator,
 } from '@/auth/refresh-coordinator'
-import {
-  sessionEvents,
-  type SessionEventBus,
-} from '@/auth/session-events'
+import { sessionEvents, type SessionEventBus } from '@/auth/session-events'
 import {
   tokenStore,
   type RefreshTokenPersistence,
@@ -179,7 +176,9 @@ export class AuthSession {
    */
   async refreshCurrentUser(): Promise<AuthUser> {
     if (this.snapshot.status !== 'authenticated') {
-      throw new Error('Cannot refresh the user profile without an active session.')
+      throw new Error(
+        'Cannot refresh the user profile without an active session.',
+      )
     }
 
     const operationVersion = this.operationVersion
@@ -228,7 +227,9 @@ export class AuthSession {
   /** Updates profile fields owned by the current user and publishes the new snapshot. */
   async updateCurrentUser(input: UpdateCurrentUserInput): Promise<AuthUser> {
     if (this.snapshot.status !== 'authenticated') {
-      throw new Error('Cannot update the user profile without an active session.')
+      throw new Error(
+        'Cannot update the user profile without an active session.',
+      )
     }
 
     const operationVersion = this.operationVersion

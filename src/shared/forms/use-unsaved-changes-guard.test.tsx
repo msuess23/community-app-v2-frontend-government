@@ -47,9 +47,7 @@ describe('useUnsavedChangesGuard', () => {
     screen.getByRole('dialog', {
       name: 'Ungespeicherte Änderungen verwerfen?',
     })
-    await user.click(
-      screen.getByRole('button', { name: 'Weiter bearbeiten' }),
-    )
+    await user.click(screen.getByRole('button', { name: 'Weiter bearbeiten' }))
 
     expect(rendered.router.state.location.pathname).toBe('/')
     expect(screen.getByRole('textbox', { name: 'Notiz' })).toHaveValue(

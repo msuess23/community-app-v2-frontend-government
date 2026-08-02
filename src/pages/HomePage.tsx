@@ -54,8 +54,8 @@ export function HomePage() {
                 Für alle Geräte vorbereitet
               </h2>
               <p className="text-on-surface-variant mt-2 leading-7">
-                Navigation und Seitenrahmen passen sich an Smartphone, Tablet und
-                Desktop an. Die Fachmodule werden schrittweise ergänzt.
+                Navigation und Seitenrahmen passen sich an Smartphone, Tablet
+                und Desktop an. Die Fachmodule werden schrittweise ergänzt.
               </p>
             </div>
           </div>

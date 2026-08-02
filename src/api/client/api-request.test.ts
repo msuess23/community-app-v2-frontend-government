@@ -27,9 +27,9 @@ describe('resolveApiUrl', () => {
   })
 
   it('keeps an absolute operation URL unchanged', () => {
-    expect(
-      resolveApiUrl('https://files.example/document.pdf', '/api/v1'),
-    ).toBe('https://files.example/document.pdf')
+    expect(resolveApiUrl('https://files.example/document.pdf', '/api/v1')).toBe(
+      'https://files.example/document.pdf',
+    )
   })
 })
 

@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type {
-  ApiFetch,
-  ApiRequestOptions,
-} from '@/api/client/api-fetch'
+import type { ApiFetch, ApiRequestOptions } from '@/api/client/api-fetch'
 import { createPasswordRecoveryApi } from '@/auth/auth-api'
 
 describe('PasswordRecoveryApi', () => {
