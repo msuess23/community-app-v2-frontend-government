@@ -4,6 +4,8 @@ import type { ReactNode } from 'react'
 import { queryClient as defaultQueryClient } from '@/app/query-client'
 import { AuthProvider } from '@/auth/AuthProvider'
 import type { AuthSession } from '@/auth/auth-session'
+import { ConfirmationProvider } from '@/shared/confirmation/ConfirmationProvider'
+import { FeedbackProvider } from '@/shared/feedback/FeedbackProvider'
 
 type AppProvidersProps = {
   authSession?: AuthSession
@@ -11,6 +13,7 @@ type AppProvidersProps = {
   queryClient?: QueryClient
 }
 
+/** Composes the application-wide data, feedback, confirmation and auth services. */
 export function AppProviders({
   authSession,
   children,
@@ -18,7 +21,11 @@ export function AppProviders({
 }: AppProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider session={authSession}>{children}</AuthProvider>
+      <FeedbackProvider>
+        <ConfirmationProvider>
+          <AuthProvider session={authSession}>{children}</AuthProvider>
+        </ConfirmationProvider>
+      </FeedbackProvider>
     </QueryClientProvider>
   )
 }

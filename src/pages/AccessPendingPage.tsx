@@ -4,6 +4,8 @@ import { Navigate, useNavigate } from 'react-router'
 
 import { useAuth } from '@/auth/auth-context'
 import { isAuthorityUser } from '@/auth/permissions'
+import { useApiFeedback } from '@/shared/feedback/use-api-feedback'
+import { useFeedback } from '@/shared/feedback/feedback-context'
 import { Button } from '@/shared/ui/Button'
 import { Card } from '@/shared/ui/Card'
 import { PageHeader } from '@/shared/ui/PageHeader'
@@ -14,9 +16,10 @@ import { PageHeader } from '@/shared/ui/PageHeader'
 export function AccessPendingPage() {
   const { logout, refreshCurrentUser, user } = useAuth()
   const navigate = useNavigate()
+  const reportApiError = useApiFeedback()
+  const { notify } = useFeedback()
   const [isCheckingAccess, setIsCheckingAccess] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const [statusMessage, setStatusMessage] = useState<string>()
 
   if (isAuthorityUser(user)) {
     return <Navigate replace to="/" />
@@ -27,8 +30,6 @@ export function AccessPendingPage() {
    */
   async function handleAccessCheck(): Promise<void> {
     setIsCheckingAccess(true)
-    setStatusMessage(undefined)
-
     try {
       const refreshedUser = await refreshCurrentUser()
 
@@ -37,13 +38,22 @@ export function AccessPendingPage() {
         return
       }
 
-      setStatusMessage(
-        'Für dieses Konto wurde noch keine Behördenrolle freigeschaltet.',
-      )
-    } catch {
-      setStatusMessage(
-        'Der Kontostatus konnte nicht geprüft werden. Versuche es erneut.',
-      )
+      notify({
+        dedupeKey: 'authority-access-still-pending',
+        description:
+          'Eine Administration muss dem Konto weiterhin eine Behördenrolle zuweisen.',
+        title: 'Zugang noch nicht freigeschaltet',
+        tone: 'info',
+      })
+    } catch (error) {
+      reportApiError(error, {
+        dedupeKey: 'authority-access-check-failed',
+        fallback: {
+          description:
+            'Der Kontostatus konnte nicht geprüft werden. Versuche es erneut.',
+          title: 'Kontostatus nicht verfügbar',
+        },
+      })
     } finally {
       setIsCheckingAccess(false)
     }
@@ -86,15 +96,6 @@ export function AccessPendingPage() {
               <dt className="font-semibold">Aktueller Status</dt>
               <dd>Bürgerkonto</dd>
             </dl>
-          ) : null}
-
-          {statusMessage ? (
-            <p
-              className="bg-secondary-container text-on-secondary-container rounded-lg p-4 text-sm font-medium"
-              role="status"
-            >
-              {statusMessage}
-            </p>
           ) : null}
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">

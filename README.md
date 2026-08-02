@@ -65,6 +65,8 @@ Aktuell enthalten sind:
 
 ```text
 src/shared/
+├── confirmation/  # globale Bestätigungsdialoge
+├── feedback/      # globale Statusmeldungen und API-Fehlerfeedback
 ├── forms/
 │   ├── ControlledCheckboxField.tsx
 │   ├── ControlledTextField.tsx
@@ -85,6 +87,8 @@ src/shared/
 ```
 
 Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Text- und Checkboxfelder basieren auf React Aria Components und stellen sichtbare Beschriftungen, Beschreibungen, Fehlerzustände und ausreichend große Interaktionsflächen bereit. Unter `src/shared/forms` liegen die schmalen React-Hook-Form-Adapter sowie die gemeinsame Zod-Validierung und Fehlerzusammenfassung. Zusätzliche Varianten werden erst ergänzt, wenn ein konkreter Anwendungsfall sie benötigt.
+
+Globale Rückmeldungen werden über `useFeedback()` ausgelöst. Kritische Meldungen bleiben bis zum Schließen sichtbar; wiederholte Meldungen können dedupliziert werden. Folgenreiche Aktionen verwenden `useConfirmation()` statt `window.confirm()`. Typische Transportfehler werden über `getApiErrorPresentation()` beziehungsweise `useApiFeedback()` in sichere, lokalisierte Meldungen überführt. Der genaue Vertrag ist unter `docs/global-feedback-and-confirmation.md` dokumentiert.
 
 ## API-Transport
 

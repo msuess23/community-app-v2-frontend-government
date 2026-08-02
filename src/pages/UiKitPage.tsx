@@ -1,5 +1,6 @@
 import { ArrowRight, Check, Trash2 } from 'lucide-react'
 
+import { FeedbackAndConfirmationExample } from '@/pages/ui-kit/FeedbackAndConfirmationExample'
 import { LoginFormExample } from '@/pages/ui-kit/LoginFormExample'
 import { Button } from '@/shared/ui/Button'
 import { CheckboxField } from '@/shared/ui/CheckboxField'
@@ -52,6 +53,7 @@ const colorTokens = [
   },
 ]
 
+/** Presents development-only examples of the shared visual and interaction system. */
 export function UiKitPage() {
   return (
     <div className="space-y-12">
@@ -110,6 +112,23 @@ export function UiKitPage() {
             </Button>
             <Button isDisabled>Deaktiviert</Button>
           </div>
+        </Card>
+      </section>
+
+      <section aria-labelledby="feedback-heading" className="space-y-5">
+        <h2
+          className="text-on-surface text-2xl font-semibold tracking-tight"
+          id="feedback-heading"
+        >
+          Rückmeldungen und Bestätigungen
+        </h2>
+        <Card>
+          <p className="text-on-surface-variant mb-5 leading-7">
+            Globale Rückmeldungen informieren über abgeschlossene oder
+            fehlgeschlagene Aktionen. Bestätigungen sichern folgenreiche
+            Entscheidungen ab.
+          </p>
+          <FeedbackAndConfirmationExample />
         </Card>
       </section>
 
