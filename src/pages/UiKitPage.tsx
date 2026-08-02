@@ -1,5 +1,6 @@
 import { ArrowRight, Check, Trash2 } from 'lucide-react'
 
+import { DataViewFoundationExample } from '@/pages/ui-kit/DataViewFoundationExample'
 import { FeedbackAndConfirmationExample } from '@/pages/ui-kit/FeedbackAndConfirmationExample'
 import { LoginFormExample } from '@/pages/ui-kit/LoginFormExample'
 import { RemoteDataLifecycleExample } from '@/pages/ui-kit/RemoteDataLifecycleExample'
@@ -146,6 +147,22 @@ export function UiKitPage() {
             blockierende Fehler und fehlgeschlagene Hintergrundaktualisierungen.
           </p>
           <RemoteDataLifecycleExample />
+        </Card>
+      </section>
+
+      <section aria-labelledby="data-view-heading" className="space-y-5">
+        <h2
+          className="text-on-surface text-2xl font-semibold tracking-tight"
+          id="data-view-heading"
+        >
+          Datenansichten
+        </h2>
+        <Card>
+          <p className="text-on-surface-variant mb-5 leading-7">
+            Listenansichten verbinden Suche, Filter, Sortierung, responsive
+            Darstellung und Pagination zu einem konsistenten Arbeitsbereich.
+          </p>
+          <DataViewFoundationExample />
         </Card>
       </section>
 

@@ -74,7 +74,9 @@ Aktuell enthalten sind:
 ```text
 src/shared/
 ├── confirmation/  # globale Bestätigungsdialoge
+├── data-view/     # URL-State, Filter, responsive Listen und Pagination
 ├── feedback/      # globale Statusmeldungen und API-Fehlerfeedback
+├── format/        # zentrale Anzeigeformatierung für Datum und Zahlen
 ├── forms/
 │   ├── ControlledCheckboxField.tsx
 │   ├── ControlledTextField.tsx
@@ -101,6 +103,8 @@ Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Text- und Checkbox
 Globale Rückmeldungen werden über `useFeedback()` ausgelöst. Kritische Meldungen bleiben bis zum Schließen sichtbar; wiederholte Meldungen können dedupliziert werden. Folgenreiche Aktionen verwenden `useConfirmation()` statt `window.confirm()`. Typische Transportfehler werden über `getApiErrorPresentation()` beziehungsweise `useApiFeedback()` in sichere, lokalisierte Meldungen überführt. Der genaue Vertrag ist unter `docs/global-feedback-and-confirmation.md` dokumentiert.
 
 Gemeinsame Remote-Data-Bausteine liegen unter `src/shared/remote-data`. Sie definieren Query-Key-Hierarchien, sichere Retry-Regeln, serverbestätigte Cache-Aktualisierung sowie zugängliche Lade-, Leer-, Refetch- und Fehlerzustände. Featuremodule bauen darauf auf, statt eigene Query-Lebenszyklen zu implementieren. Details stehen unter `docs/remote-data-query-and-lifecycle.md`.
+
+Listenansichten verwenden die Grundlagen unter `src/shared/data-view`: URL-gesteuerte Suche, Filter, Sortierung und Pagination sowie eine semantische Tabelle mit gleichwertiger mobiler Kartenansicht. Zentrale Datum-/Zeit- und Zahlenformatierung liegt unter `src/shared/format`. Der Komponentenvertrag und die Barrierefreiheitsanforderungen sind unter `docs/data-view-foundation.md` beschrieben.
 
 ## API-Transport
 
