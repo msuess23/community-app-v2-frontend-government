@@ -17,7 +17,7 @@
     "test:e2e:ui": "playwright test --ui",
     "api:validate": "node scripts/validate-openapi.mjs",
     "api:pull": "node scripts/pull-openapi.mjs",
-    "api:generate": "npm run api:validate && orval",
+    "api:generate": "npm run api:validate && orval --clean --formatter prettier --fail-on-warnings",
     "api:sync": "npm run api:pull && npm run api:generate",
     "preview": "vite preview",
     "verify": "npm run verify:fast && npm run test:e2e",
@@ -64,9 +64,9 @@
     "vite": "^8.1.1",
     "vitest": "^4.1.10"
   },
-  "packageManager": "npm@10.9.2",
+  "packageManager": "npm@11.11.0",
   "engines": {
-    "node": ">=22.22.0 <23",
-    "npm": ">=10.9.0 <11"
+    "node": ">=24.14.1 <25",
+    "npm": ">=11.11.0 <12"
   }
 }

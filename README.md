@@ -148,3 +148,7 @@ Der Session-Core übernimmt:
 Die geschützte Route `/account` bietet die Bearbeitung von Vor- und Nachname sowie die Abmeldung dieser oder aller Sitzungen. E-Mail-Adresse, Rolle und Behördenzuordnung bleiben entsprechend dem Backendvertrag schreibgeschützt. Details stehen unter `docs/account-session-management.md`.
 
 Login, Registrierung, Passwort-Wiederherstellung und Rollenfreischaltung verwenden diesen Session-Core über den `AuthProvider`.
+
+### API-Vertrag und Featuremodule
+
+Orval erzeugt den typisierten Transportclient aus `openapi/openapi.json`; die generierten Dateien werden bewusst nicht manuell gepflegt. Konkrete Fachmodule registrieren ihre geschützten Routen und Navigation zentral über `src/app/features/index.ts`. Details zu Generierung, DTO-Mapping und Capabilities stehen in `docs/api-contract-and-feature-architecture.md`.

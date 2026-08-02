@@ -1,6 +1,7 @@
 import { createElement } from 'react'
 import { createBrowserRouter, type RouteObject } from 'react-router'
 
+import { FEATURE_ROUTES } from '@/app/features'
 import { RequireAuth } from '@/auth/RequireAuth'
 import { RequireCapability } from '@/auth/RequireCapability'
 import { AccessPendingPage } from '@/pages/AccessPendingPage'
@@ -95,6 +96,7 @@ export const appRoutes: RouteObject[] = [
                     Component: AccountPage,
                     handle: { pageTitle: 'Mein Konto' },
                   },
+                  ...FEATURE_ROUTES,
                   {
                     path: 'forbidden',
                     Component: ForbiddenPage,

@@ -1,28 +1,66 @@
 import { describe, expect, it } from 'vitest'
 
-import { hasCapability } from '@/auth/capabilities'
+import {
+  APP_CAPABILITIES,
+  hasCapability,
+  type AppCapability,
+} from '@/auth/capabilities'
 import type { AuthUser, Role } from '@/auth/auth-types'
 
-const ACCESS_CASES: readonly [Role, boolean][] = [
-  ['CITIZEN', false],
-  ['DISPATCHER', true],
-  ['OFFICER', true],
-  ['MANAGER', true],
-  ['ADMIN', true],
-]
+const EXPECTED_CAPABILITIES: Readonly<Record<Role, readonly AppCapability[]>> = {
+  CITIZEN: [],
+  DISPATCHER: [
+    'accessAuthorityClient',
+    'viewTicketWorkspace',
+    'dispatchTickets',
+    'viewUsers',
+  ],
+  OFFICER: [
+    'accessAuthorityClient',
+    'viewTicketWorkspace',
+    'workOnTickets',
+    'viewAppointmentWorkspace',
+    'manageAppointmentSlots',
+    'manageAppointmentDocuments',
+    'manageInfos',
+    'viewUsers',
+  ],
+  MANAGER: [
+    'accessAuthorityClient',
+    'viewTicketWorkspace',
+    'workOnTickets',
+    'decideTicketEscalations',
+    'viewAppointmentWorkspace',
+    'manageAppointmentSlots',
+    'manageAppointmentDocuments',
+    'manageInfos',
+    'viewUsers',
+  ],
+  ADMIN: [
+    'accessAuthorityClient',
+    'manageInfos',
+    'viewUsers',
+    'manageUsers',
+    'manageOffices',
+  ],
+}
 
 describe('application capabilities', () => {
-  it.each(ACCESS_CASES)(
-    'maps %s to authority-client access',
-    (role, expected) => {
-      expect(
-        hasCapability(createUser(role), 'accessAuthorityClient'),
-      ).toBe(expected)
+  it.each(Object.entries(EXPECTED_CAPABILITIES) as [Role, AppCapability[]][])(
+    'maps %s to the declared feature capabilities',
+    (role, expectedCapabilities) => {
+      const granted = APP_CAPABILITIES.filter((capability) =>
+        hasCapability(createUser(role), capability),
+      )
+
+      expect(granted).toEqual(expectedCapabilities)
     },
   )
 
-  it('denies capabilities when no authenticated user exists', () => {
-    expect(hasCapability(null, 'accessAuthorityClient')).toBe(false)
+  it('denies every capability when no authenticated user exists', () => {
+    APP_CAPABILITIES.forEach((capability) => {
+      expect(hasCapability(null, capability)).toBe(false)
+    })
   })
 })
 

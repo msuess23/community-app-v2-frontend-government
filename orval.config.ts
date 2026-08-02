@@ -10,8 +10,7 @@ export default defineConfig({
       mode: 'tags-split',
       target: './src/api/generated/endpoints.ts',
       schemas: './src/api/generated/models',
-      client: 'react-query',
-      httpClient: 'fetch',
+      client: 'fetch',
       override: {
         fetch: {
           includeHttpResponseReturnType: false,

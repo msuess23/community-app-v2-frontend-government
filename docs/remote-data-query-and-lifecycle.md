@@ -89,7 +89,7 @@ npm run api:sync      # aktualisiert Snapshot und generierten Client
 
 Der Standard für `OPENAPI_URL` ist `http://localhost:8000/api/v1/openapi.json`. Änderungen am Snapshot und am generierten Client sollen gemeinsam geprüft werden. Dateien unter `src/api/generated` werden nicht manuell bearbeitet.
 
-Die generierten Endpunkte werden erst mit den jeweiligen Feature-Patches importiert. Der vorliegende Patch führt daher noch keine fachlichen Queries in den Anwendungsbundle ein.
+Der Patch **API Contract & Feature Architecture** konfiguriert Orval als Eigentümer des rohen Fetch-Clients. Die generierten Dateien entstehen lokal über `npm run api:generate`; Query Keys, DTO-Mapping und Cache-Lifecycle bleiben im jeweiligen Featuremodul.
 
 ## MSW-Testgrundlage
 

@@ -1,18 +1,11 @@
-import { LayoutDashboard, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard } from 'lucide-react'
 
-import type { AppCapability } from '@/auth/capabilities'
+import { FEATURE_NAVIGATION_ITEMS } from '@/app/features'
+import type { AppNavigationItem } from '@/app/navigation-types'
 import { hasCapability } from '@/auth/capabilities'
 import type { AuthUser } from '@/auth/auth-types'
 
-export type PrimaryNavigationItem = Readonly<{
-  capability: AppCapability
-  end?: boolean
-  icon: LucideIcon
-  label: string
-  to: string
-}>
-
-export const PRIMARY_NAVIGATION_ITEMS: readonly PrimaryNavigationItem[] = [
+export const PRIMARY_NAVIGATION_ITEMS: readonly AppNavigationItem[] = [
   {
     capability: 'accessAuthorityClient',
     end: true,
@@ -20,6 +13,7 @@ export const PRIMARY_NAVIGATION_ITEMS: readonly PrimaryNavigationItem[] = [
     label: 'Übersicht',
     to: '/',
   },
+  ...FEATURE_NAVIGATION_ITEMS,
 ]
 
 /**
@@ -27,7 +21,7 @@ export const PRIMARY_NAVIGATION_ITEMS: readonly PrimaryNavigationItem[] = [
  */
 export function getPrimaryNavigationItems(
   user: AuthUser | null,
-): readonly PrimaryNavigationItem[] {
+): readonly AppNavigationItem[] {
   return PRIMARY_NAVIGATION_ITEMS.filter((item) =>
     hasCapability(user, item.capability),
   )
