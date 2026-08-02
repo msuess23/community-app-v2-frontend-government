@@ -4,8 +4,8 @@ Responsiver React-Client für die Behördenfunktionen des Community-App-Backends
 
 ## Voraussetzungen
 
-- Node.js 22.22.x (siehe `.nvmrc` und `.node-version`)
-- npm 10.9.x
+- Node.js 24.14.1 (siehe `.nvmrc` und `.node-version`)
+- npm 11.11.0
 - optional: laufendes FastAPI-Backend für OpenAPI-Synchronisation und spätere API-Aufrufe
 
 ## Installation

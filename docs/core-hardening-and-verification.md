@@ -52,7 +52,7 @@ Die unterstützte Laufzeit wird an drei Stellen festgeschrieben:
 - `.node-version`
 - `package.json` über `engines` und `packageManager`
 
-Der Referenzstand ist Node.js 22.22.0 und npm 10.9.2.
+Der Referenzstand ist Node.js 24.14.1 und npm 11.11.0.
 
 `npm run verify:fast` führt OpenAPI-Validierung, ESLint, Prettier, Vitest, TypeScript und Produktionsbuild aus. `npm run verify` ergänzt anschließend die Playwright-Suite.
 

@@ -82,7 +82,9 @@ describe('password recovery pages', () => {
       'secret-password',
     )
     await user.type(
-      screen.getByLabelText('Neues Passwort bestätigen'),
+      screen.getByLabelText(/^Neues Passwort bestätigen/, {
+        selector: 'input[name="passwordConfirmation"]',
+      }),
       'secret-password',
     )
     await user.click(screen.getByRole('button', { name: 'Passwort ändern' }))

@@ -7,6 +7,24 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
 
+  build: {
+    rolldownOptions: {
+      output: {
+        // Keep third-party code cacheable and prevent the application entry chunk from growing unchecked.
+        codeSplitting: {
+          groups: [
+            {
+              maxSize: 250_000,
+              minSize: 20_000,
+              name: 'vendor',
+              test: /node_modules/,
+            },
+          ],
+        },
+      },
+    },
+  },
+
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

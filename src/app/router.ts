@@ -10,6 +10,7 @@ import { ForbiddenPage } from '@/pages/ForbiddenPage'
 import { HomePage } from '@/pages/HomePage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { RouteErrorPage } from '@/pages/RouteErrorPage'
+import { RouteLoadingPage } from '@/pages/RouteLoadingPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
@@ -37,6 +38,7 @@ export const appRoutes: RouteObject[] = [
     path: '/',
     Component: RootLayout,
     ErrorBoundary: RouteErrorPage,
+    HydrateFallback: RouteLoadingPage,
     children: [
       {
         Component: PublicLayout,

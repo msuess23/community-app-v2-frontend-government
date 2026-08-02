@@ -117,6 +117,11 @@ describe('ResourceActionBar', () => {
 
     const trigger = screen.getByRole('button', { name: 'Abschließen' })
     await user.click(trigger)
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Aktionsdialog schließen' }),
+      ).toHaveFocus()
+    })
     await user.keyboard('{Escape}')
 
     await waitFor(() => {
