@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { Mail, MapPin, Phone } from 'lucide-react'
+import { Mail, MapPin, Pencil, Phone } from 'lucide-react'
 import { useLocation, useParams } from 'react-router'
 
+import { useAuth } from '@/auth/auth-context'
+import { hasCapability } from '@/auth/capabilities'
 import { OfficeOpeningHoursView } from '@/features/offices/components/OfficeOpeningHours'
 import { OfficeStatusBadge } from '@/features/offices/components/OfficeStatusBadge'
 import {
@@ -18,6 +20,7 @@ import {
   ResourceMetadataList,
 } from '@/shared/resource-detail/ResourceDetailLayout'
 import { resolveResourceDetailReturnTo } from '@/shared/resource-detail/detail-navigation'
+import { LinkButton } from '@/shared/ui/LinkButton'
 
 const DETAIL_NAVIGATION = [
   { id: 'description', label: 'Beschreibung' },
@@ -30,6 +33,7 @@ const DETAIL_NAVIGATION = [
 
 /** Shows one backend-authorized office with complete readable master data. */
 export function OfficeDetailPage() {
+  const { user } = useAuth()
   const { officeId = '' } = useParams()
   const location = useLocation()
   const query = useQuery({
@@ -59,6 +63,20 @@ export function OfficeDetailPage() {
     >
       {(office) => (
         <ResourceDetailLayout
+          actions={
+            office.isActive && hasCapability(user, 'manageOffices') ? (
+              <LinkButton
+                state={{
+                  from: `/offices/${office.id}`,
+                  listFrom: returnTo,
+                }}
+                to={`/offices/${office.id}/edit`}
+              >
+                <Pencil aria-hidden="true" size={18} />
+                Behörde bearbeiten
+              </LinkButton>
+            ) : undefined
+          }
           aside={<OfficeDetailAside office={office} />}
           backLink={{ label: 'Zurück zum Behördenverzeichnis', to: returnTo }}
           description="Die angezeigten Angaben entsprechen dem aktuell gespeicherten Stand der Behörde."

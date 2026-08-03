@@ -44,6 +44,9 @@ describe('OfficeDirectoryPage', () => {
       await screen.findByRole('heading', { level: 1, name: 'Behörden' }),
     ).toBeInTheDocument()
     expect(screen.getByLabelText('Behördenstatus')).toHaveValue('all')
+    expect(
+      screen.getByRole('link', { name: 'Behörde anlegen' }),
+    ).toHaveAttribute('href', '/offices/new')
 
     const table = await screen.findByRole('table', {
       name: 'Behördenverzeichnis',

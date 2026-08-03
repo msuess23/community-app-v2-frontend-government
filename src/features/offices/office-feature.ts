@@ -1,8 +1,10 @@
+import { createElement } from 'react'
 import { Building2 } from 'lucide-react'
 
 import { defineFeatureModule } from '@/app/feature-module'
+import { RequireCapability } from '@/auth/RequireCapability'
 
-/** Registers the readable office directory and backend-authorized detail route. */
+/** Registers office directory, detail, and administrator-only maintenance routes. */
 export const officeFeature = defineFeatureModule({
   capability: 'viewOffices',
   id: 'offices',
@@ -23,6 +25,33 @@ export const officeFeature = defineFeatureModule({
         return { Component: OfficeDirectoryPage }
       },
       path: 'offices',
+    },
+    {
+      children: [
+        {
+          handle: { pageTitle: 'Behörde anlegen' },
+          lazy: async () => {
+            const { OfficeCreatePage } = await import(
+              '@/features/offices/pages/OfficeCreatePage'
+            )
+            return { Component: OfficeCreatePage }
+          },
+          path: 'offices/new',
+        },
+        {
+          handle: { pageTitle: 'Behörde bearbeiten' },
+          lazy: async () => {
+            const { OfficeEditPage } = await import(
+              '@/features/offices/pages/OfficeEditPage'
+            )
+            return { Component: OfficeEditPage }
+          },
+          path: 'offices/:officeId/edit',
+        },
+      ],
+      element: createElement(RequireCapability, {
+        capability: 'manageOffices',
+      }),
     },
     {
       handle: { pageTitle: 'Behördendetails' },

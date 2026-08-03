@@ -1,7 +1,10 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Plus } from 'lucide-react'
+import { useLocation } from 'react-router'
 
 import { useAuth } from '@/auth/auth-context'
+import { hasCapability } from '@/auth/capabilities'
 import type { AuthUser } from '@/auth/auth-types'
 import { OfficeDirectoryFilters } from '@/features/offices/components/OfficeDirectoryFilters'
 import { OfficeDirectoryView } from '@/features/offices/components/OfficeDirectoryView'
@@ -27,6 +30,7 @@ import {
   RemoteDataBoundary,
   RemoteDataEmptyState,
 } from '@/shared/remote-data/RemoteDataBoundary'
+import { LinkButton } from '@/shared/ui/LinkButton'
 import { PageHeader } from '@/shared/ui/PageHeader'
 
 const SORT_OPTIONS: readonly DataViewSortOption<OfficeDirectorySortField>[] = [
@@ -46,6 +50,7 @@ export function OfficeDirectoryPage() {
 function AuthenticatedOfficeDirectoryPage({
   user,
 }: Readonly<{ user: AuthUser }>) {
+  const location = useLocation()
   const access = useMemo(() => getOfficeDirectoryAccess(user.role), [user.role])
   const config = useMemo(
     () => createOfficeDirectoryUrlConfig(access),
@@ -64,6 +69,17 @@ function AuthenticatedOfficeDirectoryPage({
   return (
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
+        actions={
+          hasCapability(user, 'manageOffices') ? (
+            <LinkButton
+              state={{ from: `${location.pathname}${location.search}` }}
+              to="/offices/new"
+            >
+              <Plus aria-hidden="true" size={18} />
+              Behörde anlegen
+            </LinkButton>
+          ) : undefined
+        }
         description={
           access.canFilterByStatus
             ? 'Finde aktive und deaktivierte Behörden und öffne ihre vollständigen Stammdaten.'
