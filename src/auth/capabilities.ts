@@ -12,6 +12,7 @@ export const APP_CAPABILITIES = [
   'manageInfos',
   'viewUsers',
   'manageUsers',
+  'viewOffices',
   'manageOffices',
 ] as const
 
@@ -29,6 +30,7 @@ const CAPABILITY_ROLES: Readonly<Record<AppCapability, readonly Role[]>> = {
   manageInfos: ['OFFICER', 'MANAGER', 'ADMIN'],
   viewUsers: ['DISPATCHER', 'OFFICER', 'MANAGER', 'ADMIN'],
   manageUsers: ['ADMIN'],
+  viewOffices: ['DISPATCHER', 'OFFICER', 'MANAGER', 'ADMIN'],
   manageOffices: ['ADMIN'],
 }
 

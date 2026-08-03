@@ -1,8 +1,9 @@
 import { createFeatureRegistry } from '@/app/feature-module'
+import { officeFeature } from '@/features/offices/office-feature'
 import { userFeature } from '@/features/users/user-feature'
 
 // Concrete feature modules are added here only when their routes are usable.
-const featureRegistry = createFeatureRegistry([userFeature])
+const featureRegistry = createFeatureRegistry([userFeature, officeFeature])
 
 export const FEATURE_MODULES = featureRegistry.modules
 export const FEATURE_NAVIGATION_ITEMS = featureRegistry.navigation

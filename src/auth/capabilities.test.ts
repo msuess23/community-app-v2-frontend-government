@@ -15,6 +15,7 @@ const EXPECTED_CAPABILITIES: Readonly<Record<Role, readonly AppCapability[]>> =
       'viewTicketWorkspace',
       'dispatchTickets',
       'viewUsers',
+      'viewOffices',
     ],
     OFFICER: [
       'accessAuthorityClient',
@@ -25,6 +26,7 @@ const EXPECTED_CAPABILITIES: Readonly<Record<Role, readonly AppCapability[]>> =
       'manageAppointmentDocuments',
       'manageInfos',
       'viewUsers',
+      'viewOffices',
     ],
     MANAGER: [
       'accessAuthorityClient',
@@ -36,12 +38,14 @@ const EXPECTED_CAPABILITIES: Readonly<Record<Role, readonly AppCapability[]>> =
       'manageAppointmentDocuments',
       'manageInfos',
       'viewUsers',
+      'viewOffices',
     ],
     ADMIN: [
       'accessAuthorityClient',
       'manageInfos',
       'viewUsers',
       'manageUsers',
+      'viewOffices',
       'manageOffices',
     ],
   }
