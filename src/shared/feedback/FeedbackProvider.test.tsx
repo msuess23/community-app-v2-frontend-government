@@ -47,6 +47,9 @@ describe('FeedbackProvider', () => {
     vi.useFakeTimers()
     renderWithProviders(<FeedbackHarness />)
 
+    expect(
+      screen.getByRole('region', { name: 'Benachrichtigungen' }),
+    ).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Erfolg anzeigen' }))
 
     expect(screen.getByRole('status')).toHaveTextContent('Gespeichert')

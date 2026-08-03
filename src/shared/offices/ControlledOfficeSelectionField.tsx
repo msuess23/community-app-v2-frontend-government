@@ -87,8 +87,8 @@ export function ControlledOfficeSelectionField<
       }
       disabled={isDisabled || loading || failed}
       emptySearchMessage="Keine aktiven Behörden entsprechen der Suche."
-      isRequired={isRequired}
       label={label}
+      required={isRequired}
       name={name}
       options={options}
       placeholder={

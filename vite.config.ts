@@ -42,6 +42,10 @@ export default defineConfig({
 
   test: {
     environment: 'jsdom',
+    environmentOptions: {
+      // Align relative generated API requests with the shared MSW handler origin.
+      jsdom: { url: 'http://localhost/' },
+    },
     globals: true,
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     setupFiles: './src/test/setup.ts',

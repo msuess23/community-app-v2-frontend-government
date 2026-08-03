@@ -103,6 +103,7 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       <div
         aria-label="Benachrichtigungen"
         className="pointer-events-none fixed inset-x-4 bottom-4 z-[80] flex max-h-[calc(100vh-2rem)] flex-col items-end gap-3 overflow-y-auto sm:left-auto sm:w-full sm:max-w-md"
+        role="region"
       >
         {messages.map((message) => (
           <FeedbackNotice

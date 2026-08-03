@@ -46,9 +46,8 @@ async function loadAllVisibleOffices(
 ): Promise<readonly OfficeReference[]> {
   const offices: OfficeReference[] = []
   let page = 1
-  let pageCount = 1
 
-  do {
+  while (true) {
     const response = await getAllOfficesApiV1OfficesGet(
       {
         order: 'asc',
@@ -61,9 +60,12 @@ async function loadAllVisibleOffices(
     )
 
     offices.push(...response.data.map(mapOfficeReference))
-    pageCount = response.pages
+    if (page >= response.pages) {
+      break
+    }
+
     page += 1
-  } while (page <= pageCount)
+  }
 
   return offices
 }

@@ -310,8 +310,8 @@ function UserAdminEditForm({
                         ? 'Ein Bürgerkonto kann einmalig für eine Behördenrolle freigeschaltet werden.'
                         : 'Ein bestehendes Behördenkonto kann nicht wieder zum Bürgerkonto werden.'
                   }
-                  isRequired
                   label="Rolle"
+                  required
                   name="role"
                   options={assignableRoles.map((role) => ({
                     label: getRoleLabel(role),

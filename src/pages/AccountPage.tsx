@@ -1,5 +1,5 @@
 import { LogOut, MonitorOff, Save, ShieldCheck, Undo2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 
@@ -324,7 +324,7 @@ function AuthenticatedAccountPage({ user }: AuthenticatedAccountPageProps) {
 
 type AccountMetadataProps = Readonly<{
   label: string
-  value: string
+  value: ReactNode
 }>
 
 /** Renders one immutable account attribute with responsive wrapping. */
