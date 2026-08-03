@@ -4,7 +4,7 @@ import { UsersRound } from 'lucide-react'
 import { defineFeatureModule } from '@/app/feature-module'
 import { RequireCapability } from '@/auth/RequireCapability'
 
-/** Registers user directory, profile, and administrator-only edit routes. */
+/** Registers user directory, profile, and administrator-only lifecycle routes. */
 export const userFeature = defineFeatureModule({
   capability: 'viewUsers',
   id: 'users',
@@ -47,6 +47,16 @@ export const userFeature = defineFeatureModule({
             return { Component: UserAdminEditPage }
           },
           path: 'users/:userId/edit',
+        },
+        {
+          handle: { pageTitle: 'Benutzerhistorie' },
+          lazy: async () => {
+            const { UserHistoryPage } = await import(
+              '@/features/users/pages/UserHistoryPage'
+            )
+            return { Component: UserHistoryPage }
+          },
+          path: 'users/:userId/history',
         },
       ],
       element: createElement(RequireCapability, {

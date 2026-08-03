@@ -1,9 +1,10 @@
-import { screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import {
   ActiveDataViewFilters,
+  DataViewFilterDateField,
   DataViewFilterPanel,
   DataViewFilterSelect,
 } from '@/shared/data-view/DataViewFilters'
@@ -73,4 +74,24 @@ describe('data view filters', () => {
     expect(select).toHaveAccessibleDescription('Behörden werden geladen.')
   })
 
+  it('emits native calendar dates with an accessible description', () => {
+    const onChange = vi.fn()
+
+    renderWithProviders(
+      <DataViewFilterDateField
+        description="Der vollständige Kalendertag wird berücksichtigt."
+        label="Von"
+        onChange={onChange}
+        value=""
+      />,
+    )
+
+    const input = screen.getByLabelText('Von')
+    fireEvent.change(input, { target: { value: '2026-08-03' } })
+
+    expect(input).toHaveAccessibleDescription(
+      'Der vollständige Kalendertag wird berücksichtigt.',
+    )
+    expect(onChange).toHaveBeenLastCalledWith('2026-08-03')
+  })
 })

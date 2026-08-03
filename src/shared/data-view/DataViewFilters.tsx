@@ -170,6 +170,60 @@ export function DataViewFilterSelect({
   )
 }
 
+
+export interface DataViewFilterDateFieldProps {
+  className?: string
+  description?: string
+  label: string
+  max?: string
+  min?: string
+  onChange: (value: string) => void
+  value: string
+}
+
+/** Renders a native calendar-date filter with explicit accessible help text. */
+export function DataViewFilterDateField({
+  className,
+  description,
+  label,
+  max,
+  min,
+  onChange,
+  value,
+}: DataViewFilterDateFieldProps) {
+  const descriptionId = useId()
+  const inputId = useId()
+
+  return (
+    <div className={cn('grid gap-2', className)}>
+      <label
+        className="text-on-surface text-sm font-semibold"
+        htmlFor={inputId}
+      >
+        {label}
+      </label>
+      <input
+        aria-describedby={description ? descriptionId : undefined}
+        className="border-outline bg-surface text-on-surface hover:border-secondary focus-visible:border-primary focus-visible:ring-primary min-h-11 w-full rounded-lg border px-3 py-2.5 text-base shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+        id={inputId}
+        max={max}
+        min={min}
+        onChange={(event) => onChange(event.currentTarget.value)}
+        type="date"
+        value={value}
+      />
+      {description ? (
+        <p
+          className="text-on-surface-variant text-sm leading-5"
+          id={descriptionId}
+        >
+          {description}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 export type ActiveDataViewFilter = Readonly<{
   key: string
   label: string

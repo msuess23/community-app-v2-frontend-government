@@ -32,7 +32,10 @@ export function useUpdateUserByAdminMutation() {
       await commitMutationResult(queryClient, {
         data: updatedUser,
         detailKey: userQueryKeys.detail(variables.userId),
-        invalidate: [userQueryKeys.lists()],
+        invalidate: [
+          userQueryKeys.lists(),
+          userQueryKeys.histories(variables.userId),
+        ],
       })
 
       if (currentUser?.id === updatedUser.id) {

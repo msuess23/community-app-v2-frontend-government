@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import { Mail, Pencil, UserRoundCheck } from 'lucide-react'
+import { History, Mail, Pencil, UserRoundCheck } from 'lucide-react'
 import { useLocation, useParams } from 'react-router'
 
 import { useAuth } from '@/auth/auth-context'
 import { hasCapability } from '@/auth/capabilities'
 import { getRoleLabel } from '@/auth/role-labels'
+import { UserLifecycleActions } from '@/features/users/components/UserLifecycleActions'
 import { UserOfficeName } from '@/features/users/components/UserOfficeName'
 import { UserStatusBadge } from '@/features/users/components/UserStatusBadge'
 import { getUserDisplayName } from '@/features/users/model/user-model'
@@ -44,13 +45,14 @@ export function UserDetailPage() {
     >
       {(user) => {
         const isOwnAccount = currentUser?.id === user.id
-        const canManageUser =
-          user.isActive && hasCapability(currentUser, 'manageUsers')
+        const canViewAdministration = hasCapability(currentUser, 'manageUsers')
+        const canManageUser = user.isActive && canViewAdministration
+        const canDeactivateUser = canManageUser && !isOwnAccount
 
         return (
           <ResourceDetailLayout
             actions={
-              isOwnAccount || canManageUser ? (
+              isOwnAccount || canViewAdministration ? (
                 <div className="flex flex-wrap gap-2">
                   {isOwnAccount ? (
                     <LinkButton to="/account" variant="secondary">
@@ -69,6 +71,19 @@ export function UserDetailPage() {
                       <Pencil aria-hidden="true" size={18} />
                       Administrativ bearbeiten
                     </LinkButton>
+                  ) : null}
+                  {canViewAdministration ? (
+                    <LinkButton
+                      state={{ listFrom: returnTo }}
+                      to={`/users/${user.id}/history`}
+                      variant="outline"
+                    >
+                      <History aria-hidden="true" size={18} />
+                      Änderungshistorie
+                    </LinkButton>
+                  ) : null}
+                  {canDeactivateUser ? (
+                    <UserLifecycleActions user={user} />
                   ) : null}
                 </div>
               ) : undefined

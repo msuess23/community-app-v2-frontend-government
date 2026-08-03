@@ -8,6 +8,7 @@ import { PageHeader } from '@/shared/ui/PageHeader'
 
 export type ResourceDetailBackLink = Readonly<{
   label: string
+  state?: unknown
   to: string
 }>
 
@@ -179,6 +180,7 @@ function ResourceDetailBackLinkView({
   return (
     <Link
       className="text-primary hover:bg-primary-container focus-visible:outline-primary inline-flex min-h-11 items-center gap-2 rounded-lg px-2 py-2 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
+      state={backLink.state}
       to={backLink.to}
     >
       <ArrowLeft aria-hidden="true" size={18} />

@@ -64,7 +64,7 @@ src/
 └── test/      # gemeinsame Testhelfer, MSW-Server und Test-Setup
 ```
 
-Das erste Fachmodul unter `src/features/users` stellt das rollenabhängige Benutzerverzeichnis und lesende Benutzerprofile bereit. Weitere Fachbereiche werden in getrennten Patches ergänzt.
+Das erste Fachmodul unter `src/features/users` stellt Benutzerverzeichnis, Profile, Administration, Deaktivierung und Audit-Historie bereit. Weitere Fachbereiche werden in getrennten Patches ergänzt.
 
 ## Gemeinsame UI-Bausteine
 
@@ -161,3 +161,7 @@ Das Feature unter `src/features/users` registriert `/users` und `/users/:userId`
 ## Benutzeradministration
 
 Administratoren bearbeiten aktive Benutzerkonten über `/users/:userId/edit`. Der Workflow unterstützt Namen, Rolle, aktive Behördenzuordnung und einen verpflichtenden Änderungsgrund. Rollen- und Behördenregeln werden bereits im Formular abgebildet, bleiben aber serverseitig maßgeblich. Eine gemeinsame durchsuchbare Native-Select-Komponente erhält zuverlässige Tastatur-, Touch- und Screenreader-Funktionalität auf Smartphone, Tablet und Desktop. Details stehen unter `docs/user-administration-and-role-assignment.md`.
+
+## Benutzer-Lebenszyklus und Audit-Historie
+
+Administratoren können andere aktive Konten mit verpflichtendem Änderungsgrund deaktivieren. Die Oberfläche erläutert Anonymisierung, Sitzungswiderruf und mögliche Ticket- oder Terminkonflikte. `/users/:userId/history` zeigt die unveränderlichen Kontostände paginiert und mit timezone-bewussten Datumsfiltern als Desktop-Tabelle beziehungsweise responsive Karten. Details stehen unter `docs/user-lifecycle-and-audit-history.md`.
