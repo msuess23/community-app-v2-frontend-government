@@ -1,0 +1,38 @@
+import { UsersRound } from 'lucide-react'
+
+import { defineFeatureModule } from '@/app/feature-module'
+
+/** Registers the read-only user directory and profile routes in the authority App-Shell. */
+export const userFeature = defineFeatureModule({
+  capability: 'viewUsers',
+  id: 'users',
+  navigation: [
+    {
+      icon: UsersRound,
+      label: 'Benutzer',
+      to: '/users',
+    },
+  ],
+  routes: [
+    {
+      handle: { pageTitle: 'Benutzer' },
+      lazy: async () => {
+        const { UserDirectoryPage } = await import(
+          '@/features/users/pages/UserDirectoryPage'
+        )
+        return { Component: UserDirectoryPage }
+      },
+      path: 'users',
+    },
+    {
+      handle: { pageTitle: 'Benutzerprofil' },
+      lazy: async () => {
+        const { UserDetailPage } = await import(
+          '@/features/users/pages/UserDetailPage'
+        )
+        return { Component: UserDetailPage }
+      },
+      path: 'users/:userId',
+    },
+  ],
+})

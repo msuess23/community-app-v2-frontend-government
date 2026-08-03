@@ -26,18 +26,22 @@ export type DataViewColumn<TItem> = Readonly<{
 export interface ResponsiveDataViewProps<TItem> {
   caption: string
   columns: readonly DataViewColumn<TItem>[]
+  compactListClassName?: string
   getItemLabel: (item: TItem) => string
   getRowKey: (item: TItem) => string
   items: readonly TItem[]
+  tableBreakpoint?: 'md' | 'lg'
 }
 
 /** Renders one data set as a semantic table on wide screens and cards on small screens. */
 export function ResponsiveDataView<TItem>({
   caption,
   columns,
+  compactListClassName,
   getItemLabel,
   getRowKey,
   items,
+  tableBreakpoint = 'md',
 }: ResponsiveDataViewProps<TItem>) {
   const rowHeaderColumn = getRowHeaderColumn(columns)
   const detailColumns = columns.filter(
@@ -45,9 +49,19 @@ export function ResponsiveDataView<TItem>({
   )
   const actionColumns = columns.filter((column) => column.isAction)
 
+  const tableVisibility =
+    tableBreakpoint === 'lg' ? 'hidden lg:block' : 'hidden md:block'
+  const compactVisibility =
+    tableBreakpoint === 'lg' ? 'lg:hidden' : 'md:hidden'
+
   return (
     <>
-      <div className="border-outline-variant bg-surface hidden overflow-x-auto rounded-xl border shadow-sm md:block">
+      <div
+        className={cn(
+          'border-outline-variant bg-surface overflow-x-auto rounded-xl border shadow-sm',
+          tableVisibility,
+        )}
+      >
         <table className="min-w-full border-collapse">
           <caption className="sr-only">{caption}</caption>
           <thead className="bg-surface-container">
@@ -90,7 +104,10 @@ export function ResponsiveDataView<TItem>({
         </table>
       </div>
 
-      <ul aria-label={caption} className="space-y-3 md:hidden">
+      <ul
+        aria-label={caption}
+        className={cn('space-y-3', compactVisibility, compactListClassName)}
+      >
         {items.map((item) => {
           const itemLabel = getItemLabel(item)
 

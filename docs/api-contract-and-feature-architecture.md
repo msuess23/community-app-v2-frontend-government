@@ -89,7 +89,7 @@ The capability matrix distinguishes application access from feature intent:
 
 Capabilities control route and navigation eligibility only. They never replace backend authorization or the resource-specific `allowed_actions` returned by Ticket and Appointment projections.
 
-The current backend user-list route excludes `ADMIN` at its route dependency even though administrators own role changes. The frontend capability represents the intended administration workflow, but the backend contract must be corrected before the user administration feature is implemented.
+The backend user-directory route includes `ADMIN` through its dedicated `USER_DIRECTORY_ROLES` group. This keeps administrative discovery separate from the broader authority workflow roles used by Ticket and other domains.
 
 ## Contract refresh workflow
 

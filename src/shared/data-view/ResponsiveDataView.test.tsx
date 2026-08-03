@@ -45,6 +45,8 @@ describe('ResponsiveDataView', () => {
     expect(within(table).getByText('Tiefbauamt')).toBeInTheDocument()
 
     const compactList = screen.getByRole('list', { name: 'Bürgeranliegen' })
+    expect(table.parentElement).toHaveClass('md:block')
+    expect(compactList).toHaveClass('md:hidden')
     const article = within(compactList).getByRole('article', {
       name: 'Defekte Laterne',
     })
@@ -57,6 +59,28 @@ describe('ResponsiveDataView', () => {
       }),
     ).toBeInTheDocument()
   })
+
+
+  it('supports a tablet card layout before the desktop table breakpoint', () => {
+    renderWithProviders(
+      <ResponsiveDataView
+        caption="Bürgeranliegen"
+        columns={createColumns()}
+        compactListClassName="sm:grid sm:grid-cols-2"
+        getItemLabel={(item) => item.title}
+        getRowKey={(item) => item.id}
+        items={items}
+        tableBreakpoint="lg"
+      />,
+    )
+
+    const table = screen.getByRole('table', { name: 'Bürgeranliegen' })
+    const compactList = screen.getByRole('list', { name: 'Bürgeranliegen' })
+
+    expect(table.parentElement).toHaveClass('lg:block')
+    expect(compactList).toHaveClass('lg:hidden', 'sm:grid-cols-2')
+  })
+
 
   it('announces and requests the next table sort direction', async () => {
     const user = userEvent.setup()

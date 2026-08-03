@@ -27,6 +27,7 @@ import {
   FormErrorSummary,
   type FormErrorSummaryItem,
 } from '@/shared/ui/FormErrorSummary'
+import { OfficeName } from '@/shared/offices/OfficeName'
 import { FormSection } from '@/shared/ui/FormSection'
 import { FormSubmitButton } from '@/shared/ui/FormSubmitButton'
 import { PageHeader } from '@/shared/ui/PageHeader'
@@ -254,7 +255,7 @@ function AuthenticatedAccountPage({ user }: AuthenticatedAccountPageProps) {
               <AccountMetadata label="Rolle" value={getRoleLabel(user.role)} />
               <AccountMetadata
                 label="Zugeordnete Behörde"
-                value={user.officeId ?? 'Keine Behörde zugeordnet'}
+                value={<OfficeName officeId={user.officeId} />}
               />
             </dl>
           </section>

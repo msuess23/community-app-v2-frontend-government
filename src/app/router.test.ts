@@ -61,6 +61,9 @@ describe('application routes', () => {
     expect(
       screen.getByRole('link', { name: 'Mein Konto', hidden: true }),
     ).toHaveAttribute('href', '/account')
+    expect(
+      screen.getByRole('link', { name: 'Benutzer', hidden: true }),
+    ).toHaveAttribute('href', '/users')
 
     const menuButton = screen.getByRole('button', {
       hidden: true,

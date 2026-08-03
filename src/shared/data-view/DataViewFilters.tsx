@@ -108,6 +108,8 @@ export type DataViewFilterOption = Readonly<{
 export interface DataViewFilterSelectProps {
   allLabel?: string
   className?: string
+  description?: string
+  isDisabled?: boolean
   label: string
   onChange: (value: string) => void
   options: readonly DataViewFilterOption[]
@@ -118,11 +120,14 @@ export interface DataViewFilterSelectProps {
 export function DataViewFilterSelect({
   allLabel = 'Alle',
   className,
+  description,
+  isDisabled = false,
   label,
   onChange,
   options,
   value,
 }: DataViewFilterSelectProps) {
+  const descriptionId = useId()
   const selectId = useId()
 
   /** Sends the native select value back to the feature-owned URL state. */
@@ -139,7 +144,9 @@ export function DataViewFilterSelect({
         {label}
       </label>
       <select
-        className="border-outline bg-surface text-on-surface hover:border-secondary focus-visible:border-primary focus-visible:ring-primary min-h-11 w-full rounded-lg border px-3 py-2.5 text-base shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+        aria-describedby={description ? descriptionId : undefined}
+        className="border-outline bg-surface text-on-surface hover:border-secondary focus-visible:border-primary focus-visible:ring-primary min-h-11 w-full rounded-lg border px-3 py-2.5 text-base shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+        disabled={isDisabled}
         id={selectId}
         onChange={handleChange}
         value={value}
@@ -151,6 +158,14 @@ export function DataViewFilterSelect({
           </option>
         ))}
       </select>
+      {description ? (
+        <p
+          className="text-on-surface-variant text-sm leading-5"
+          id={descriptionId}
+        >
+          {description}
+        </p>
+      ) : null}
     </div>
   )
 }

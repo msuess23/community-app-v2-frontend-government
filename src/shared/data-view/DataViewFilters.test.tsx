@@ -55,4 +55,22 @@ describe('data view filters', () => {
 
     expect(onRemove).toHaveBeenCalledOnce()
   })
+
+  it('describes and disables a filter while remote options are unavailable', () => {
+    renderWithProviders(
+      <DataViewFilterSelect
+        description="Behörden werden geladen."
+        isDisabled
+        label="Behörde"
+        onChange={vi.fn()}
+        options={[]}
+        value=""
+      />,
+    )
+
+    const select = screen.getByLabelText('Behörde')
+    expect(select).toBeDisabled()
+    expect(select).toHaveAccessibleDescription('Behörden werden geladen.')
+  })
+
 })

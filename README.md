@@ -58,12 +58,13 @@ src/
 ├── api/       # Transport, Fehlernormalisierung und spätere generierte Clients
 ├── app/       # Router, Provider und anwendungsweite Infrastruktur
 ├── config/    # geprüfte Laufzeitkonfiguration
+├── features/  # fachlich gekapselte Routen, Modelle, Queries und Komponenten
 ├── pages/     # seitenbezogene Komponenten
 ├── shared/    # fachlich unabhängige Layout-, Daten- und UI-Bausteine
 └── test/      # gemeinsame Testhelfer, MSW-Server und Test-Setup
 ```
 
-Fachliche Features und die dazugehörige API-Kommunikation werden in getrennten Patches ergänzt.
+Das erste Fachmodul unter `src/features/users` stellt das rollenabhängige Benutzerverzeichnis und lesende Benutzerprofile bereit. Weitere Fachbereiche werden in getrennten Patches ergänzt.
 
 ## Gemeinsame UI-Bausteine
 
@@ -98,7 +99,7 @@ src/shared/
     └── TextField.tsx
 ```
 
-Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Einzeilige und mehrzeilige Texteingaben, Checkboxen, native Selects, Radio-Gruppen und Datei-Auswahl stellen sichtbare Beschriftungen, Beschreibungen, Fehlerzustände und ausreichend große Interaktionsflächen bereit. Unter `src/shared/forms` liegen schmale React-Hook-Form-Adapter, gemeinsame Zod-Validierung, Fehlerzusammenfassung und der Schutz vor dem Verlassen ungespeicherter Formulare. Der Vertrag ist unter `docs/form-workflow-and-unsaved-changes.md` dokumentiert. Entfernte Suchauswahlen werden erst mit einem konkreten Feature als zugängliche Remote-Combobox ergänzt.
+Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Einzeilige und mehrzeilige Texteingaben, Checkboxen, native Selects, Radio-Gruppen und Datei-Auswahl stellen sichtbare Beschriftungen, Beschreibungen, Fehlerzustände und ausreichend große Interaktionsflächen bereit. Unter `src/shared/forms` liegen schmale React-Hook-Form-Adapter, gemeinsame Zod-Validierung, Fehlerzusammenfassung und der Schutz vor dem Verlassen ungespeicherter Formulare. Der Vertrag ist unter `docs/form-workflow-and-unsaved-changes.md` dokumentiert. Entfernte Suchauswahlen werden bei Bedarf mit einem konkreten Feature als zugängliche Remote-Combobox ergänzt.
 
 Globale Rückmeldungen werden über `useFeedback()` ausgelöst. Kritische Meldungen bleiben bis zum Schließen sichtbar; wiederholte Meldungen können dedupliziert werden. Folgenreiche Aktionen verwenden `useConfirmation()` statt `window.confirm()`. Typische Transportfehler werden über `getApiErrorPresentation()` beziehungsweise `useApiFeedback()` in sichere, lokalisierte Meldungen überführt. Der genaue Vertrag ist unter `docs/global-feedback-and-confirmation.md` dokumentiert.
 
@@ -152,3 +153,7 @@ Login, Registrierung, Passwort-Wiederherstellung und Rollenfreischaltung verwend
 ### API-Vertrag und Featuremodule
 
 Orval erzeugt den typisierten Transportclient aus `openapi/openapi.json`; die generierten Dateien werden bewusst nicht manuell gepflegt. Konkrete Fachmodule registrieren ihre geschützten Routen und Navigation zentral über `src/app/features/index.ts`. Details zu Generierung, DTO-Mapping und Capabilities stehen in `docs/api-contract-and-feature-architecture.md`.
+
+## Benutzerverzeichnis
+
+Das Feature unter `src/features/users` registriert `/users` und `/users/:userId` über die Feature-Registry. Suche, rollenabhängige Filter, Sortierung und Pagination bleiben URL-gesteuert. Smartphones verwenden Benutzerkarten, Tablets ein zweispaltiges Kartenraster und Desktopansichten eine semantische Tabelle. Behörden-IDs werden über gemeinsame Office-Reference-Queries in lesbare Namen aufgelöst. Details stehen unter `docs/user-directory-and-profile-integration.md`.
