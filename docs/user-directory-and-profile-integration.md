@@ -2,7 +2,7 @@
 
 ## Scope
 
-This patch introduces the first read-only user feature on top of the existing account page. It deliberately does not add administrative updates, role assignment, deactivation or audit history. Those workflows remain separate patches because they require mutation forms, conflict handling and irreversible lifecycle actions.
+This document describes the read-oriented foundation introduced by the first user patch. Administrative updates and role assignment are now documented separately in `user-administration-and-role-assignment.md`; deactivation and audit history remain a later lifecycle patch.
 
 ## Routes and capability
 
@@ -54,9 +54,4 @@ Query keys are owned by the user feature. List changes retain previous data whil
 
 ## Follow-up patches
 
-The next user patches are expected to add:
-
-1. administrative profile editing, role assignment and office selection,
-2. deactivation and append-only user history.
-
-The current pages expose no placeholder controls for these unavailable mutations.
+Administrative profile editing, role assignment and office selection are provided by the second user patch. Deactivation and append-only user history remain the final user lifecycle patch.

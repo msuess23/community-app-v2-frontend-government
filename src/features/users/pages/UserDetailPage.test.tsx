@@ -62,6 +62,9 @@ describe('UserDetailPage', () => {
     expect(screen.getByText('Sachbearbeitung')).toBeVisible()
     expect(screen.getByText(TARGET_ID)).toBeVisible()
     expect(
+      screen.getByRole('link', { name: 'Administrativ bearbeiten' }),
+    ).toHaveAttribute('href', `/users/${TARGET_ID}/edit`)
+    expect(
       screen.getByRole('link', { name: 'Zurück zum Benutzerverzeichnis' }),
     ).toHaveAttribute('href', '/users?role=OFFICER')
   })

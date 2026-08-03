@@ -1,8 +1,10 @@
+import { createElement } from 'react'
 import { UsersRound } from 'lucide-react'
 
 import { defineFeatureModule } from '@/app/feature-module'
+import { RequireCapability } from '@/auth/RequireCapability'
 
-/** Registers the read-only user directory and profile routes in the authority App-Shell. */
+/** Registers user directory, profile, and administrator-only edit routes. */
 export const userFeature = defineFeatureModule({
   capability: 'viewUsers',
   id: 'users',
@@ -33,6 +35,23 @@ export const userFeature = defineFeatureModule({
         return { Component: UserDetailPage }
       },
       path: 'users/:userId',
+    },
+    {
+      children: [
+        {
+          handle: { pageTitle: 'Benutzer bearbeiten' },
+          lazy: async () => {
+            const { UserAdminEditPage } = await import(
+              '@/features/users/pages/UserAdminEditPage'
+            )
+            return { Component: UserAdminEditPage }
+          },
+          path: 'users/:userId/edit',
+        },
+      ],
+      element: createElement(RequireCapability, {
+        capability: 'manageUsers',
+      }),
     },
   ],
 })

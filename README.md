@@ -99,7 +99,7 @@ src/shared/
     └── TextField.tsx
 ```
 
-Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Einzeilige und mehrzeilige Texteingaben, Checkboxen, native Selects, Radio-Gruppen und Datei-Auswahl stellen sichtbare Beschriftungen, Beschreibungen, Fehlerzustände und ausreichend große Interaktionsflächen bereit. Unter `src/shared/forms` liegen schmale React-Hook-Form-Adapter, gemeinsame Zod-Validierung, Fehlerzusammenfassung und der Schutz vor dem Verlassen ungespeicherter Formulare. Der Vertrag ist unter `docs/form-workflow-and-unsaved-changes.md` dokumentiert. Entfernte Suchauswahlen werden bei Bedarf mit einem konkreten Feature als zugängliche Remote-Combobox ergänzt.
+Neue fachliche Seiten sollen diese Bausteine wiederverwenden. Einzeilige und mehrzeilige Texteingaben, Checkboxen, native Selects, Radio-Gruppen und Datei-Auswahl stellen sichtbare Beschriftungen, Beschreibungen, Fehlerzustände und ausreichend große Interaktionsflächen bereit. Unter `src/shared/forms` liegen schmale React-Hook-Form-Adapter, gemeinsame Zod-Validierung, Fehlerzusammenfassung und der Schutz vor dem Verlassen ungespeicherter Formulare. Der Vertrag ist unter `docs/form-workflow-and-unsaved-changes.md` dokumentiert. Lange Referenzlisten können über `SearchableSelectField` mit einer sichtbaren Suche gefiltert werden, während die eigentliche Auswahl ein zuverlässiges natives Select bleibt. Serverseitig paginierte Remote-Comboboxen werden nur ergänzt, wenn ein Fachbereich sie tatsächlich benötigt.
 
 Globale Rückmeldungen werden über `useFeedback()` ausgelöst. Kritische Meldungen bleiben bis zum Schließen sichtbar; wiederholte Meldungen können dedupliziert werden. Folgenreiche Aktionen verwenden `useConfirmation()` statt `window.confirm()`. Typische Transportfehler werden über `getApiErrorPresentation()` beziehungsweise `useApiFeedback()` in sichere, lokalisierte Meldungen überführt. Der genaue Vertrag ist unter `docs/global-feedback-and-confirmation.md` dokumentiert.
 
@@ -157,3 +157,7 @@ Orval erzeugt den typisierten Transportclient aus `openapi/openapi.json`; die ge
 ## Benutzerverzeichnis
 
 Das Feature unter `src/features/users` registriert `/users` und `/users/:userId` über die Feature-Registry. Suche, rollenabhängige Filter, Sortierung und Pagination bleiben URL-gesteuert. Smartphones verwenden Benutzerkarten, Tablets ein zweispaltiges Kartenraster und Desktopansichten eine semantische Tabelle. Behörden-IDs werden über gemeinsame Office-Reference-Queries in lesbare Namen aufgelöst. Details stehen unter `docs/user-directory-and-profile-integration.md`.
+
+## Benutzeradministration
+
+Administratoren bearbeiten aktive Benutzerkonten über `/users/:userId/edit`. Der Workflow unterstützt Namen, Rolle, aktive Behördenzuordnung und einen verpflichtenden Änderungsgrund. Rollen- und Behördenregeln werden bereits im Formular abgebildet, bleiben aber serverseitig maßgeblich. Eine gemeinsame durchsuchbare Native-Select-Komponente erhält zuverlässige Tastatur-, Touch- und Screenreader-Funktionalität auf Smartphone, Tablet und Desktop. Details stehen unter `docs/user-administration-and-role-assignment.md`.

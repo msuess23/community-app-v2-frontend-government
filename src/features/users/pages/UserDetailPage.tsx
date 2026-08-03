@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { Mail, UserRoundCheck } from 'lucide-react'
+import { Mail, Pencil, UserRoundCheck } from 'lucide-react'
 import { useLocation, useParams } from 'react-router'
 
 import { useAuth } from '@/auth/auth-context'
+import { hasCapability } from '@/auth/capabilities'
 import { getRoleLabel } from '@/auth/role-labels'
 import { UserOfficeName } from '@/features/users/components/UserOfficeName'
 import { UserStatusBadge } from '@/features/users/components/UserStatusBadge'
@@ -18,7 +19,7 @@ import {
 import { resolveResourceDetailReturnTo } from '@/shared/resource-detail/detail-navigation'
 import { LinkButton } from '@/shared/ui/LinkButton'
 
-/** Shows one backend-authorized user profile without exposing administrative mutations yet. */
+/** Shows one backend-authorized user profile and capability-gated follow-up actions. */
 export function UserDetailPage() {
   const { user: currentUser } = useAuth()
   const { userId = '' } = useParams()
@@ -43,15 +44,33 @@ export function UserDetailPage() {
     >
       {(user) => {
         const isOwnAccount = currentUser?.id === user.id
+        const canManageUser =
+          user.isActive && hasCapability(currentUser, 'manageUsers')
 
         return (
           <ResourceDetailLayout
             actions={
-              isOwnAccount ? (
-                <LinkButton to="/account" variant="secondary">
-                  <UserRoundCheck aria-hidden="true" size={18} />
-                  Eigenes Profil bearbeiten
-                </LinkButton>
+              isOwnAccount || canManageUser ? (
+                <div className="flex flex-wrap gap-2">
+                  {isOwnAccount ? (
+                    <LinkButton to="/account" variant="secondary">
+                      <UserRoundCheck aria-hidden="true" size={18} />
+                      Eigenes Profil bearbeiten
+                    </LinkButton>
+                  ) : null}
+                  {canManageUser ? (
+                    <LinkButton
+                      state={{
+                        from: `/users/${user.id}`,
+                        listFrom: returnTo,
+                      }}
+                      to={`/users/${user.id}/edit`}
+                    >
+                      <Pencil aria-hidden="true" size={18} />
+                      Administrativ bearbeiten
+                    </LinkButton>
+                  ) : null}
+                </div>
               ) : undefined
             }
             backLink={{ label: 'Zurück zum Benutzerverzeichnis', to: returnTo }}
