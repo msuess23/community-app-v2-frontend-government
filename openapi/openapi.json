@@ -2252,7 +2252,7 @@
           "Offices"
         ],
         "summary": "Update Office",
-        "description": "Update an office and record its previous state.",
+        "description": "Update an office and record the resulting state snapshot.",
         "operationId": "update_office_api_v1_offices__office_id__patch",
         "security": [
           {
@@ -2361,7 +2361,7 @@
           "Offices"
         ],
         "summary": "Get Office History",
-        "description": "Return the paginated audit history of an office.",
+        "description": "Return paginated result-state snapshots for an office.",
         "operationId": "get_office_history_api_v1_offices__office_id__history_get",
         "security": [
           {
@@ -6850,9 +6850,7 @@
             "title": "Services"
           },
           "opening_hours": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Opening Hours"
+            "$ref": "#/components/schemas/OpeningHours"
           },
           "address_snapshot": {
             "anyOf": [

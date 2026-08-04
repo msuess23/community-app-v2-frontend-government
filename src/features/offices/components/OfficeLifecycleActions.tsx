@@ -1,4 +1,4 @@
-import { Building2Off } from 'lucide-react'
+import { Building2 } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router'
@@ -47,7 +47,7 @@ export function OfficeLifecycleActions({
           description:
             'Die Deaktivierung ist dauerhaft, wird in der Änderungshistorie dokumentiert und kann durch bestehende Abhängigkeiten blockiert werden.',
           dialogTitle: 'Behörde deaktivieren',
-          icon: <Building2Off aria-hidden="true" size={18} />,
+          icon: <Building2 aria-hidden="true" size={18} />,
           label: 'Behörde deaktivieren',
           render: () => <OfficeDeactivationForm office={office} />,
         },

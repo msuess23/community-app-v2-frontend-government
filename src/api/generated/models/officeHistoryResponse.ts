@@ -5,7 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AddressSnapshot } from './addressSnapshot'
-import type { OfficeHistoryResponseOpeningHours } from './officeHistoryResponseOpeningHours'
+import type { OpeningHours } from './openingHours'
 
 /**
  * Serialize one immutable office history snapshot.
@@ -18,7 +18,7 @@ export interface OfficeHistoryResponse {
   contact_email?: string | null
   phone?: string | null
   services?: string[]
-  opening_hours?: OfficeHistoryResponseOpeningHours
+  opening_hours?: OpeningHours
   address_snapshot?: AddressSnapshot | null
   is_active: boolean
   changed_by_user_id: string

@@ -100,7 +100,7 @@ export const getUpdateOfficeApiV1OfficesOfficeIdPatchUrl = (
 }
 
 /**
- * Update an office and record its previous state.
+ * Update an office and record the resulting state snapshot.
  * @summary Update Office
  */
 export const updateOfficeApiV1OfficesOfficeIdPatch = async (
@@ -165,7 +165,7 @@ export const getGetOfficeHistoryApiV1OfficesOfficeIdHistoryGetUrl = (
 }
 
 /**
- * Return the paginated audit history of an office.
+ * Return paginated result-state snapshots for an office.
  * @summary Get Office History
  */
 export const getOfficeHistoryApiV1OfficesOfficeIdHistoryGet = async (
