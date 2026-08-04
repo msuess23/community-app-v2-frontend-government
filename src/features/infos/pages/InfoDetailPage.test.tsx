@@ -75,6 +75,12 @@ describe('InfoDetailPage', () => {
       screen.queryByRole('link', { name: 'Mitteilung bearbeiten' }),
     ).not.toBeInTheDocument()
     expect(
+      screen.queryByRole('button', { name: 'Status aktualisieren' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Mitteilung löschen' }),
+    ).not.toBeInTheDocument()
+    expect(
       screen.queryByRole('heading', { name: 'Bilder hochladen' }),
     ).not.toBeInTheDocument()
 
@@ -283,6 +289,131 @@ describe('InfoDetailPage', () => {
       ).toBeVisible()
     },
   )
+
+  it('publishes a new public status entry and updates the current projection', async () => {
+    const user = userEvent.setup()
+    const statusRequests: unknown[] = []
+    let storedInfo = infoResponse()
+    let statusHistory = [storedInfo.current_status]
+
+    mockApiServer.use(
+      http.get(`http://localhost/api/v1/infos/${INFO_ID}`, () =>
+        HttpResponse.json(storedInfo),
+      ),
+      http.get(`http://localhost/api/v1/infos/${INFO_ID}/images`, () =>
+        HttpResponse.json([]),
+      ),
+      http.get(`http://localhost/api/v1/infos/${INFO_ID}/status`, () =>
+        HttpResponse.json(statusHistory),
+      ),
+      http.put(
+        `http://localhost/api/v1/infos/${INFO_ID}/status`,
+        async ({ request }) => {
+          const body = await request.json()
+          statusRequests.push(body)
+          const statusEntry = {
+            created_at: '2026-08-05T08:00:00Z',
+            id: 'status-cancelled',
+            message: 'Das Fest fällt wegen des Unwetters aus.',
+            status: 'CANCELLED' as const,
+          }
+          statusHistory = [statusEntry, ...statusHistory]
+          storedInfo = {
+            ...storedInfo,
+            current_status: statusEntry,
+            updated_at: statusEntry.created_at,
+          }
+          return HttpResponse.json(statusEntry)
+        },
+      ),
+      http.get(`http://localhost/api/v1/offices/${OFFICE_ID}`, () =>
+        HttpResponse.json(officeResponse()),
+      ),
+    )
+
+    renderDetail(ADMIN)
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Status aktualisieren' }),
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Status aktualisieren' })
+    await user.selectOptions(
+      within(dialog).getByRole('combobox', { name: /Neuer Status/ }),
+      'CANCELLED',
+    )
+    await user.type(
+      within(dialog).getByRole('textbox', { name: 'Öffentliche Nachricht' }),
+      'Das Fest fällt wegen des Unwetters aus.',
+    )
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Status veröffentlichen' }),
+    )
+
+    await waitFor(() => {
+      expect(statusRequests).toEqual([
+        {
+          message: 'Das Fest fällt wegen des Unwetters aus.',
+          status: 'CANCELLED',
+        },
+      ])
+    })
+    expect(
+      await within(
+        screen.getByRole('region', { name: 'Statusverlauf' }),
+      ).findByText('Das Fest fällt wegen des Unwetters aus.'),
+    ).toBeVisible()
+    expect(screen.getAllByText('Abgesagt').length).toBeGreaterThan(0)
+    expect(
+      screen.queryByRole('dialog', { name: 'Status aktualisieren' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('physically deletes an Info and returns to the preserved directory state', async () => {
+    const user = userEvent.setup()
+    const deleteRequests: string[] = []
+
+    mockApiServer.use(
+      http.get(`http://localhost/api/v1/infos/${INFO_ID}`, () =>
+        HttpResponse.json(infoResponse()),
+      ),
+      http.get(`http://localhost/api/v1/infos/${INFO_ID}/images`, () =>
+        HttpResponse.json([]),
+      ),
+      http.get(`http://localhost/api/v1/infos/${INFO_ID}/status`, () =>
+        HttpResponse.json([infoResponse().current_status]),
+      ),
+      http.delete(`http://localhost/api/v1/infos/${INFO_ID}`, () => {
+        deleteRequests.push(INFO_ID)
+        return new HttpResponse(null, { status: 204 })
+      }),
+      http.get(`http://localhost/api/v1/offices/${OFFICE_ID}`, () =>
+        HttpResponse.json(officeResponse()),
+      ),
+    )
+
+    renderDetail(ADMIN)
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Mitteilung löschen' }),
+    )
+    const dialog = screen.getByRole('dialog', {
+      name: 'Mitteilung endgültig löschen',
+    })
+    expect(within(dialog).getByText(/Statusverlauf/)).toBeVisible()
+    expect(within(dialog).getByText(/Bilddateien/)).toBeVisible()
+    expect(within(dialog).queryByRole('textbox')).not.toBeInTheDocument()
+
+    await user.click(
+      within(dialog).getByRole('button', {
+        name: 'Mitteilung endgültig löschen',
+      }),
+    )
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Mitteilungen' }),
+    ).toBeVisible()
+    expect(deleteRequests).toEqual([INFO_ID])
+  })
 })
 
 function renderDetail(user: AuthUser) {
@@ -300,6 +431,10 @@ function renderDetail(user: AuthUser) {
               ]}
             >
               <Routes>
+                <Route
+                  path="infos"
+                  element={<h1 data-page-heading="true">Mitteilungen</h1>}
+                />
                 <Route path="infos/:infoId" element={<InfoDetailPage />} />
               </Routes>
             </MemoryRouter>

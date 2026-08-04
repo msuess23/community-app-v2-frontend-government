@@ -5,6 +5,7 @@ import { Link, useLocation, useParams } from 'react-router'
 import { useAuth } from '@/auth/auth-context'
 import { InfoCategoryBadge, InfoStatusBadge } from '@/features/infos/components/InfoBadges'
 import { InfoImageManager } from '@/features/infos/components/InfoImageManager'
+import { InfoLifecycleActions } from '@/features/infos/components/InfoLifecycleActions'
 import { InfoStatusTimeline } from '@/features/infos/components/InfoStatusTimeline'
 import type { InfoAddress, InfoRecord } from '@/features/infos/model/info-model'
 import { canManageInfo } from '@/features/infos/model/info-permissions'
@@ -68,16 +69,19 @@ export function InfoDetailPage() {
         <ResourceDetailLayout
           actions={
             user && canManageInfo(user, info) ? (
-              <LinkButton
-                state={{
-                  from: `/infos/${info.id}`,
-                  listFrom: returnTo,
-                }}
-                to={`/infos/${info.id}/edit`}
-              >
-                <Pencil aria-hidden="true" size={18} />
-                Mitteilung bearbeiten
-              </LinkButton>
+              <div className="flex flex-wrap items-center gap-2">
+                <LinkButton
+                  state={{
+                    from: `/infos/${info.id}`,
+                    listFrom: returnTo,
+                  }}
+                  to={`/infos/${info.id}/edit`}
+                >
+                  <Pencil aria-hidden="true" size={18} />
+                  Mitteilung bearbeiten
+                </LinkButton>
+                <InfoLifecycleActions info={info} returnTo={returnTo} />
+              </div>
             ) : undefined
           }
           aside={<InfoDetailAside info={info} />}

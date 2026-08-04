@@ -257,6 +257,62 @@ test(
   },
 )
 
+test(
+  'administrators publish public status entries and permanently delete Infos',
+  async ({ page }) => {
+    const requests = await installInfoLifecycleApi(page)
+    await signInAsAuthorityUser(page, `/infos/${INFO_ID}`, adminUser)
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Stadtteilfest' }),
+    ).toBeVisible()
+
+    await page.getByRole('button', { name: 'Status aktualisieren' }).click()
+    const statusDialog = page.getByRole('dialog', {
+      name: 'Status aktualisieren',
+    })
+    await statusDialog
+      .getByRole('combobox', { name: /Neuer Status/ })
+      .selectOption('CANCELLED')
+    await statusDialog
+      .getByRole('textbox', { name: 'Öffentliche Nachricht' })
+      .fill('Das Fest fällt wegen des Unwetters aus.')
+    await expectNoSeriousAccessibilityViolations(page)
+    await statusDialog
+      .getByRole('button', { name: 'Status veröffentlichen' })
+      .click()
+
+    await expect(page.getByText('Abgesagt').first()).toBeVisible()
+    await expect(
+      page.getByText('Das Fest fällt wegen des Unwetters aus.'),
+    ).toBeVisible()
+    expect(requests.statusUpdates).toEqual([
+      {
+        message: 'Das Fest fällt wegen des Unwetters aus.',
+        status: 'CANCELLED',
+      },
+    ])
+
+    await page.getByRole('button', { name: 'Mitteilung löschen' }).click()
+    const deleteDialog = page.getByRole('dialog', {
+      name: 'Mitteilung endgültig löschen',
+    })
+    await expect(deleteDialog).toContainText('öffentliche Statusverlauf')
+    await expect(deleteDialog).toContainText('Bilddateien')
+    await expect(deleteDialog.getByRole('textbox')).toHaveCount(0)
+    await expectNoSeriousAccessibilityViolations(page)
+    await deleteDialog
+      .getByRole('button', { name: 'Mitteilung endgültig löschen' })
+      .click()
+
+    await expect(page).toHaveURL(/\/infos$/)
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Mitteilungen' }),
+    ).toBeVisible()
+    expect(requests.deletedInfoIds).toEqual([INFO_ID])
+  },
+)
+
 async function installInfoApi(page: Page): Promise<string[]> {
   const listRequests: string[] = []
 
@@ -682,6 +738,144 @@ async function installInfoImageManagementApi(page: Page): Promise<{
   })
 
   return state
+}
+
+async function installInfoLifecycleApi(page: Page): Promise<{
+  deletedInfoIds: string[]
+  statusUpdates: unknown[]
+}> {
+  const requests = {
+    deletedInfoIds: [] as string[],
+    statusUpdates: [] as unknown[],
+  }
+  let deleted = false
+  let storedInfo: Record<string, unknown> = infoResponse()
+  let statusHistory: Array<Record<string, unknown>> = [
+    infoResponse().current_status,
+  ]
+
+  await page.route('**/api/v1/offices**', async (route) => {
+    const url = new URL(route.request().url())
+
+    await route.fulfill({
+      contentType: 'application/json',
+      json:
+        url.pathname === '/api/v1/offices'
+          ? {
+              data: [officeResponse()],
+              page: 1,
+              pages: 1,
+              size: 100,
+              total: 1,
+            }
+          : officeResponse(),
+      status: 200,
+    })
+  })
+
+  await page.route('**/api/v1/infos**', async (route) => {
+    const request = route.request()
+    const url = new URL(request.url())
+    const path = url.pathname
+
+    if (path.endsWith('/content')) {
+      await route.fulfill({
+        body: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+          'base64',
+        ),
+        contentType: 'image/png',
+        status: 200,
+      })
+      return
+    }
+
+    if (
+      path === `/api/v1/infos/${INFO_ID}/status` &&
+      request.method() === 'PUT'
+    ) {
+      const body = request.postDataJSON() as {
+        message: string | null
+        status: string
+      }
+      requests.statusUpdates.push(body)
+      const entry = {
+        created_at: '2026-08-05T08:00:00Z',
+        id: 'status-cancelled',
+        message: body.message,
+        status: body.status,
+      }
+      statusHistory = [entry, ...statusHistory]
+      storedInfo = {
+        ...storedInfo,
+        current_status: entry,
+        updated_at: entry.created_at,
+      }
+      await route.fulfill({
+        contentType: 'application/json',
+        json: entry,
+        status: 200,
+      })
+      return
+    }
+
+    if (path === `/api/v1/infos/${INFO_ID}` && request.method() === 'DELETE') {
+      requests.deletedInfoIds.push(INFO_ID)
+      deleted = true
+      await route.fulfill({ status: 204 })
+      return
+    }
+
+    if (path === '/api/v1/infos') {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: {
+          data: deleted ? [] : [storedInfo],
+          page: 1,
+          pages: deleted ? 0 : 1,
+          size: 20,
+          total: deleted ? 0 : 1,
+        },
+        status: 200,
+      })
+      return
+    }
+
+    if (path.endsWith('/images')) {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: deleted ? [] : [imageResponse()],
+        status: 200,
+      })
+      return
+    }
+
+    if (path.endsWith('/status')) {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: deleted ? [] : statusHistory,
+        status: 200,
+      })
+      return
+    }
+
+    if (deleted) {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: { error_code: 'INFO_NOT_FOUND', message: 'Info not found' },
+        status: 404,
+      })
+      return
+    }
+
+    await route.fulfill({
+      contentType: 'application/json',
+      json: storedInfo,
+      status: 200,
+    })
+  })
+
+  return requests
 }
 
 function readMultipartValue(body: string, fieldName: string): string {

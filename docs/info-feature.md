@@ -33,3 +33,9 @@ The third feature slice keeps Info image semantics inside the Info feature while
 Info management requires one normalized alternative text per selected image, allows JPEG, PNG, and WebP files up to 5 MiB, and uploads queued files sequentially. Successful files remain successful when a later upload fails; failed entries can be retried individually. Local preview object URLs are revoked when entries are removed or the queue unmounts.
 
 Cover selection and physical deletion use the dedicated Info endpoints. The gallery updates only from confirmed responses. Deleting the current cover forces a server reload because the backend deterministically selects the oldest remaining image as the replacement. Detail and list projections are invalidated after media mutations because `image_url` and `updated_at` may change.
+
+## Status maintenance and permanent deletion
+
+The fourth feature slice keeps the mutable Info lifecycle distinct from event-sourced resources. Authorized administrators, officers, and managers may append any backend-supported status together with an optional public message. The UI does not invent a transition matrix, and repeating the current status remains possible when another public update is needed. The confirmed status response updates the current detail projection, prepends the public status log, and invalidates paginated list projections.
+
+Deleting an Info is a physical and irreversible operation rather than deactivation. The destructive workflow explicitly explains that the notice, owned address, complete status log, image metadata, and image files are removed. It requests no audit reason because the backend neither accepts nor retains one. After the `204` response, all detail-owned query data is removed, list projections are invalidated, and navigation returns to the preserved directory URL.

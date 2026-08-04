@@ -143,8 +143,8 @@ export function InfoForm({
                 />
                 <ControlledSelectField
                   control={control}
-                  isRequired
                   label="Kategorie"
+                  required
                   name="category"
                   options={INFO_CATEGORIES.map((category) => ({
                     label: getInfoCategoryLabel(category),
