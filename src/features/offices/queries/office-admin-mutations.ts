@@ -57,7 +57,11 @@ export function useUpdateOfficeMutation() {
       await commitMutationResult(queryClient, {
         data: updatedOffice,
         detailKey: officeFeatureQueryKeys.detail(updatedOffice.id),
-        invalidate: [officeFeatureQueryKeys.lists(), officeQueryKeys.all],
+        invalidate: [
+          officeFeatureQueryKeys.lists(),
+          officeFeatureQueryKeys.histories(updatedOffice.id),
+          officeQueryKeys.all,
+        ],
       })
     },
   })

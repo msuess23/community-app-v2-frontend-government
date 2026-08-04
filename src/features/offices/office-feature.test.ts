@@ -12,7 +12,11 @@ describe('officeFeature', () => {
       expect.objectContaining({ path: 'offices' }),
     )
     expect(officeFeature.routes[1]?.children?.map((route) => route.path)).toEqual(
-      ['offices/new', 'offices/:officeId/edit'],
+      [
+        'offices/new',
+        'offices/:officeId/edit',
+        'offices/:officeId/history',
+      ],
     )
     expect(officeFeature.routes[2]).toEqual(
       expect.objectContaining({ path: 'offices/:officeId' }),

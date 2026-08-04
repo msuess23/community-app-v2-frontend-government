@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { Mail, MapPin, Pencil, Phone } from 'lucide-react'
+import { History, Mail, MapPin, Pencil, Phone } from 'lucide-react'
 import { useLocation, useParams } from 'react-router'
 
 import { useAuth } from '@/auth/auth-context'
 import { hasCapability } from '@/auth/capabilities'
+import { OfficeLifecycleActions } from '@/features/offices/components/OfficeLifecycleActions'
 import { OfficeOpeningHoursView } from '@/features/offices/components/OfficeOpeningHours'
 import { OfficeStatusBadge } from '@/features/offices/components/OfficeStatusBadge'
 import {
@@ -64,17 +65,32 @@ export function OfficeDetailPage() {
       {(office) => (
         <ResourceDetailLayout
           actions={
-            office.isActive && hasCapability(user, 'manageOffices') ? (
-              <LinkButton
-                state={{
-                  from: `/offices/${office.id}`,
-                  listFrom: returnTo,
-                }}
-                to={`/offices/${office.id}/edit`}
-              >
-                <Pencil aria-hidden="true" size={18} />
-                Behörde bearbeiten
-              </LinkButton>
+            hasCapability(user, 'manageOffices') ? (
+              <div className="flex flex-wrap gap-2">
+                {office.isActive ? (
+                  <LinkButton
+                    state={{
+                      from: `/offices/${office.id}`,
+                      listFrom: returnTo,
+                    }}
+                    to={`/offices/${office.id}/edit`}
+                  >
+                    <Pencil aria-hidden="true" size={18} />
+                    Behörde bearbeiten
+                  </LinkButton>
+                ) : null}
+                <LinkButton
+                  state={{ listFrom: returnTo }}
+                  to={`/offices/${office.id}/history`}
+                  variant="outline"
+                >
+                  <History aria-hidden="true" size={18} />
+                  Änderungshistorie
+                </LinkButton>
+                {office.isActive ? (
+                  <OfficeLifecycleActions office={office} />
+                ) : null}
+              </div>
             ) : undefined
           }
           aside={<OfficeDetailAside office={office} />}

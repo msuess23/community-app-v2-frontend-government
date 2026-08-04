@@ -48,6 +48,16 @@ export const officeFeature = defineFeatureModule({
           },
           path: 'offices/:officeId/edit',
         },
+        {
+          handle: { pageTitle: 'Behördenhistorie' },
+          lazy: async () => {
+            const { OfficeHistoryPage } = await import(
+              '@/features/offices/pages/OfficeHistoryPage'
+            )
+            return { Component: OfficeHistoryPage }
+          },
+          path: 'offices/:officeId/history',
+        },
       ],
       element: createElement(RequireCapability, {
         capability: 'manageOffices',
