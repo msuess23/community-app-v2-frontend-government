@@ -90,6 +90,105 @@ test(
 )
 
 test(
+  'administrators upload Info images sequentially and manage the cover',
+  async ({ page }) => {
+    const requests = await installInfoImageManagementApi(page)
+    await signInAsAuthorityUser(page, `/infos/${INFO_ID}`, adminUser)
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Stadtteilfest' }),
+    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Bilder hochladen' })).toBeVisible()
+
+    await page.getByLabel('Bilddateien auswählen').setInputFiles([
+      {
+        buffer: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+          'base64',
+        ),
+        mimeType: 'image/png',
+        name: 'umleitung.png',
+      },
+      {
+        buffer: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+          'base64',
+        ),
+        mimeType: 'image/png',
+        name: 'lageplan.png',
+      },
+    ])
+    await page
+      .getByRole('textbox', { name: 'Alternativtext für umleitung.png' })
+      .fill('Umleitung rund um die gesperrte Parkstraße')
+    await page
+      .getByRole('textbox', { name: 'Alternativtext für lageplan.png' })
+      .fill('Lageplan mit Bühne und Informationsständen')
+
+    await page.getByRole('button', { name: 'Bilder hochladen' }).click()
+    await expect(
+      page.getByRole('img', {
+        name: 'Umleitung rund um die gesperrte Parkstraße',
+      }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('img', {
+        name: 'Lageplan mit Bühne und Informationsständen',
+      }),
+    ).toBeVisible()
+    expect(requests.maximumConcurrentUploads).toBe(1)
+    expect(requests.uploadBodies).toHaveLength(2)
+    expect(requests.uploadBodies[0]).toContain(
+      'Umleitung rund um die gesperrte Parkstraße',
+    )
+    expect(requests.uploadBodies[1]).toContain(
+      'Lageplan mit Bühne und Informationsständen',
+    )
+
+    await page
+      .getByRole('button', {
+        name: 'Als Titelbild verwenden: Lageplan mit Bühne und Informationsständen',
+      })
+      .click()
+    const selectedCover = page
+      .getByRole('img', {
+        name: 'Lageplan mit Bühne und Informationsständen',
+      })
+      .locator('xpath=ancestor::figure')
+    await expect(selectedCover.getByText('Titelbild')).toBeVisible()
+
+    await page
+      .getByRole('button', {
+        name: 'Bild löschen: Lageplan mit Bühne und Informationsständen',
+      })
+      .click()
+    const confirmation = page.getByRole('dialog', { name: 'Bild löschen?' })
+    await expect(confirmation).toContainText(
+      'das älteste verbleibende Bild als neues Titelbild',
+    )
+    await confirmation
+      .getByRole('button', { name: 'Bild endgültig löschen' })
+      .click()
+
+    await expect(
+      page.getByRole('img', {
+        name: 'Lageplan mit Bühne und Informationsständen',
+      }),
+    ).toHaveCount(0)
+    const replacementCover = page
+      .getByRole('img', {
+        name: 'Bühne und Informationsstände auf dem Leipziger Markt',
+      })
+      .locator('xpath=ancestor::figure')
+    await expect(replacementCover.getByText('Titelbild')).toBeVisible()
+    expect(requests.coverImageIds).toEqual(['image-upload-2'])
+    expect(requests.deletedImageIds).toEqual(['image-upload-2'])
+
+    await expectNoSeriousAccessibilityViolations(page)
+  },
+)
+
+test(
   'administrators can create and minimally edit Info master data',
   async ({ page }) => {
     const requests = await installInfoManagementApi(page)
@@ -272,18 +371,28 @@ function infoResponse() {
   }
 }
 
-function imageResponse() {
+function imageResponse(
+  overrides: Readonly<{
+    altText?: string
+    id?: string
+    isCover?: boolean
+    originalFilename?: string
+  }> = {},
+) {
+  const id = overrides.id ?? IMAGE_ID
   return {
-    alt_text: 'Bühne und Informationsstände auf dem Leipziger Markt',
+    alt_text:
+      overrides.altText ??
+      'Bühne und Informationsstände auf dem Leipziger Markt',
     height: 1,
-    id: IMAGE_ID,
+    id,
     info_id: INFO_ID,
-    is_cover: true,
+    is_cover: overrides.isCover ?? true,
     mime_type: 'image/png',
-    original_filename: 'markt.png',
+    original_filename: overrides.originalFilename ?? 'markt.png',
     size_bytes: 68,
     uploaded_at: '2026-08-01T08:00:00Z',
-    url: `/api/v1/infos/${INFO_ID}/images/${IMAGE_ID}/content`,
+    url: `/api/v1/infos/${INFO_ID}/images/${id}/content`,
     width: 1,
   }
 }
@@ -440,6 +549,150 @@ async function installInfoManagementApi(page: Page): Promise<{
   })
 
   return requests
+}
+
+async function installInfoImageManagementApi(page: Page): Promise<{
+  coverImageIds: string[]
+  deletedImageIds: string[]
+  maximumConcurrentUploads: number
+  uploadBodies: string[]
+}> {
+  const state = {
+    coverImageIds: [] as string[],
+    deletedImageIds: [] as string[],
+    maximumConcurrentUploads: 0,
+    uploadBodies: [] as string[],
+  }
+  let activeUploads = 0
+  let uploadSequence = 0
+  let images: Array<ReturnType<typeof imageResponse>> = [imageResponse()]
+
+  await page.route('**/api/v1/offices**', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      json: officeResponse(),
+      status: 200,
+    })
+  })
+
+  await page.route('**/api/v1/infos**', async (route) => {
+    const request = route.request()
+    const url = new URL(request.url())
+    const path = url.pathname
+
+    if (path.endsWith('/content')) {
+      await route.fulfill({
+        body: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+          'base64',
+        ),
+        contentType: 'image/png',
+        status: 200,
+      })
+      return
+    }
+
+    if (path === `/api/v1/infos/${INFO_ID}/images` && request.method() === 'POST') {
+      activeUploads += 1
+      state.maximumConcurrentUploads = Math.max(
+        state.maximumConcurrentUploads,
+        activeUploads,
+      )
+      const body = request.postDataBuffer()?.toString('utf8') ?? ''
+      state.uploadBodies.push(body)
+      uploadSequence += 1
+      await new Promise((resolve) => setTimeout(resolve, 25))
+      const altText = readMultipartValue(body, 'alt_text')
+      const filename = readMultipartFilename(body) ?? `upload-${uploadSequence}.png`
+      const uploaded = imageResponse({
+        altText,
+        id: `image-upload-${uploadSequence}`,
+        isCover: images.length === 0,
+        originalFilename: filename,
+      })
+      images = [...images, uploaded]
+      activeUploads -= 1
+      await route.fulfill({
+        contentType: 'application/json',
+        json: uploaded,
+        status: 201,
+      })
+      return
+    }
+
+    if (path === `/api/v1/infos/${INFO_ID}/images` && request.method() === 'GET') {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: images,
+        status: 200,
+      })
+      return
+    }
+
+    const coverMatch = path.match(/\/images\/([^/]+)\/cover$/)
+    if (coverMatch && request.method() === 'PUT') {
+      const imageId = coverMatch[1]
+      state.coverImageIds.push(imageId)
+      images = images.map((image) => ({
+        ...image,
+        is_cover: image.id === imageId,
+      }))
+      await route.fulfill({
+        contentType: 'application/json',
+        json: images.find((image) => image.id === imageId),
+        status: 200,
+      })
+      return
+    }
+
+    const deleteMatch = path.match(/\/images\/([^/]+)$/)
+    if (deleteMatch && request.method() === 'DELETE') {
+      const imageId = deleteMatch[1]
+      state.deletedImageIds.push(imageId)
+      const deletedCover = images.find((image) => image.id === imageId)?.is_cover
+      images = images.filter((image) => image.id !== imageId)
+      if (deletedCover && images.length > 0) {
+        images = images.map((image, index) => ({
+          ...image,
+          is_cover: index === 0,
+        }))
+      }
+      await route.fulfill({ status: 204 })
+      return
+    }
+
+    if (path.endsWith('/status')) {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: [infoResponse().current_status],
+        status: 200,
+      })
+      return
+    }
+
+    const cover = images.find((image) => image.is_cover)
+    await route.fulfill({
+      contentType: 'application/json',
+      json: {
+        ...infoResponse(),
+        image_url: cover?.url ?? null,
+      },
+      status: 200,
+    })
+  })
+
+  return state
+}
+
+function readMultipartValue(body: string, fieldName: string): string {
+  const pattern = new RegExp(
+    `name="${fieldName}"\\r?\\n\\r?\\n([^\\r\\n]+)`,
+  )
+  return pattern.exec(body)?.[1] ?? ''
+}
+
+function readMultipartFilename(body: string): string | null {
+  return /filename="([^"]+)"/.exec(body)?.[1] ?? null
 }
 
 async function expectNoSeriousAccessibilityViolations(page: Page) {

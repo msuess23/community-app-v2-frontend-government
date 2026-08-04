@@ -4,6 +4,7 @@ import { Link, useLocation, useParams } from 'react-router'
 
 import { useAuth } from '@/auth/auth-context'
 import { InfoCategoryBadge, InfoStatusBadge } from '@/features/infos/components/InfoBadges'
+import { InfoImageManager } from '@/features/infos/components/InfoImageManager'
 import { InfoStatusTimeline } from '@/features/infos/components/InfoStatusTimeline'
 import type { InfoAddress, InfoRecord } from '@/features/infos/model/info-model'
 import { canManageInfo } from '@/features/infos/model/info-permissions'
@@ -94,7 +95,10 @@ export function InfoDetailPage() {
             </p>
           </ResourceDetailSection>
 
-          <InfoImagesSection infoId={info.id} />
+          <InfoImagesSection
+            canManage={Boolean(user && canManageInfo(user, info))}
+            infoId={info.id}
+          />
           <InfoStatusHistorySection infoId={info.id} />
         </ResourceDetailLayout>
       )}
@@ -102,7 +106,10 @@ export function InfoDetailPage() {
   )
 }
 
-function InfoImagesSection({ infoId }: Readonly<{ infoId: string }>) {
+function InfoImagesSection({
+  canManage,
+  infoId,
+}: Readonly<{ canManage: boolean; infoId: string }>) {
   const imagesQuery = useQuery(createInfoImagesQueryOptions(infoId))
 
   return (
@@ -122,7 +129,13 @@ function InfoImagesSection({ infoId }: Readonly<{ infoId: string }>) {
         loadingLabel="Bilder der Mitteilung werden geladen."
         query={imagesQuery}
       >
-        {(images) => <MediaGallery assets={images} />}
+        {(images) =>
+          canManage ? (
+            <InfoImageManager assets={images} infoId={infoId} />
+          ) : (
+            <MediaGallery assets={images} />
+          )
+        }
       </RemoteDataBoundary>
     </ResourceDetailSection>
   )

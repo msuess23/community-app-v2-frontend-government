@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type ReactNode,
   type SyntheticEvent,
 } from 'react'
 import { Eye, X } from 'lucide-react'
@@ -16,6 +17,7 @@ export interface MediaGalleryProps {
   assets: readonly MediaAsset[]
   emptyMessage?: string
   label?: string
+  renderActions?: (asset: MediaAsset) => ReactNode
 }
 
 /** Displays a responsive image collection and an accessible full-size preview. */
@@ -23,6 +25,7 @@ export function MediaGallery({
   assets,
   emptyMessage = 'Für diese Mitteilung wurden keine Bilder veröffentlicht.',
   label = 'Bilder der Mitteilung',
+  renderActions,
 }: MediaGalleryProps) {
   const [selectedAsset, setSelectedAsset] = useState<MediaAsset | null>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
@@ -105,6 +108,11 @@ export function MediaGallery({
                 </span>
                 {asset.isCover ? (
                   <span className="text-on-surface-variant block">Titelbild</span>
+                ) : null}
+                {renderActions ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {renderActions(asset)}
+                  </div>
                 ) : null}
               </figcaption>
             </figure>

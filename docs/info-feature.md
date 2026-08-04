@@ -25,3 +25,11 @@ The second feature slice adds `/infos/new` and `/infos/:infoId/edit` behind `man
 Create and update use one accessible form but separate request mappers. Local `datetime-local` values are interpreted in `Europe/Berlin` and serialized as timezone-aware instants, including daylight-saving validation. Updates contain only normalized fields that differ from the current server projection. Explicitly clearing description, office assignment (admin only), or address sends `null`, while unchanged address coordinates remain omitted and therefore preserved.
 
 Images remain outside the create request. After the server has created the Info and returned its identifier, media can be managed as separate resources by the following image-management slice. This keeps partial upload failures visible instead of presenting a misleading atomic create workflow.
+
+## Current image management
+
+The third feature slice keeps Info image semantics inside the Info feature while extending `src/shared/media` with reusable upload and gallery actions. The shared queue accepts feature-provided file constraints, an optional description field, an upload callback, and an error formatter. It does not know endpoint paths, permissions, cover rules, or whether another feature physically deletes or event-sources an image.
+
+Info management requires one normalized alternative text per selected image, allows JPEG, PNG, and WebP files up to 5 MiB, and uploads queued files sequentially. Successful files remain successful when a later upload fails; failed entries can be retried individually. Local preview object URLs are revoked when entries are removed or the queue unmounts.
+
+Cover selection and physical deletion use the dedicated Info endpoints. The gallery updates only from confirmed responses. Deleting the current cover forces a server reload because the backend deterministically selects the oldest remaining image as the replacement. Detail and list projections are invalidated after media mutations because `image_url` and `updated_at` may change.
