@@ -10,7 +10,7 @@ Der Patch trennt öffentliche Authentifizierungsseiten vom geschützten Behörde
 - `PublicLayout` rahmt Anmeldung, Registrierung, Passwort-Wiederherstellung und den Status einer noch nicht freigeschalteten Registrierung.
 - `AppShellLayout` enthält die responsive Hauptnavigation und das Kontomenü für berechtigte Behördenrollen.
 
-Die Hauptnavigation ist auf kleinen Viewports ein- und ausklappbar. Sie bleibt per Tastatur bedienbar, kann mit `Escape` geschlossen werden und markiert den aktiven Eintrag semantisch.
+Die Hauptnavigation ist auf kleinen Viewports ein- und ausklappbar. Sie bleibt per Tastatur bedienbar, kann mit `Escape` geschlossen werden und markiert den aktiven Eintrag semantisch. Auf Desktop-Viewports stehen App-Name, mittig ausgerichtete Hauptnavigation und Kontomenü in einer gemeinsamen Kopfzeile. Der Inhaltscontainer nutzt bis zu 100rem, damit breite Tabellen und Formulare auch auf 2K-Displays sinnvoll Platz erhalten, ohne auf 1080p-Displays randlos zu wirken.
 
 ## Rollenfreischaltung
 
@@ -36,7 +36,7 @@ Der Patch ergänzt:
 
 - einen globalen Skip-Link,
 - fokussierbare Hauptüberschriften,
-- Fokuswechsel auf die neue Überschrift nach einer Navigation,
+- Fokuswechsel auf die neue Überschrift nach einer Navigation, wobei nicht interaktive Überschriften keinen irreführenden Browser-Standardrahmen erhalten,
 - dokumentbezogene Seitentitel,
 - eine semantische Hauptnavigation mit `aria-current`,
 - ausreichend große Bedienelemente und sichtbare Fokusdarstellung,

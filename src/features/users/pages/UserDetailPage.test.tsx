@@ -63,7 +63,7 @@ describe('UserDetailPage', () => {
     ).toBeInTheDocument()
     expect(await screen.findByText('Ordnungsamt')).toBeVisible()
     expect(screen.getByText('Sachbearbeitung')).toBeVisible()
-    expect(screen.getByText(TARGET_ID)).toBeVisible()
+    expect(screen.queryByText(TARGET_ID)).not.toBeInTheDocument()
     expect(
       screen.getByRole('link', { name: 'Administrativ bearbeiten' }),
     ).toHaveAttribute('href', `/users/${TARGET_ID}/edit`)

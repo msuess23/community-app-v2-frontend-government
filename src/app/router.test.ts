@@ -88,6 +88,26 @@ describe('application routes', () => {
     })
     expect(closedMenuButton).toHaveAttribute('aria-expanded', 'false')
     expect(closedMenuButton).toHaveFocus()
+
+    fireEvent.click(closedMenuButton)
+    fireEvent.pointerDown(
+      screen.getByRole('heading', { level: 1, name: 'Übersicht' }),
+    )
+    expect(closedMenuButton).toHaveAttribute('aria-expanded', 'false')
+
+    const accountSummary = screen
+      .getByText('Kontomenü öffnen')
+      .closest('summary')
+    const accountMenu = accountSummary?.closest('details')
+    expect(accountSummary).not.toBeNull()
+    expect(accountMenu).not.toBeNull()
+
+    fireEvent.click(accountSummary!)
+    expect(accountMenu).toHaveAttribute('open')
+    fireEvent.pointerDown(
+      screen.getByRole('heading', { level: 1, name: 'Übersicht' }),
+    )
+    expect(accountMenu).not.toHaveAttribute('open')
   })
 
   it('lets a citizen recheck a newly assigned authority role', async () => {

@@ -45,6 +45,14 @@ describe('OfficeDetailPage', () => {
     ).toHaveAttribute('href', 'tel:+49341123456')
     expect(screen.getByText('Musterstraße 12a')).toBeVisible()
     expect(screen.getByText('Fundbüro')).toBeVisible()
+    expect(screen.queryByText('Breitengrad')).not.toBeInTheDocument()
+    expect(screen.queryByText('Längengrad')).not.toBeInTheDocument()
+    expect(screen.queryByText('Behörden-ID')).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('navigation', {
+        name: 'Abschnitte dieser Detailansicht',
+      }),
+    ).toHaveClass('lg:hidden')
 
     const openingHours = screen.getByRole('region', {
       name: 'Öffnungszeiten',

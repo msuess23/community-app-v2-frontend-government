@@ -19,6 +19,7 @@ describe('ResourceDetailLayout', () => {
                 label: 'Zur Anliegenübersicht',
                 to: '/tickets?status=OPEN&page=3',
               }}
+              navigationClassName="lg:hidden"
               navigationItems={[
                 { id: 'overview', label: 'Übersicht' },
                 { id: 'history', label: 'Ereignisse' },
@@ -54,7 +55,7 @@ describe('ResourceDetailLayout', () => {
       screen.getByRole('navigation', {
         name: 'Abschnitte dieser Detailansicht',
       }),
-    ).toBeInTheDocument()
+    ).toHaveClass('lg:hidden')
     expect(screen.getByRole('link', { name: 'Ereignisse' })).toHaveAttribute(
       'href',
       '#history',

@@ -20,15 +20,14 @@ export interface DataViewSearchFieldProps {
   value: string
 }
 
-/** Provides a labelled, debounced search control for server-backed list views. */
-export function DataViewSearchField(props: DataViewSearchFieldProps) {
-  // Remounting the stateful control synchronizes intentional external URL changes
-  // without a cascading state update inside an effect.
-  return <DataViewSearchControl key={props.value} {...props} />
-}
+type SearchDraftState = Readonly<{
+  committedValue: string
+  draft: string
+  externalValue: string
+}>
 
-/** Owns one search draft until the controlled value changes externally. */
-function DataViewSearchControl({
+/** Provides a labelled, debounced search control for server-backed list views. */
+export function DataViewSearchField({
   debounceMs = 400,
   description = 'Die Suche wird nach einer kurzen Eingabepause ausgeführt.',
   label = 'Suche',
@@ -40,8 +39,25 @@ function DataViewSearchControl({
   const inputId = useId()
   const inputRef = useRef<HTMLInputElement | null>(null)
   const timeoutRef = useRef<number | null>(null)
-  const lastCommittedValueRef = useRef(normalizeSearch(value))
-  const [draft, setDraft] = useState(value)
+  const [searchState, setSearchState] = useState<SearchDraftState>(() => ({
+    committedValue: normalizeSearch(value),
+    draft: value,
+    externalValue: value,
+  }))
+
+  if (searchState.externalValue !== value) {
+    const normalizedExternalValue = normalizeSearch(value)
+    const draftAlreadyRepresentsValue =
+      normalizeSearch(searchState.draft) === normalizedExternalValue
+
+    setSearchState({
+      committedValue: normalizedExternalValue,
+      draft: draftAlreadyRepresentsValue ? searchState.draft : value,
+      externalValue: value,
+    })
+  }
+
+  const draft = searchState.draft
 
   /** Cancels a pending debounced server-search update. */
   const clearPendingCommit = useCallback(() => {
@@ -57,31 +73,43 @@ function DataViewSearchControl({
       clearPendingCommit()
       const normalizedValue = normalizeSearch(nextValue)
 
-      if (normalizedValue === lastCommittedValueRef.current) {
+      if (normalizedValue === searchState.committedValue) {
         return
       }
 
-      lastCommittedValueRef.current = normalizedValue
+      setSearchState((current) => ({
+        ...current,
+        committedValue: normalizedValue,
+      }))
       onSearch(normalizedValue)
     },
-    [clearPendingCommit, onSearch],
+    [clearPendingCommit, onSearch, searchState.committedValue],
   )
 
   useEffect(() => {
     const normalizedDraft = normalizeSearch(draft)
 
-    if (normalizedDraft === lastCommittedValueRef.current) {
+    if (normalizedDraft === searchState.committedValue) {
       return undefined
     }
 
     timeoutRef.current = window.setTimeout(() => {
       timeoutRef.current = null
-      lastCommittedValueRef.current = normalizedDraft
+      setSearchState((current) => ({
+        ...current,
+        committedValue: normalizedDraft,
+      }))
       onSearch(normalizedDraft)
     }, debounceMs)
 
     return clearPendingCommit
-  }, [clearPendingCommit, debounceMs, draft, onSearch])
+  }, [
+    clearPendingCommit,
+    debounceMs,
+    draft,
+    onSearch,
+    searchState.committedValue,
+  ])
 
   /** Prevents native navigation and commits the current draft immediately. */
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -89,9 +117,15 @@ function DataViewSearchControl({
     commitSearch(draft)
   }
 
+  /** Updates only the local draft while the server-backed value catches up. */
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextDraft = event.currentTarget.value
+    setSearchState((current) => ({ ...current, draft: nextDraft }))
+  }
+
   /** Clears the query and keeps keyboard focus in the search input. */
   const handleClear = () => {
-    setDraft('')
+    setSearchState((current) => ({ ...current, draft: '' }))
     commitSearch('')
     inputRef.current?.focus()
   }
@@ -115,9 +149,7 @@ function DataViewSearchControl({
             aria-describedby={descriptionId}
             className="border-outline bg-surface text-on-surface placeholder:text-on-surface-variant hover:border-secondary focus-visible:border-primary focus-visible:ring-primary min-h-11 w-full rounded-lg border py-2.5 pr-11 pl-10 text-base shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             id={inputId}
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              setDraft(event.currentTarget.value)
-            }
+            onChange={handleChange}
             placeholder={placeholder}
             ref={inputRef}
             type="search"

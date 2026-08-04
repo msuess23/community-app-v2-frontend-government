@@ -1,4 +1,7 @@
-import type { OfficeDirectoryAccess } from '@/features/offices/model/office-directory'
+import type {
+  OfficeDirectoryAccess,
+  OfficeDirectorySortField,
+} from '@/features/offices/model/office-directory'
 import {
   ActiveDataViewFilters,
   DataViewFilterPanel,
@@ -6,6 +9,11 @@ import {
   type ActiveDataViewFilter,
   type DataViewFilterOption,
 } from '@/shared/data-view/DataViewFilters'
+import {
+  DataViewSortControl,
+  type DataViewSortOption,
+} from '@/shared/data-view/DataViewSortControl'
+import type { DataViewSort } from '@/shared/data-view/data-view-url-state'
 
 const STATUS_OPTIONS: readonly DataViewFilterOption[] = [
   { label: 'Nur aktive Behörden', value: 'active' },
@@ -17,18 +25,24 @@ export interface OfficeDirectoryFiltersProps {
   access: OfficeDirectoryAccess
   onReset: () => void
   onSetSearch: (value: string) => void
+  onSetSort: (sort: DataViewSort<OfficeDirectorySortField> | null) => void
   onSetStatus: (value: string) => void
   search: string
+  sort: DataViewSort<OfficeDirectorySortField> | null
+  sortOptions: readonly DataViewSortOption<OfficeDirectorySortField>[]
   status: string
 }
 
-/** Renders the administrator-only lifecycle filter and removable active values. */
+/** Renders lifecycle filtering and backend sorting in one responsive control panel. */
 export function OfficeDirectoryFilters({
   access,
   onReset,
   onSetSearch,
+  onSetSort,
   onSetStatus,
   search,
+  sort,
+  sortOptions,
   status,
 }: OfficeDirectoryFiltersProps) {
   const activeFilters = createActiveFilters({
@@ -41,12 +55,12 @@ export function OfficeDirectoryFilters({
 
   return (
     <div className="space-y-4">
-      {access.canFilterByStatus ? (
-        <DataViewFilterPanel
-          activeFilterCount={status ? 1 : 0}
-          onReset={onReset}
-          title="Behörden filtern"
-        >
+      <DataViewFilterPanel
+        activeFilterCount={access.canFilterByStatus && status ? 1 : 0}
+        onReset={onReset}
+        title="Behörden filtern und sortieren"
+      >
+        {access.canFilterByStatus ? (
           <DataViewFilterSelect
             allLabel="Aktive Behörden (Standard)"
             label="Behördenstatus"
@@ -54,8 +68,14 @@ export function OfficeDirectoryFilters({
             options={STATUS_OPTIONS}
             value={status}
           />
-        </DataViewFilterPanel>
-      ) : null}
+        ) : null}
+
+        <DataViewSortControl
+          onChange={onSetSort}
+          options={sortOptions}
+          value={sort}
+        />
+      </DataViewFilterPanel>
 
       <ActiveDataViewFilters filters={activeFilters} />
     </div>

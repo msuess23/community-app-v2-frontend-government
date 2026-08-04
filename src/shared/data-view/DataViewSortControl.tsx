@@ -1,5 +1,7 @@
 import { useId, type ChangeEvent } from 'react'
 
+import { cn } from '@/shared/lib/cn'
+
 import type {
   DataViewSort,
   DataViewSortDirection,
@@ -13,6 +15,7 @@ export type DataViewSortOption<TSortField extends string> = Readonly<{
 }>
 
 export interface DataViewSortControlProps<TSortField extends string> {
+  className?: string
   label?: string
   noneLabel?: string
   onChange: (sort: DataViewSort<TSortField> | null) => void
@@ -22,6 +25,7 @@ export interface DataViewSortControlProps<TSortField extends string> {
 
 /** Exposes table sorting through a select that also works in compact card layouts. */
 export function DataViewSortControl<TSortField extends string>({
+  className,
   label = 'Sortierung',
   noneLabel = 'Standardsortierung',
   onChange,
@@ -40,7 +44,7 @@ export function DataViewSortControl<TSortField extends string>({
   }
 
   return (
-    <div className="grid gap-2">
+    <div className={cn('grid gap-2 lg:w-56 xl:w-64', className)}>
       <label
         className="text-on-surface text-sm font-semibold"
         htmlFor={selectId}

@@ -18,10 +18,7 @@ import {
 import { createOfficeFeatureDirectoryQueryOptions } from '@/features/offices/queries/office-queries'
 import { DataViewPagination } from '@/shared/data-view/DataViewPagination'
 import { DataViewSearchField } from '@/shared/data-view/DataViewSearchField'
-import {
-  DataViewSortControl,
-  type DataViewSortOption,
-} from '@/shared/data-view/DataViewSortControl'
+import type { DataViewSortOption } from '@/shared/data-view/DataViewSortControl'
 import {
   getSingleFilterValue,
   useDataViewUrlState,
@@ -101,8 +98,11 @@ function AuthenticatedOfficeDirectoryPage({
         access={access}
         onReset={directory.resetFilters}
         onSetSearch={directory.setSearch}
+        onSetSort={directory.setSort}
         onSetStatus={(value) => directory.setFilter('status', value || null)}
         search={directory.state.search}
+        sort={directory.state.sort}
+        sortOptions={SORT_OPTIONS}
         status={status}
       />
 
@@ -132,14 +132,6 @@ function AuthenticatedOfficeDirectoryPage({
       >
         {(page) => (
           <div className="space-y-5">
-            <div className="lg:hidden">
-              <DataViewSortControl
-                onChange={directory.setSort}
-                options={SORT_OPTIONS}
-                value={directory.state.sort}
-              />
-            </div>
-
             <OfficeDirectoryView
               items={page.items}
               onSortChange={directory.setSort}

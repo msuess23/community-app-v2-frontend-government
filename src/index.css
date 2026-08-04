@@ -85,6 +85,15 @@
     font: inherit;
   }
 
+  input[type='search']::-webkit-search-cancel-button,
+  input[type='search']::-webkit-search-decoration {
+    appearance: none;
+  }
+
+  input[type='search']::-ms-clear {
+    display: none;
+  }
+
   a {
     color: inherit;
   }

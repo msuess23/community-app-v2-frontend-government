@@ -9,7 +9,7 @@ export interface UserReferenceNameProps {
   userId: string
 }
 
-/** Resolves one audit actor ID to a readable user name with a safe technical fallback. */
+/** Resolves one audit actor to a readable name without exposing identifiers. */
 export function UserReferenceName({
   linkToProfile = true,
   userId,
@@ -25,11 +25,7 @@ export function UserReferenceName({
   }
 
   if (!query.data) {
-    return (
-      <span title={userId}>
-        Nicht auflösbar ({shortenIdentifier(userId)})
-      </span>
-    )
+    return <span>Benutzer nicht mehr verfügbar</span>
   }
 
   const name = getUserDisplayName(query.data)
@@ -44,9 +40,4 @@ export function UserReferenceName({
   ) : (
     name
   )
-}
-
-/** Keeps fallback identifiers useful without letting UUIDs dominate audit cards. */
-function shortenIdentifier(value: string): string {
-  return value.length > 12 ? `${value.slice(0, 8)}…` : value
 }

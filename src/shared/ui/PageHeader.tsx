@@ -34,7 +34,7 @@ export function PageHeader({
           </p>
         ) : null}
         <h1
-          className="text-on-surface text-3xl font-bold tracking-tight sm:text-4xl"
+          className="text-on-surface text-3xl font-bold tracking-tight focus:outline-none sm:text-4xl"
           data-page-heading
           id={headingId}
           tabIndex={-1}

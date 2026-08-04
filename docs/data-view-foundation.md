@@ -40,7 +40,9 @@ const ticketListUrlConfig = {
 - einen konfigurierbaren Debounce,
 - sofortige Ausführung beim Absenden,
 - eine zugängliche Löschaktion,
-- Fokuswiederherstellung nach dem Löschen.
+- Fokuswiederherstellung nach dem Löschen,
+- einen stabilen Eingabeentwurf, der bei debounced URL- und Serveraktualisierungen nicht neu gemountet wird,
+- ausschließlich eine eigene, zugänglich benannte Löschaktion statt eines zusätzlichen browserabhängigen Suchfeld-Kreuzes.
 
 `DataViewFilterPanel` zeigt Filter auf breiten Viewports dauerhaft und auf kleinen Viewports in einem ein- und ausklappbaren Bereich. `Escape` schließt den kompakten Bereich und setzt den Fokus auf den Auslöser zurück.
 
@@ -48,7 +50,7 @@ const ticketListUrlConfig = {
 
 `ActiveDataViewFilters` stellt aktive Auswahlwerte als einzeln entfernbare Chips dar. Der sichtbare Text muss den Filterinhalt vollständig erklären; Farbe allein darf keine Bedeutung tragen.
 
-`DataViewSortControl` macht dieselbe Sortierung zugänglich, wenn die Tabellenkopfzeile in der mobilen Kartenansicht nicht sichtbar ist.
+`DataViewSortControl` macht die serverseitige Sortierung in jedem Viewport explizit auswählbar und kann zusammen mit den fachlichen Filtern im `DataViewFilterPanel` stehen. Sortierbare Desktop-Tabellenköpfe bleiben als gleichwertige Abkürzung erhalten. Bei paginierten Endpunkten darf nicht nur die aktuell geladene Seite lokal sortiert werden; das Feature mappt Sortierfeld und Richtung auf die Backendparameter `sort_by` und `order`.
 
 ## Responsive Datendarstellung
 

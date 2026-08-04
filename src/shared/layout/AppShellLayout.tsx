@@ -1,5 +1,5 @@
 import { ChevronDown, LogOut, Menu, Settings, UserRound, X } from 'lucide-react'
-import { useState, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 
 import { getPrimaryNavigationItems } from '@/app/navigation'
@@ -16,6 +16,9 @@ export function AppShellLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const accountMenuRef = useRef<HTMLDetailsElement | null>(null)
+  const navigationRef = useRef<HTMLElement | null>(null)
+  const navigationTriggerRef = useRef<HTMLButtonElement | null>(null)
   // Binding the open state to the current path closes the mobile panel after navigation.
   const [navigationState, setNavigationState] = useState({
     isOpen: false,
@@ -24,6 +27,34 @@ export function AppShellLayout() {
   const isNavigationOpen =
     navigationState.pathname === location.pathname && navigationState.isOpen
   const navigationItems = getPrimaryNavigationItems(user)
+
+  useEffect(() => {
+    /** Closes transient header menus when the pointer moves outside them. */
+    const handleDocumentPointerDown = (event: PointerEvent) => {
+      if (!(event.target instanceof Node)) {
+        return
+      }
+
+      if (
+        isNavigationOpen &&
+        !navigationRef.current?.contains(event.target) &&
+        !navigationTriggerRef.current?.contains(event.target)
+      ) {
+        setNavigationState({ isOpen: false, pathname: location.pathname })
+      }
+
+      if (
+        accountMenuRef.current?.open &&
+        !accountMenuRef.current.contains(event.target)
+      ) {
+        accountMenuRef.current.open = false
+      }
+    }
+
+    document.addEventListener('pointerdown', handleDocumentPointerDown)
+    return () =>
+      document.removeEventListener('pointerdown', handleDocumentPointerDown)
+  }, [isNavigationOpen, location.pathname])
 
   /**
    * Ends the local session before returning to the public login route.
@@ -69,7 +100,7 @@ export function AppShellLayout() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-outline-variant bg-surface-container-lowest sticky top-0 z-40 border-b shadow-sm">
-        <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center gap-3 px-4 py-2 sm:px-6 lg:px-8">
+        <div className="mx-auto flex min-h-16 w-full max-w-[100rem] flex-wrap items-center gap-3 px-4 py-2 sm:px-6 lg:grid lg:min-h-20 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-x-6 lg:px-8">
           <Button
             aria-controls="primary-navigation"
             aria-expanded={isNavigationOpen}
@@ -80,6 +111,7 @@ export function AppShellLayout() {
             }
             className="lg:hidden"
             id="primary-navigation-toggle"
+            ref={navigationTriggerRef}
             onPress={() =>
               setNavigationState({
                 isOpen: !isNavigationOpen,
@@ -97,7 +129,7 @@ export function AppShellLayout() {
           </Button>
 
           <Link
-            className="text-primary focus-visible:outline-primary min-w-0 rounded-md font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4"
+            className="text-primary focus-visible:outline-primary min-w-0 rounded-md font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 lg:justify-self-start"
             to="/"
           >
             <span className="sm:hidden">Community-App</span>
@@ -106,9 +138,51 @@ export function AppShellLayout() {
             </span>
           </Link>
 
+          <nav
+            aria-label="Hauptnavigation"
+            className={cn(
+              'border-outline-variant order-3 mt-2 basis-full border-t pt-2 lg:order-none lg:mt-0 lg:flex lg:basis-auto lg:justify-self-center lg:border-0 lg:pt-0',
+              isNavigationOpen ? 'flex flex-col gap-1' : 'hidden',
+              'lg:flex-row lg:items-center lg:gap-1',
+            )}
+            id="primary-navigation"
+            ref={navigationRef}
+            onKeyDown={handleNavigationKeyDown}
+          >
+            {navigationItems.map((item) => {
+              const Icon = item.icon
+
+              return (
+                <NavLink
+                  className={({ isActive }) =>
+                    cn(
+                      'focus-visible:outline-primary flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2',
+                      isActive
+                        ? 'bg-primary-container text-on-primary-container'
+                        : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface',
+                    )
+                  }
+                  end={item.end}
+                  key={item.to}
+                  onClick={() =>
+                    setNavigationState({
+                      isOpen: false,
+                      pathname: location.pathname,
+                    })
+                  }
+                  to={item.to}
+                >
+                  <Icon aria-hidden="true" size={19} />
+                  {item.label}
+                </NavLink>
+              )
+            })}
+          </nav>
+
           {user ? (
             <details
-              className="relative ml-auto"
+              className="relative ml-auto lg:ml-0 lg:justify-self-end"
+              ref={accountMenuRef}
               onKeyDown={handleAccountMenuKeyDown}
             >
               <summary className="focus-visible:outline-primary hover:bg-surface-container flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg px-2 py-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
@@ -171,53 +245,10 @@ export function AppShellLayout() {
             </details>
           ) : null}
         </div>
-
-        <div
-          className={cn(
-            'border-outline-variant border-t lg:block',
-            isNavigationOpen ? 'block' : 'hidden',
-          )}
-          id="primary-navigation"
-          onKeyDown={handleNavigationKeyDown}
-        >
-          <nav
-            aria-label="Hauptnavigation"
-            className="mx-auto flex w-full max-w-7xl flex-col gap-1 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:px-8"
-          >
-            {navigationItems.map((item) => {
-              const Icon = item.icon
-
-              return (
-                <NavLink
-                  className={({ isActive }) =>
-                    cn(
-                      'focus-visible:outline-primary flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2',
-                      isActive
-                        ? 'bg-primary-container text-on-primary-container'
-                        : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface',
-                    )
-                  }
-                  end={item.end}
-                  key={item.to}
-                  onClick={() =>
-                    setNavigationState({
-                      isOpen: false,
-                      pathname: location.pathname,
-                    })
-                  }
-                  to={item.to}
-                >
-                  <Icon aria-hidden="true" size={19} />
-                  {item.label}
-                </NavLink>
-              )
-            })}
-          </nav>
-        </div>
       </header>
 
       <main
-        className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
+        className="mx-auto w-full max-w-[100rem] flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
         id="main-content"
         tabIndex={-1}
       >

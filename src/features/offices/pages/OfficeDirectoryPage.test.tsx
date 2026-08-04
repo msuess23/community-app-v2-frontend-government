@@ -38,12 +38,15 @@ describe('OfficeDirectoryPage', () => {
       }),
     )
 
-    renderDirectory('/offices?search=ordnung&status=all')
+    renderDirectory(
+      '/offices?search=ordnung&status=all&sortBy=createdAt&sortDirection=desc',
+    )
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Behörden' }),
     ).toBeInTheDocument()
     expect(screen.getByLabelText('Behördenstatus')).toHaveValue('all')
+    expect(screen.getByLabelText('Sortierung')).toHaveValue('createdAt:desc')
     expect(
       screen.getByRole('link', { name: 'Behörde anlegen' }),
     ).toHaveAttribute('href', '/offices/new')
@@ -67,6 +70,8 @@ describe('OfficeDirectoryPage', () => {
     await waitFor(() => {
       expect(requestedSearch).toContain('q=ordnung')
       expect(requestedSearch).toContain('status=all')
+      expect(requestedSearch).toContain('sort_by=created_at')
+      expect(requestedSearch).toContain('order=desc')
       expect(requestedSearch).not.toContain('bbox=')
     })
   })

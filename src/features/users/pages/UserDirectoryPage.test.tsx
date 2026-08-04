@@ -69,13 +69,16 @@ describe('UserDirectoryPage', () => {
       ),
     )
 
-    renderDirectory('/users?role=CITIZEN&status=all')
+    renderDirectory(
+      '/users?role=CITIZEN&status=all&sortBy=email&sortDirection=desc',
+    )
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Benutzer' }),
     ).toBeInTheDocument()
     expect(screen.getByLabelText('Rolle')).toHaveValue('CITIZEN')
     expect(screen.getByLabelText('Kontostatus')).toHaveValue('all')
+    expect(screen.getByLabelText('Sortierung')).toHaveValue('email:desc')
     await waitFor(() => expect(screen.getByLabelText('Behörde')).toBeEnabled())
 
     const table = await screen.findByRole('table', {
@@ -93,6 +96,8 @@ describe('UserDirectoryPage', () => {
 
     expect(requestedUserSearch).toContain('role=CITIZEN')
     expect(requestedUserSearch).toContain('status=all')
+    expect(requestedUserSearch).toContain('sort_by=email')
+    expect(requestedUserSearch).toContain('order=desc')
   })
 })
 

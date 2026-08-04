@@ -1,6 +1,9 @@
 import type { Role } from '@/auth/auth-types'
 import { getRoleLabel } from '@/auth/role-labels'
-import type { UserDirectoryAccess } from '@/features/users/model/user-directory'
+import type {
+  UserDirectoryAccess,
+  UserDirectorySortField,
+} from '@/features/users/model/user-directory'
 import {
   ActiveDataViewFilters,
   DataViewFilterPanel,
@@ -8,6 +11,11 @@ import {
   type ActiveDataViewFilter,
   type DataViewFilterOption,
 } from '@/shared/data-view/DataViewFilters'
+import {
+  DataViewSortControl,
+  type DataViewSortOption,
+} from '@/shared/data-view/DataViewSortControl'
+import type { DataViewSort } from '@/shared/data-view/data-view-url-state'
 import type { OfficeReference } from '@/shared/offices/office-model'
 
 const STATUS_OPTIONS: readonly DataViewFilterOption[] = [
@@ -24,11 +32,14 @@ export interface UserDirectoryFiltersProps {
   onReset: () => void
   onSetOffice: (value: string) => void
   onSetRole: (value: string) => void
-  onSetStatus: (value: string) => void
   onSetSearch: (value: string) => void
+  onSetSort: (sort: DataViewSort<UserDirectorySortField> | null) => void
+  onSetStatus: (value: string) => void
   office: string
   role: string
   search: string
+  sort: DataViewSort<UserDirectorySortField> | null
+  sortOptions: readonly DataViewSortOption<UserDirectorySortField>[]
   status: string
 }
 
@@ -41,11 +52,14 @@ export function UserDirectoryFilters({
   onReset,
   onSetOffice,
   onSetRole,
-  onSetStatus,
   onSetSearch,
+  onSetSort,
+  onSetStatus,
   office,
   role,
   search,
+  sort,
+  sortOptions,
   status,
 }: UserDirectoryFiltersProps) {
   const activeFilters = createActiveFilters({
@@ -72,7 +86,7 @@ export function UserDirectoryFilters({
       <DataViewFilterPanel
         activeFilterCount={panelFilterCount}
         onReset={onReset}
-        title="Benutzer filtern"
+        title="Benutzer filtern und sortieren"
       >
         <DataViewFilterSelect
           allLabel="Alle verfügbaren Rollen"
@@ -106,6 +120,12 @@ export function UserDirectoryFilters({
             value={status}
           />
         ) : null}
+
+        <DataViewSortControl
+          onChange={onSetSort}
+          options={sortOptions}
+          value={sort}
+        />
       </DataViewFilterPanel>
 
       <ActiveDataViewFilters filters={activeFilters} />

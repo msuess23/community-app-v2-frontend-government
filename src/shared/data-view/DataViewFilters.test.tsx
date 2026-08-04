@@ -8,6 +8,7 @@ import {
   DataViewFilterPanel,
   DataViewFilterSelect,
 } from '@/shared/data-view/DataViewFilters'
+import { DataViewSortControl } from '@/shared/data-view/DataViewSortControl'
 import { renderWithProviders } from '@/test/render'
 
 describe('data view filters', () => {
@@ -36,6 +37,35 @@ describe('data view filters', () => {
 
     expect(trigger).toHaveAttribute('aria-expanded', 'false')
     expect(trigger).toHaveFocus()
+  })
+
+  it('keeps desktop filter controls compact in one wrapping row', () => {
+    renderWithProviders(
+      <DataViewFilterPanel>
+        <DataViewFilterSelect
+          label="Rolle"
+          onChange={vi.fn()}
+          options={[]}
+          value=""
+        />
+        <DataViewSortControl
+          onChange={vi.fn()}
+          options={[{ field: 'name', label: 'Name' }]}
+          value={null}
+        />
+      </DataViewFilterPanel>,
+    )
+
+    const select = screen.getByLabelText('Rolle')
+    expect(select.parentElement).toHaveClass('lg:w-56', 'xl:w-64')
+    expect(select.parentElement?.parentElement).toHaveClass(
+      'lg:flex',
+      'lg:flex-wrap',
+    )
+    expect(screen.getByLabelText('Sortierung').parentElement).toHaveClass(
+      'lg:w-56',
+      'xl:w-64',
+    )
   })
 
   it('removes an active filter through a named action', async () => {

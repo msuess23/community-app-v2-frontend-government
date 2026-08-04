@@ -26,11 +26,28 @@ test(
   async ({ page }) => {
     const api = await installOfficeApi(page)
 
-    await signInAsAuthorityUser(page, '/offices?search=ordnung', officerUser)
+    await signInAsAuthorityUser(page, '/offices', officerUser)
 
     await expect(
       page.getByRole('heading', { level: 1, name: 'Behörden' }),
     ).toBeVisible()
+
+    const searchbox = page.getByRole('searchbox', { name: 'Behörden suchen' })
+    await searchbox.fill('Ordnung')
+    await page.waitForTimeout(500)
+    await expect(searchbox).toBeFocused()
+    await searchbox.pressSequentially('samt')
+    await expect(searchbox).toHaveValue('Ordnungsamt')
+
+    const sortSelect = page.getByRole('combobox', { name: 'Sortierung' })
+    if (!(await sortSelect.isVisible())) {
+      await page
+        .getByRole('button', { name: /Behörden filtern und sortieren/ })
+        .click()
+    }
+    await sortSelect.selectOption('createdAt:desc')
+    await expect(page).toHaveURL(/sortBy=createdAt/)
+    await expect(page).toHaveURL(/sortDirection=desc/)
     await expect(
       page.getByRole('link', { name: 'Behörde anlegen' }),
     ).toHaveCount(0)
@@ -63,6 +80,10 @@ test(
     ).toHaveCount(0)
     expect(api.listStatuses.length).toBeGreaterThan(0)
     expect(api.listStatuses.every((status) => status === 'active')).toBe(true)
+    expect(api.listSorts).toContainEqual({
+      order: 'desc',
+      sortBy: 'created_at',
+    })
 
     await expectNoSeriousAccessibilityViolations(page)
 
@@ -238,6 +259,7 @@ type JsonObject = Record<string, unknown>
 type OfficeApiHarness = Readonly<{
   createRequests: JsonObject[]
   deactivateRequests: JsonObject[]
+  listSorts: Array<Readonly<{ order: string; sortBy: string }>>
   listStatuses: string[]
   updateRequests: JsonObject[]
 }>
@@ -246,6 +268,7 @@ type OfficeApiHarness = Readonly<{
 async function installOfficeApi(page: Page): Promise<OfficeApiHarness> {
   const createRequests: JsonObject[] = []
   const deactivateRequests: JsonObject[] = []
+  const listSorts: Array<Readonly<{ order: string; sortBy: string }>> = []
   const listStatuses: string[] = []
   const updateRequests: JsonObject[] = []
   let office = createOfficeResponse()
@@ -260,6 +283,10 @@ async function installOfficeApi(page: Page): Promise<OfficeApiHarness> {
     if (method === 'GET' && path === '/api/v1/offices') {
       const status = url.searchParams.get('status') ?? 'active'
       listStatuses.push(status)
+      listSorts.push({
+        order: url.searchParams.get('order') ?? '',
+        sortBy: url.searchParams.get('sort_by') ?? '',
+      })
       const visible =
         status === 'all' ||
         (status === 'active' && office.metadata.is_active) ||
@@ -353,6 +380,7 @@ async function installOfficeApi(page: Page): Promise<OfficeApiHarness> {
   return {
     createRequests,
     deactivateRequests,
+    listSorts,
     listStatuses,
     updateRequests,
   }

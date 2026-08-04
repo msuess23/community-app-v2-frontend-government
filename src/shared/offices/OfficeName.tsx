@@ -29,9 +29,5 @@ export function OfficeName({
     return <>{query.data.name}</>
   }
 
-  return (
-    <span title={`Behörden-ID: ${officeId}`}>
-      Behörde konnte nicht geladen werden
-    </span>
-  )
+  return <span>Behörde konnte nicht geladen werden</span>
 }

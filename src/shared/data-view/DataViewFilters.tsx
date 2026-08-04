@@ -92,7 +92,7 @@ export function DataViewFilterPanel({
             </Button>
           ) : null}
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-start">
           {children}
         </div>
       </Card>
@@ -136,7 +136,7 @@ export function DataViewFilterSelect({
   }
 
   return (
-    <div className={cn('grid gap-2', className)}>
+    <div className={cn('grid gap-2 lg:w-56 xl:w-64', className)}>
       <label
         className="text-on-surface text-sm font-semibold"
         htmlFor={selectId}
@@ -195,7 +195,7 @@ export function DataViewFilterDateField({
   const inputId = useId()
 
   return (
-    <div className={cn('grid gap-2', className)}>
+    <div className={cn('grid gap-2 lg:w-56 xl:w-64', className)}>
       <label
         className="text-on-surface text-sm font-semibold"
         htmlFor={inputId}

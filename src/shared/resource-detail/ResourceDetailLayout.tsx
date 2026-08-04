@@ -25,6 +25,7 @@ export interface ResourceDetailLayoutProps {
   className?: string
   description?: ReactNode
   eyebrow?: ReactNode
+  navigationClassName?: string
   navigationItems?: ReadonlyArray<ResourceDetailNavigationItem>
   status?: ReactNode
   title: ReactNode
@@ -39,6 +40,7 @@ export function ResourceDetailLayout({
   className,
   description,
   eyebrow,
+  navigationClassName,
   navigationItems = [],
   status,
   title,
@@ -62,7 +64,10 @@ export function ResourceDetailLayout({
       />
 
       {navigationItems.length > 0 ? (
-        <ResourceDetailSectionNavigation items={navigationItems} />
+        <ResourceDetailSectionNavigation
+          className={navigationClassName}
+          items={navigationItems}
+        />
       ) : null}
 
       <div
@@ -191,10 +196,17 @@ function ResourceDetailBackLinkView({
 
 /** Offers anchor navigation for long detail pages while preserving semantic sections. */
 function ResourceDetailSectionNavigation({
+  className,
   items,
-}: Readonly<{ items: ReadonlyArray<ResourceDetailNavigationItem> }>) {
+}: Readonly<{
+  className?: string
+  items: ReadonlyArray<ResourceDetailNavigationItem>
+}>) {
   return (
-    <nav aria-label="Abschnitte dieser Detailansicht">
+    <nav
+      aria-label="Abschnitte dieser Detailansicht"
+      className={className}
+    >
       <ul className="border-outline-variant flex gap-2 overflow-x-auto border-b pb-3">
         {items.map((item) => (
           <li className="shrink-0" key={item.id}>

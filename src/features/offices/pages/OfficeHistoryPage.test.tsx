@@ -108,6 +108,10 @@ describe('OfficeHistoryPage', () => {
     expect(screen.getAllByText('Historischer Behördenstand')[0]).toBeVisible()
     expect(screen.getAllByText('08:00–12:00 Uhr')[0]).toBeVisible()
     expect(screen.getAllByText('Fundbüro')[0]).toBeVisible()
+    expect(screen.queryByText('Breitengrad')).not.toBeInTheDocument()
+    expect(screen.queryByText('Längengrad')).not.toBeInTheDocument()
+    expect(screen.queryByText('Historien-ID')).not.toBeInTheDocument()
+    expect(screen.queryByText('Behörden-ID')).not.toBeInTheDocument()
     expect(requestedRange?.get('start_date')).toBe(
       '2026-07-31T22:00:00.000Z',
     )

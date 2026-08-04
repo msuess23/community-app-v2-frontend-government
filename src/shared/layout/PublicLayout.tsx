@@ -7,7 +7,7 @@ export function PublicLayout() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-outline-variant bg-surface-container-lowest border-b">
-        <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center px-4 py-3 sm:px-6 lg:px-8">
+        <div className="mx-auto flex min-h-16 w-full max-w-[100rem] items-center px-4 py-3 sm:px-6 lg:px-8">
           <Link
             className="text-primary focus-visible:outline-primary rounded-md font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4"
             to="/"
@@ -18,7 +18,7 @@ export function PublicLayout() {
       </header>
 
       <main
-        className="mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-6 sm:py-12 lg:px-8"
+        className="mx-auto w-full max-w-[100rem] flex-1 px-4 py-10 sm:px-6 sm:py-12 lg:px-8"
         id="main-content"
         tabIndex={-1}
       >

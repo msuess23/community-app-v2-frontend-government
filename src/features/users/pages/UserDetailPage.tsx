@@ -127,7 +127,7 @@ export function UserDetailPage() {
             </ResourceDetailSection>
 
             <ResourceDetailSection
-              description="Technische und zeitliche Metadaten des Kontos."
+              description="Zeitliche Angaben zum Lebenszyklus des Kontos."
               id="lifecycle"
               title="Kontostatus"
               variant="subtle"
@@ -147,10 +147,6 @@ export function UserDetailPage() {
                     value: user.deactivatedAt
                       ? formatDisplayDateTime(user.deactivatedAt)
                       : 'Nicht deaktiviert',
-                  },
-                  {
-                    label: 'Benutzer-ID',
-                    value: <code className="break-all">{user.id}</code>,
                   },
                 ]}
               />

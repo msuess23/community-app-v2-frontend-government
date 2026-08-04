@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { act, fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -29,6 +30,44 @@ describe('DataViewSearchField', () => {
     })
 
     expect(onSearch).toHaveBeenCalledWith('Laterne')
+  })
+
+  it('keeps focus while a debounced controlled value updates', () => {
+    vi.useFakeTimers()
+
+    function SearchHarness() {
+      const [value, setValue] = useState('')
+
+      return (
+        <DataViewSearchField
+          debounceMs={300}
+          onSearch={setValue}
+          value={value}
+        />
+      )
+    }
+
+    renderWithProviders(<SearchHarness />)
+
+    const searchbox = screen.getByRole('searchbox', { name: 'Suche' })
+    searchbox.focus()
+    fireEvent.change(searchbox, { target: { value: 'Ordnung' } })
+
+    act(() => {
+      vi.advanceTimersByTime(300)
+    })
+
+    expect(searchbox).toHaveFocus()
+    expect(searchbox).toHaveValue('Ordnung')
+
+    fireEvent.change(searchbox, { target: { value: 'Ordnungsamt' } })
+
+    act(() => {
+      vi.advanceTimersByTime(300)
+    })
+
+    expect(searchbox).toHaveFocus()
+    expect(searchbox).toHaveValue('Ordnungsamt')
   })
 
   it('submits immediately and clears the field with restored focus', async () => {

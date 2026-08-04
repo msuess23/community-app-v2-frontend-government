@@ -16,10 +16,7 @@ import {
 import { createUserDirectoryQueryOptions } from '@/features/users/queries/user-queries'
 import { DataViewPagination } from '@/shared/data-view/DataViewPagination'
 import { DataViewSearchField } from '@/shared/data-view/DataViewSearchField'
-import {
-  DataViewSortControl,
-  type DataViewSortOption,
-} from '@/shared/data-view/DataViewSortControl'
+import type { DataViewSortOption } from '@/shared/data-view/DataViewSortControl'
 import {
   getSingleFilterValue,
   useDataViewUrlState,
@@ -91,10 +88,13 @@ function AuthenticatedUserDirectoryPage({
         onReset={directory.resetFilters}
         onSetOffice={(value) => directory.setFilter('office', value || null)}
         onSetRole={(value) => directory.setFilter('role', value || null)}
+        onSetSort={directory.setSort}
         onSetStatus={(value) => directory.setFilter('status', value || null)}
         onSetSearch={directory.setSearch}
         role={role}
         search={directory.state.search}
+        sort={directory.state.sort}
+        sortOptions={SORT_OPTIONS}
         status={status}
       />
 
@@ -134,14 +134,6 @@ function AuthenticatedUserDirectoryPage({
       >
         {(page) => (
           <div className="space-y-5">
-            <div className="lg:hidden">
-              <DataViewSortControl
-                onChange={directory.setSort}
-                options={SORT_OPTIONS}
-                value={directory.state.sort}
-              />
-            </div>
-
             <UserDirectoryView
               items={page.items}
               offices={offices}

@@ -222,14 +222,6 @@ function OfficeHistorySnapshotDetails({
               label: 'Geändert durch',
               value: <UserReferenceName userId={item.changedByUserId} />,
             },
-            {
-              label: 'Historien-ID',
-              value: <code className="break-all">{item.id}</code>,
-            },
-            {
-              label: 'Behörden-ID',
-              value: <code className="break-all">{item.officeId}</code>,
-            },
           ]}
         />
       </SnapshotSection>
@@ -321,7 +313,7 @@ function OfficeHistoryContact({
   )
 }
 
-/** Displays the address captured by the snapshot, including optional coordinates. */
+/** Displays the postal address captured by the historical snapshot. */
 function OfficeHistoryAddressView({
   address,
 }: Readonly<{ address: OfficeHistoryAddress | null }>) {
@@ -330,31 +322,12 @@ function OfficeHistoryAddressView({
   }
 
   const postalAddress = formatHistoricalPostalAddress(address)
-  const hasCoordinates =
-    address.latitude !== null || address.longitude !== null
 
   return (
-    <div className="space-y-4">
-      <address className="flex gap-2 not-italic">
-        <MapPin aria-hidden="true" className="mt-1 shrink-0" size={18} />
-        <span className="whitespace-pre-line">{postalAddress}</span>
-      </address>
-
-      {hasCoordinates ? (
-        <SnapshotMetadata
-          items={[
-            {
-              label: 'Breitengrad',
-              value: formatCoordinate(address.latitude),
-            },
-            {
-              label: 'Längengrad',
-              value: formatCoordinate(address.longitude),
-            },
-          ]}
-        />
-      ) : null}
-    </div>
+    <address className="flex gap-2 not-italic">
+      <MapPin aria-hidden="true" className="mt-1 shrink-0" size={18} />
+      <span className="whitespace-pre-line">{postalAddress}</span>
+    </address>
   )
 }
 
@@ -388,15 +361,4 @@ function formatHistoricalPostalAddress(address: OfficeHistoryAddress): string {
   }
 
   return address.formatted ?? 'Adressdaten im Snapshot unvollständig.'
-}
-
-/** Formats optional geographic metadata without adding map behavior. */
-function formatCoordinate(value: number | null): string {
-  if (value === null || !Number.isFinite(value)) {
-    return 'Nicht angegeben'
-  }
-
-  return new Intl.NumberFormat('de-DE', {
-    maximumFractionDigits: 6,
-  }).format(value)
 }

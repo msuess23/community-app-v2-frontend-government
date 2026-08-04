@@ -70,6 +70,7 @@ describe('UserAdminEditPage', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Clara Citizen' }),
     ).toBeInTheDocument()
+    expect(screen.queryByText(TARGET_ID)).not.toBeInTheDocument()
 
     await user.selectOptions(
       screen.getByRole('combobox', { name: /Rolle/ }),

@@ -97,6 +97,7 @@ export function OfficeDetailPage() {
           backLink={{ label: 'Zurück zum Behördenverzeichnis', to: returnTo }}
           description="Die angezeigten Angaben entsprechen dem aktuell gespeicherten Stand der Behörde."
           eyebrow="Behördendetails"
+          navigationClassName="lg:hidden"
           navigationItems={DETAIL_NAVIGATION}
           status={<OfficeStatusBadge isActive={office.isActive} />}
           title={office.name}
@@ -158,10 +159,6 @@ function OfficeDetailAside({ office }: Readonly<{ office: OfficeRecord }>) {
                 ? formatDisplayDateTime(office.deactivatedAt)
                 : 'Nicht deaktiviert',
             },
-            {
-              label: 'Behörden-ID',
-              value: <code className="break-all">{office.id}</code>,
-            },
           ]}
         />
       </ResourceDetailSection>
@@ -203,7 +200,7 @@ function OfficeContact({ office }: Readonly<{ office: OfficeRecord }>) {
   )
 }
 
-/** Displays the postal address and optional technical coordinates. */
+/** Displays the postal address without exposing geographic metadata. */
 function OfficeAddressView({
   address,
 }: Readonly<{ address: OfficeAddress | null }>) {
@@ -211,39 +208,18 @@ function OfficeAddressView({
     return <p className="text-on-surface-variant">Keine Adresse hinterlegt.</p>
   }
 
-  const hasCoordinates =
-    address.latitude !== null || address.longitude !== null
-
   return (
-    <div className="space-y-5">
-      <address className="flex gap-2 not-italic">
-        <MapPin aria-hidden="true" className="mt-1 shrink-0" size={18} />
-        <span className="grid gap-1">
-          <span>
-            {address.street} {address.houseNumber}
-          </span>
-          <span>
-            {address.zipCode} {address.city}
-          </span>
+    <address className="flex gap-2 not-italic">
+      <MapPin aria-hidden="true" className="mt-1 shrink-0" size={18} />
+      <span className="grid gap-1">
+        <span>
+          {address.street} {address.houseNumber}
         </span>
-      </address>
-
-      {hasCoordinates ? (
-        <ResourceMetadataList
-          className="sm:grid-cols-1 xl:grid-cols-1"
-          items={[
-            {
-              label: 'Breitengrad',
-              value: formatCoordinate(address.latitude),
-            },
-            {
-              label: 'Längengrad',
-              value: formatCoordinate(address.longitude),
-            },
-          ]}
-        />
-      ) : null}
-    </div>
+        <span>
+          {address.zipCode} {address.city}
+        </span>
+      </span>
+    </address>
   )
 }
 
@@ -266,15 +242,4 @@ function OfficeServices({
       ))}
     </ul>
   )
-}
-
-/** Formats optional geographic metadata without introducing map behavior. */
-function formatCoordinate(value: number | null): string {
-  if (value === null || !Number.isFinite(value)) {
-    return 'Nicht angegeben'
-  }
-
-  return new Intl.NumberFormat('de-DE', {
-    maximumFractionDigits: 6,
-  }).format(value)
 }

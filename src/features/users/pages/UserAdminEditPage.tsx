@@ -288,7 +288,6 @@ function UserAdminEditForm({
                 </div>
                 <dl className="divide-outline-variant divide-y text-sm">
                   <MetadataRow label="E-Mail-Adresse" value={targetUser.email} />
-                  <MetadataRow label="Benutzer-ID" value={targetUser.id} />
                 </dl>
               </section>
             </Card>
