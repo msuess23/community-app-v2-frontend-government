@@ -34,7 +34,6 @@ describe('office history model', () => {
             office_id: 'office-1',
             opening_hours: {
               monday: '08:00-12:00',
-              unexpected: 42,
             },
             phone: '+49 341 1234',
             services: ['Fundbüro'],

@@ -218,10 +218,13 @@ function OfficeAddressView({
     <div className="space-y-5">
       <address className="flex gap-2 not-italic">
         <MapPin aria-hidden="true" className="mt-1 shrink-0" size={18} />
-        <span>
-          {address.street} {address.houseNumber}
-          <br />
-          {address.zipCode} {address.city}
+        <span className="grid gap-1">
+          <span>
+            {address.street} {address.houseNumber}
+          </span>
+          <span>
+            {address.zipCode} {address.city}
+          </span>
         </span>
       </address>
 

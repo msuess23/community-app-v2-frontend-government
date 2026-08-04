@@ -2,6 +2,7 @@ import type {
   AddressSnapshot,
   GetOfficeHistoryApiV1OfficesOfficeIdHistoryGetParams,
   OfficeHistoryResponse,
+  OpeningHours,
   PaginatedResponseOfficeHistoryResponse,
 } from '@/api/generated/models'
 import { mapApiPage, type PageModel } from '@/api/contract/pagination'
@@ -155,9 +156,9 @@ function mapOfficeHistoryAddress(
   }
 }
 
-/** Completes the weakly generated history object with explicit weekday values. */
+/** Completes the optional transport fields with explicit values for every weekday. */
 function mapOfficeHistoryOpeningHours(
-  response: Record<string, unknown> | undefined,
+  response: OpeningHours | undefined,
 ): OfficeOpeningHours {
   return Object.fromEntries(
     OFFICE_WEEKDAYS.map(({ key }) => [

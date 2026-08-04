@@ -34,9 +34,17 @@ export function ControlledOfficeSelectionField<
   name,
 }: ControlledOfficeSelectionFieldProps<TFieldValues>) {
   const directoryQuery = useQuery(createOfficeDirectoryQueryOptions('active'))
+  const currentOfficeIsActive =
+    currentOfficeId !== null &&
+    Boolean(
+      directoryQuery.data?.some((office) => office.id === currentOfficeId),
+    )
   const currentOfficeQuery = useQuery({
     ...createOfficeReferenceQueryOptions(currentOfficeId ?? ''),
-    enabled: currentOfficeId !== null,
+    enabled:
+      currentOfficeId !== null &&
+      directoryQuery.isSuccess &&
+      !currentOfficeIsActive,
   })
   const options = useMemo<readonly SelectFieldOption[]>(() => {
     const activeOptions = (directoryQuery.data ?? []).map((office) => ({
