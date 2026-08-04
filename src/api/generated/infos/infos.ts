@@ -242,6 +242,7 @@ export const uploadInfoImageApiV1InfosInfoIdImagesPost = async (
 ): Promise<InfoImageResponse> => {
   const formData = new FormData()
   formData.append(`file`, bodyUploadInfoImageApiV1InfosInfoIdImagesPost.file)
+  formData.append(`alt_text`, bodyUploadInfoImageApiV1InfosInfoIdImagesPost.alt_text)
 
   return apiFetch<InfoImageResponse>(
     getUploadInfoImageApiV1InfosInfoIdImagesPostUrl(infoId),

@@ -7,4 +7,9 @@
 
 export interface BodyUploadInfoImageApiV1InfosInfoIdImagesPost {
   file: Blob
+  /**
+   * @minLength 1
+   * @maxLength 500
+   */
+  alt_text: string
 }

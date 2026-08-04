@@ -19,4 +19,5 @@ export interface InfoImageResponse {
   uploaded_at: string
   is_cover: boolean
   info_id: string
+  alt_text: string
 }

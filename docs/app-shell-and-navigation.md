@@ -52,3 +52,6 @@ npm run test
 npm run typecheck
 npm run build
 ```
+## Info navigation
+
+The authenticated authority shell registers `Mitteilungen` through the Info feature module. Its read routes require `viewInfos`, which is granted to dispatcher, officer, manager, and administrator roles. Public and citizen-facing Info routes are intentionally excluded from this React client.

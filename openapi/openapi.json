@@ -6002,11 +6002,18 @@
             "type": "string",
             "contentMediaType": "application/octet-stream",
             "title": "File"
+          },
+          "alt_text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "title": "Alt Text"
           }
         },
         "type": "object",
         "required": [
-          "file"
+          "file",
+          "alt_text"
         ],
         "title": "Body_upload_info_image_api_v1_infos__info_id__images_post"
       },
@@ -6381,6 +6388,10 @@
             "type": "string",
             "format": "uuid",
             "title": "Info Id"
+          },
+          "alt_text": {
+            "type": "string",
+            "title": "Alt Text"
           }
         },
         "type": "object",
@@ -6392,7 +6403,8 @@
           "size_bytes",
           "uploaded_at",
           "is_cover",
-          "info_id"
+          "info_id",
+          "alt_text"
         ],
         "title": "InfoImageResponse",
         "description": "Public metadata for one current image owned by an Info."
