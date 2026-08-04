@@ -1,10 +1,13 @@
+import { Plus } from 'lucide-react'
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useLocation } from 'react-router'
 
 import { useAuth } from '@/auth/auth-context'
 import type { AuthUser } from '@/auth/auth-types'
 import { InfoDirectoryFilters } from '@/features/infos/components/InfoDirectoryFilters'
 import { InfoDirectoryView } from '@/features/infos/components/InfoDirectoryView'
+import { canCreateInfo } from '@/features/infos/model/info-permissions'
 import {
   createInfoDirectoryUrlConfig,
   toInfoDirectoryApiParams,
@@ -24,6 +27,7 @@ import {
   RemoteDataBoundary,
   RemoteDataEmptyState,
 } from '@/shared/remote-data/RemoteDataBoundary'
+import { LinkButton } from '@/shared/ui/LinkButton'
 import { PageHeader } from '@/shared/ui/PageHeader'
 
 const SORT_OPTIONS: readonly DataViewSortOption<InfoDirectorySortField>[] = [
@@ -41,6 +45,7 @@ export function InfoDirectoryPage() {
 }
 
 function AuthenticatedInfoDirectoryPage({ user }: Readonly<{ user: AuthUser }>) {
+  const location = useLocation()
   const config = useMemo(() => createInfoDirectoryUrlConfig(), [])
   const directory = useDataViewUrlState<
     InfoDirectorySortField,
@@ -56,6 +61,17 @@ function AuthenticatedInfoDirectoryPage({ user }: Readonly<{ user: AuthUser }>) 
   return (
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
+        actions={
+          canCreateInfo(user) ? (
+            <LinkButton
+              state={{ from: `${location.pathname}${location.search}` }}
+              to="/infos/new"
+            >
+              <Plus aria-hidden="true" size={18} />
+              Mitteilung anlegen
+            </LinkButton>
+          ) : undefined
+        }
         description="Finde behördliche Mitteilungen zu Veranstaltungen, Baumaßnahmen, Wartungen und weiteren aktuellen Themen."
         eyebrow="Mitteilungsverzeichnis"
         title="Mitteilungen"

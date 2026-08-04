@@ -17,3 +17,11 @@ Info list cards use `InfoResponse.image_url` only as a decorative preview becaus
 ## Status semantics
 
 The Info status endpoint is presented as a public status log. It is not labeled as an audit history or event stream because content edits are mutable and status rows do not expose an actor in the public response.
+
+## Mutable master-data forms
+
+The second feature slice adds `/infos/new` and `/infos/:infoId/edit` behind `manageInfos`. Administrators may create cross-office publications or select an active office. Officers and managers are bound to their authenticated `officeId`; the edit page additionally mirrors the backend object rule and does not render a form for another office's Info.
+
+Create and update use one accessible form but separate request mappers. Local `datetime-local` values are interpreted in `Europe/Berlin` and serialized as timezone-aware instants, including daylight-saving validation. Updates contain only normalized fields that differ from the current server projection. Explicitly clearing description, office assignment (admin only), or address sends `null`, while unchanged address coordinates remain omitted and therefore preserved.
+
+Images remain outside the create request. After the server has created the Info and returned its identifier, media can be managed as separate resources by the following image-management slice. This keeps partial upload failures visible instead of presenting a misleading atomic create workflow.

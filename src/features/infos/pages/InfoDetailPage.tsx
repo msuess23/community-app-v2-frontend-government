@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { Building2, Clock3, MapPin } from 'lucide-react'
+import { Building2, Clock3, MapPin, Pencil } from 'lucide-react'
 import { Link, useLocation, useParams } from 'react-router'
 
+import { useAuth } from '@/auth/auth-context'
 import { InfoCategoryBadge, InfoStatusBadge } from '@/features/infos/components/InfoBadges'
 import { InfoStatusTimeline } from '@/features/infos/components/InfoStatusTimeline'
 import type { InfoAddress, InfoRecord } from '@/features/infos/model/info-model'
+import { canManageInfo } from '@/features/infos/model/info-permissions'
 import {
   createInfoDetailQueryOptions,
   createInfoImagesQueryOptions,
@@ -20,6 +22,7 @@ import {
   ResourceMetadataList,
 } from '@/shared/resource-detail/ResourceDetailLayout'
 import { resolveResourceDetailReturnTo } from '@/shared/resource-detail/detail-navigation'
+import { LinkButton } from '@/shared/ui/LinkButton'
 
 const DETAIL_NAVIGATION = [
   { id: 'description', label: 'Beschreibung' },
@@ -32,6 +35,7 @@ const DETAIL_NAVIGATION = [
 
 /** Shows one current Info with its separate image collection and public status log. */
 export function InfoDetailPage() {
+  const { user } = useAuth()
   const { infoId = '' } = useParams()
   const location = useLocation()
   const infoQuery = useQuery({
@@ -61,6 +65,20 @@ export function InfoDetailPage() {
     >
       {(info) => (
         <ResourceDetailLayout
+          actions={
+            user && canManageInfo(user, info) ? (
+              <LinkButton
+                state={{
+                  from: `/infos/${info.id}`,
+                  listFrom: returnTo,
+                }}
+                to={`/infos/${info.id}/edit`}
+              >
+                <Pencil aria-hidden="true" size={18} />
+                Mitteilung bearbeiten
+              </LinkButton>
+            ) : undefined
+          }
           aside={<InfoDetailAside info={info} />}
           backLink={{ label: 'Zurück zum Mitteilungsverzeichnis', to: returnTo }}
           description="Aktuell veröffentlichter Stand der behördlichen Mitteilung."

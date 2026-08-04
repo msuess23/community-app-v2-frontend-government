@@ -1,5 +1,13 @@
 import type { InfoCategory, InfoStatus } from '@/api/generated/models'
 
+export const INFO_CATEGORIES = [
+  'EVENT',
+  'CONSTRUCTION',
+  'MAINTENANCE',
+  'ANNOUNCEMENT',
+  'OTHER',
+] as const satisfies readonly InfoCategory[]
+
 /** Represents one persisted Info address after crossing the transport boundary. */
 export type InfoAddress = Readonly<{
   city: string

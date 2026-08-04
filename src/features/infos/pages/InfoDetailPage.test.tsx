@@ -3,14 +3,24 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HttpResponse, http } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { createQueryClient } from '@/app/query-client'
+import { AuthContext, type AuthContextValue } from '@/auth/auth-context'
+import type { AuthUser } from '@/auth/auth-types'
 import { InfoDetailPage } from '@/features/infos/pages/InfoDetailPage'
 import { mockApiServer } from '@/test/server'
 
 const INFO_ID = '00000000-0000-4000-8000-000000000100'
 const OFFICE_ID = '00000000-0000-4000-8000-000000000010'
+const DISPATCHER: AuthUser = {
+  email: 'dispatcher@example.test',
+  firstName: 'Dora',
+  id: 'dispatcher-1',
+  lastName: 'Dispatcher',
+  officeId: OFFICE_ID,
+  role: 'DISPATCHER',
+}
 
 describe('InfoDetailPage', () => {
   it('renders accessible images, address and the simple public status history', async () => {
@@ -45,13 +55,18 @@ describe('InfoDetailPage', () => {
       await screen.findByRole('heading', { level: 1, name: 'Stadtteilfest' }),
     ).toBeInTheDocument()
     expect(screen.getByText('Musterstraße 12a')).toBeVisible()
-    expect(await screen.findByRole('link', { name: 'Ordnungsamt' })).toHaveAttribute(
+    expect(
+      await screen.findByRole('link', { name: 'Ordnungsamt' }),
+    ).toHaveAttribute(
       'href',
       `/offices/${OFFICE_ID}`,
     )
     expect(screen.queryByText('Breitengrad')).not.toBeInTheDocument()
     expect(screen.queryByText('Längengrad')).not.toBeInTheDocument()
     expect(screen.queryByText(INFO_ID)).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: 'Mitteilung bearbeiten' }),
+    ).not.toBeInTheDocument()
 
     const gallery = await screen.findByRole('list', {
       name: 'Bilder der Mitteilung',
@@ -64,9 +79,13 @@ describe('InfoDetailPage', () => {
     expect(within(gallery).getByText('Titelbild')).toBeVisible()
 
     const statusRegion = screen.getByRole('region', { name: 'Statusverlauf' })
-    expect(within(statusRegion).getByText('Findet wie geplant statt.')).toBeVisible()
+    expect(
+      within(statusRegion).getByText('Findet wie geplant statt.'),
+    ).toBeVisible()
     expect(within(statusRegion).getByText('Created')).toBeVisible()
-    expect(within(statusRegion).queryByText(/ausgeführt von/i)).not.toBeInTheDocument()
+    expect(
+      within(statusRegion).queryByText(/ausgeführt von/i),
+    ).not.toBeInTheDocument()
 
     await user.click(
       within(gallery).getByRole('button', {
@@ -91,18 +110,20 @@ describe('InfoDetailPage', () => {
 function renderDetail() {
   return render(
     <QueryClientProvider client={createQueryClient()}>
-      <MemoryRouter
-        initialEntries={[
-          {
-            pathname: `/infos/${INFO_ID}`,
-            state: { from: '/infos?search=stadtfest' },
-          },
-        ]}
-      >
-        <Routes>
-          <Route path="infos/:infoId" element={<InfoDetailPage />} />
-        </Routes>
-      </MemoryRouter>
+      <AuthContext.Provider value={authValue(DISPATCHER)}>
+        <MemoryRouter
+          initialEntries={[
+            {
+              pathname: `/infos/${INFO_ID}`,
+              state: { from: '/infos?search=stadtfest' },
+            },
+          ]}
+        >
+          <Routes>
+            <Route path="infos/:infoId" element={<InfoDetailPage />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>
     </QueryClientProvider>,
   )
 }
@@ -168,5 +189,20 @@ function officeResponse() {
     opening_hours: null,
     phone: null,
     services: [],
+  }
+}
+
+function authValue(user: AuthUser): AuthContextValue {
+  return {
+    isAuthenticated: true,
+    isInitializing: false,
+    login: vi.fn(async () => user),
+    logout: vi.fn(async () => undefined),
+    logoutAll: vi.fn(async () => undefined),
+    refreshCurrentUser: vi.fn(async () => user),
+    register: vi.fn(async () => user),
+    state: { status: 'authenticated', user },
+    updateCurrentUser: vi.fn(async () => user),
+    user,
   }
 }

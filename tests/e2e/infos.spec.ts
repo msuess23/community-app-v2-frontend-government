@@ -17,6 +17,14 @@ const dispatcherUser: AuthorityUserFixture = {
   office_id: OFFICE_ID,
   role: 'DISPATCHER',
 }
+const adminUser: AuthorityUserFixture = {
+  email: 'admin@example.test',
+  first_name: 'Ada',
+  id: '00000000-0000-4000-8000-000000000001',
+  last_name: 'Admin',
+  office_id: null,
+  role: 'ADMIN',
+}
 
 test(
   'authority users can filter and inspect accessible Info publications',
@@ -78,6 +86,75 @@ test(
     expect(requests.every((request) => !request.includes('bbox='))).toBe(true)
 
     await expectNoSeriousAccessibilityViolations(page)
+  },
+)
+
+test(
+  'administrators can create and minimally edit Info master data',
+  async ({ page }) => {
+    const requests = await installInfoManagementApi(page)
+    await signInAsAuthorityUser(page, '/infos', adminUser)
+
+    await page.getByRole('link', { name: 'Mitteilung anlegen' }).click()
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Mitteilung anlegen' }),
+    ).toBeVisible()
+
+    await page
+      .getByRole('textbox', { name: /Titel/ })
+      .fill('Straßensperrung Innenstadt')
+    await page
+      .getByRole('combobox', { name: /Kategorie/ })
+      .selectOption('CONSTRUCTION')
+    await page
+      .getByRole('combobox', { name: 'Zuständige Behörde' })
+      .selectOption(OFFICE_ID)
+    await page.getByLabel(/Beginn/).fill('2026-08-12T17:00')
+    await page.getByLabel(/Ende/).fill('2026-08-12T20:00')
+    await page.getByRole('checkbox', { name: 'Adresse hinterlegen' }).check()
+    await page.getByRole('textbox', { name: /Straße/ }).fill('Markt')
+    await page.getByRole('textbox', { name: /Hausnummer/ }).fill('1')
+    await page.getByRole('textbox', { name: /Postleitzahl/ }).fill('04109')
+    await page.getByRole('textbox', { name: /Ort/ }).fill('Leipzig')
+
+    await expectNoSeriousAccessibilityViolations(page)
+    await page.getByRole('button', { name: 'Mitteilung anlegen' }).click()
+
+    await expect(page).toHaveURL(new RegExp(`/infos/${INFO_ID}$`))
+    await expect(
+      page.getByRole('heading', {
+        level: 1,
+        name: 'Straßensperrung Innenstadt',
+      }),
+    ).toBeVisible()
+
+    await page.getByRole('link', { name: 'Mitteilung bearbeiten' }).click()
+    const description = page.getByRole('textbox', { name: 'Beschreibung' })
+    await description.fill('Umleitung über den Innenstadtring.')
+    await page.getByRole('button', { name: 'Änderungen speichern' }).click()
+
+    await expect(page).toHaveURL(new RegExp(`/infos/${INFO_ID}$`))
+    await expect(
+      page.getByText('Umleitung über den Innenstadtring.'),
+    ).toBeVisible()
+
+    expect(requests.create).toEqual({
+      address: {
+        city: 'Leipzig',
+        house_number: '1',
+        street: 'Markt',
+        zip_code: '04109',
+      },
+      category: 'CONSTRUCTION',
+      description: null,
+      ends_at: '2026-08-12T18:00:00.000Z',
+      office_id: OFFICE_ID,
+      starts_at: '2026-08-12T15:00:00.000Z',
+      title: 'Straßensperrung Innenstadt',
+    })
+    expect(requests.update).toEqual({
+      description: 'Umleitung über den Innenstadtring.',
+    })
   },
 )
 
@@ -227,6 +304,142 @@ function officeResponse() {
     phone: null,
     services: [],
   }
+}
+
+async function installInfoManagementApi(page: Page): Promise<{
+  create: unknown
+  update: unknown
+}> {
+  const requests: { create: unknown; update: unknown } = {
+    create: null,
+    update: null,
+  }
+  let storedInfo: Record<string, unknown> = infoResponse()
+
+  await page.route('**/api/v1/offices**', async (route) => {
+    const url = new URL(route.request().url())
+    if (url.pathname === '/api/v1/offices') {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: {
+          data: [officeResponse()],
+          page: 1,
+          pages: 1,
+          size: 100,
+          total: 1,
+        },
+        status: 200,
+      })
+      return
+    }
+
+    await route.fulfill({
+      contentType: 'application/json',
+      json: officeResponse(),
+      status: 200,
+    })
+  })
+
+  await page.route('**/api/v1/infos**', async (route) => {
+    const request = route.request()
+    const url = new URL(request.url())
+    const path = url.pathname
+
+    if (path === '/api/v1/infos' && request.method() === 'POST') {
+      const body = request.postDataJSON() as Record<string, unknown>
+      requests.create = body
+      storedInfo = {
+        ...storedInfo,
+        ...body,
+        address: body.address
+          ? {
+              id: 'address-1',
+              latitude: null,
+              longitude: null,
+              ...(body.address as Record<string, unknown>),
+            }
+          : null,
+        created_at: '2026-08-04T08:00:00Z',
+        current_status: {
+          created_at: '2026-08-04T08:00:00Z',
+          id: 'status-created',
+          message: 'Created',
+          status: 'SCHEDULED',
+        },
+        id: INFO_ID,
+        image_url: null,
+        updated_at: '2026-08-04T08:00:00Z',
+      }
+      await route.fulfill({
+        contentType: 'application/json',
+        json: storedInfo,
+        status: 201,
+      })
+      return
+    }
+
+    if (path === `/api/v1/infos/${INFO_ID}` && request.method() === 'PUT') {
+      const body = request.postDataJSON() as Record<string, unknown>
+      requests.update = body
+      storedInfo = {
+        ...storedInfo,
+        ...body,
+        address:
+          body.address === undefined
+            ? storedInfo.address
+            : body.address === null
+              ? null
+              : {
+                  ...((storedInfo.address as
+                    | Record<string, unknown>
+                    | null) ?? {}),
+                  ...(body.address as Record<string, unknown>),
+                },
+        updated_at: '2026-08-04T09:00:00Z',
+      }
+      await route.fulfill({
+        contentType: 'application/json',
+        json: storedInfo,
+        status: 200,
+      })
+      return
+    }
+
+    if (path === '/api/v1/infos') {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: { data: [], page: 1, pages: 0, size: 20, total: 0 },
+        status: 200,
+      })
+      return
+    }
+
+    if (path.endsWith('/images')) {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: [],
+        status: 200,
+      })
+      return
+    }
+
+    if (path.endsWith('/status')) {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: [storedInfo.current_status],
+        status: 200,
+      })
+      return
+    }
+
+    await route.fulfill({
+      contentType: 'application/json',
+      json: storedInfo,
+      status: 200,
+    })
+  })
+
+  return requests
 }
 
 async function expectNoSeriousAccessibilityViolations(page: Page) {
