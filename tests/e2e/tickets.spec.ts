@@ -150,15 +150,10 @@ test('officer executes one server-driven forwarding action', async ({ page }) =>
   await expectNoSeriousAccessibilityViolations(page)
 })
 
-test('officer appends comments and manages revisioned ticket images', async ({
+test('officer appends comments and reads revisioned ticket images', async ({
   page,
 }) => {
-  const {
-    commentRequests,
-    imageCoverRequests,
-    imageRemovalRequests,
-    imageUploadNames,
-  } = await installTicketReadApi(page)
+  const { commentRequests } = await installTicketReadApi(page)
   const directory = new TicketDirectoryPageObject(page)
   const detail = new TicketDetailPageObject(page)
 
@@ -168,23 +163,6 @@ test('officer appends comments and manages revisioned ticket images', async ({
 
   await detail.addInternalNote('Bitte zunächst intern abstimmen.')
   await detail.addPublicComment('Die Absicherung ist für morgen vorgesehen.')
-  await detail.uploadTicketImages([
-    {
-      buffer: Buffer.from('first-image'),
-      mimeType: 'image/jpeg',
-      name: 'neue-aufnahme.jpg',
-    },
-    {
-      buffer: Buffer.from('second-image'),
-      mimeType: 'image/png',
-      name: 'detailaufnahme.png',
-    },
-  ])
-  await detail.setCover('schlagloch-detail.jpg')
-  await detail.removeImage(
-    'schlagloch-detail.jpg',
-    'Doppelte Perspektive ohne Zusatznutzen',
-  )
 
   expect(commentRequests).toEqual([
     { is_internal: true, text: 'Bitte zunächst intern abstimmen.' },
@@ -193,52 +171,23 @@ test('officer appends comments and manages revisioned ticket images', async ({
       text: 'Die Absicherung ist für morgen vorgesehen.',
     },
   ])
-  expect(imageUploadNames).toEqual([
-    'neue-aufnahme.jpg',
-    'detailaufnahme.png',
-  ])
-  expect(imageCoverRequests).toEqual(['image-secondary'])
-  expect(imageRemovalRequests).toEqual([
-    {
-      imageId: 'image-secondary',
-      reason: 'Doppelte Perspektive ohne Zusatznutzen',
-    },
-  ])
   await expect(
     page.getByRole('region', { name: 'Ereignishistorie' }),
   ).toContainText('Interne Notiz hinzugefügt')
   await expect(
-    page.getByRole('region', { name: 'Ereignishistorie' }),
-  ).toContainText('Bild entfernt')
+    page.getByRole('region', { name: 'Aktuelle Ticketbilder' }),
+  ).toBeVisible()
   await expect(page.getByText('schlagloch-detail.jpg')).toBeVisible()
+  await expect(page.getByText('Historisch entfernte Bilder')).toBeVisible()
+  await expect(page.getByText('schlagloch-alt.jpg')).toBeVisible()
+  await expect(page.getByLabel('Bilddateien auswählen')).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: /Als Titelbild verwenden:/ }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: /Bild entfernen:/ }),
+  ).toHaveCount(0)
   await expectNoSeriousAccessibilityViolations(page)
-})
-
-test('pending ticket image uploads participate in the unsaved-changes guard', async ({
-  page,
-}) => {
-  await installTicketReadApi(page)
-  const directory = new TicketDirectoryPageObject(page)
-  const detail = new TicketDetailPageObject(page)
-
-  await signInAsAuthorityUser(page, '/tickets', officer)
-  await directory.openFirstTicket()
-  await detail.expectLoaded()
-
-  await page.getByLabel('Bilddateien auswählen').setInputFiles({
-    buffer: Buffer.from('pending-image'),
-    mimeType: 'image/jpeg',
-    name: 'noch-nicht-hochgeladen.jpg',
-  })
-  await page
-    .getByRole('link', { name: 'Zurück zum Ticketverzeichnis' })
-    .click()
-
-  const dialog = page.getByRole('dialog', { name: 'Bild-Uploads verwerfen?' })
-  await expect(dialog).toBeVisible()
-  await dialog.getByRole('button', { name: 'Weiter bearbeiten' }).click()
-  await expect(page).toHaveURL(new RegExp(`/tickets/${TICKET_ID}$`))
-  await expect(dialog).toBeHidden()
 })
 
 test('dispatcher receives only dispatch actions and no removed image history', async ({
@@ -247,7 +196,6 @@ test('dispatcher receives only dispatch actions and no removed image history', a
   const { imageListRequests } = await installTicketReadApi(page, {
     ticket: {
       allowed_actions: ['DISPATCH'],
-      can_manage_images: false,
       current_assignee: null,
       current_assignee_id: null,
       current_status: {
@@ -284,7 +232,11 @@ test('dispatcher receives only dispatch actions and no removed image history', a
   await expect(page.getByLabel('Bilddateien auswählen')).toHaveCount(0)
   await expect(page.getByText('Historisch entfernte Bilder')).toHaveCount(0)
   await expect
-    .poll(() => imageListRequests.some((request) => request.includes('include_removed=false')))
+    .poll(() =>
+      imageListRequests.some((request) =>
+        request.includes('include_removed=false'),
+      ),
+    )
     .toBe(true)
 
   const { dialog } = await detail.openWorkflowAction(

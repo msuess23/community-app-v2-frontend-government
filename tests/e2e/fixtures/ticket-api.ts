@@ -3,7 +3,6 @@ import type { Page } from '@playwright/test'
 import type {
   TicketCommentResponse,
   TicketEventType,
-  TicketImageResponse,
   TicketInternalDetailResponse,
   TicketWorkflowOptionsResponse,
 } from '../../../src/api/generated/models'
@@ -25,9 +24,6 @@ export { SECOND_TICKET_ID, TICKET_ID, TICKET_OFFICE_ID } from './ticket-api-data
 
 export type TicketApiRequestLog = Readonly<{
   commentRequests: unknown[]
-  imageCoverRequests: string[]
-  imageRemovalRequests: unknown[]
-  imageUploadNames: string[]
   imageListRequests: string[]
   listRequests: string[]
   workflowRequests: unknown[]
@@ -45,9 +41,6 @@ export async function installTicketReadApi(
   scenario: TicketApiScenario = {},
 ): Promise<TicketApiRequestLog> {
   const commentRequests: unknown[] = []
-  const imageCoverRequests: string[] = []
-  const imageRemovalRequests: unknown[] = []
-  const imageUploadNames: string[] = []
   const imageListRequests: string[] = []
   const listRequests: string[] = []
   const workflowRequests: unknown[] = []
@@ -56,7 +49,7 @@ export async function installTicketReadApi(
     ...scenario.ticket,
   }
   let comments = ticketCommentsResponse()
-  let images = ticketImagesResponse()
+  const images = ticketImagesResponse()
   let events = [...(scenario.events ?? initialTicketEvents())]
 
   function appendEvent(
@@ -229,118 +222,20 @@ export async function installTicketReadApi(
       }
     }
 
-    if (path === `/api/v1/tickets/${TICKET_ID}/images`) {
-      if (request.method() === 'GET') {
-        imageListRequests.push(url.searchParams.toString())
-        const includeRemoved =
-          url.searchParams.get('include_removed') === 'true'
-        await route.fulfill({
-          contentType: 'application/json',
-          json: includeRemoved
-            ? images
-            : images.filter((image) => image.is_active),
-          status: 200,
-        })
-        return
-      }
-
-      if (request.method() === 'POST') {
-        const multipartBody = request.postData() ?? ''
-        const filename =
-          multipartBody.match(/filename="([^"]+)"/)?.[1] ??
-          `ticket-upload-${imageUploadNames.length + 1}.jpg`
-        imageUploadNames.push(filename)
-        const imageId = `image-upload-${imageUploadNames.length}`
-        const image: TicketImageResponse = {
-          height: 360,
-          id: imageId,
-          is_active: true,
-          is_cover: images.every((item) => !item.is_active),
-          mime_type: filename.endsWith('.png') ? 'image/png' : 'image/jpeg',
-          original_filename: filename,
-          removed_at: null,
-          size_bytes: 1200,
-          ticket_id: TICKET_ID,
-          uploaded_at: '2026-08-05T07:00:00Z',
-          url: `/api/v1/tickets/${TICKET_ID}/images/${imageId}/content`,
-          width: 640,
-        }
-        images = [...images, image]
-        appendEvent('TICKET_IMAGE_ADDED', {
-          height: image.height,
-          image_id: image.id,
-          is_cover: image.is_cover,
-          mime_type: image.mime_type,
-          original_filename: image.original_filename,
-          size_bytes: image.size_bytes,
-          storage_key: `ticket/${TICKET_ID}/${image.id}`,
-          width: image.width,
-        })
-        await route.fulfill({
-          contentType: 'application/json',
-          json: image,
-          status: 200,
-        })
-        return
-      }
-    }
-
-    const coverMatch = path.match(
-      new RegExp(`^/api/v1/tickets/${TICKET_ID}/images/([^/]+)/cover$`),
-    )
-    if (coverMatch && request.method() === 'PUT') {
-      const imageId = coverMatch[1]
-      imageCoverRequests.push(imageId)
-      images = images.map((image) => ({
-        ...image,
-        is_cover: image.id === imageId,
-      }))
-      appendEvent('TICKET_COVER_IMAGE_CHANGED', { image_id: imageId })
+    if (
+      path === `/api/v1/tickets/${TICKET_ID}/images` &&
+      request.method() === 'GET'
+    ) {
+      imageListRequests.push(url.searchParams.toString())
+      const includeRemoved =
+        url.searchParams.get('include_removed') === 'true'
       await route.fulfill({
         contentType: 'application/json',
-        json: images.find((image) => image.id === imageId),
+        json: includeRemoved
+          ? images
+          : images.filter((image) => image.is_active),
         status: 200,
       })
-      return
-    }
-
-    const imageMatch = path.match(
-      new RegExp(`^/api/v1/tickets/${TICKET_ID}/images/([^/]+)$`),
-    )
-    if (imageMatch && request.method() === 'DELETE') {
-      const imageId = imageMatch[1]
-      const body = request.postDataJSON() as { reason?: string | null }
-      imageRemovalRequests.push({ imageId, ...body })
-      const removedWasCover = images.some(
-        (image) => image.id === imageId && image.is_cover,
-      )
-      images = images.map((image) =>
-        image.id === imageId
-          ? {
-              ...image,
-              is_active: false,
-              is_cover: false,
-              removed_at: '2026-08-05T07:00:00Z',
-            }
-          : image,
-      )
-      appendEvent('TICKET_IMAGE_REMOVED', {
-        image_id: imageId,
-        reason: body.reason ?? null,
-      })
-      if (removedWasCover) {
-        const replacement = images.find((image) => image.is_active)
-        if (replacement) {
-          images = images.map((image) => ({
-            ...image,
-            is_cover: image.id === replacement.id,
-          }))
-          appendEvent('TICKET_COVER_IMAGE_CHANGED', {
-            image_id: replacement.id,
-          })
-        }
-      }
-      await route.fulfill({ status: 204 })
       return
     }
 
@@ -380,9 +275,6 @@ export async function installTicketReadApi(
 
   return {
     commentRequests,
-    imageCoverRequests,
-    imageRemovalRequests,
-    imageUploadNames,
     imageListRequests,
     listRequests,
     workflowRequests,

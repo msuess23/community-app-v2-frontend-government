@@ -10,7 +10,7 @@ Dispatcher work is limited to tickets awaiting initial or renewed dispatch. Offi
 
 ## Read model and directory
 
-Generated snake-case DTOs stop at the query and mapper boundary. Ticket components consume feature-owned camel-case models containing the current projection, display references, version, update timestamp, image-management permission, and `allowedActions`.
+Generated snake-case DTOs stop at the query and mapper boundary. Ticket components consume feature-owned camel-case models containing the current projection, display references, version, update timestamp, and `allowedActions`.
 
 The directory persists search, lifecycle, public status, workflow state, category, office, date boundaries, sorting, page, and page size in the URL. Search text is capped at the backend limit of 200 characters. The complete directory URL is preserved when a user opens a detail page and uses its explicit return link.
 
@@ -48,13 +48,13 @@ The current ticket detail is the authoritative projection. The frontend never re
 
 The immutable timeline supports all nineteen current ticket event types. Feature-owned Zod parsers validate the payload shape before a renderer uses it. Known events with malformed payloads and unknown future events remain visible through safe fallbacks. Actor, user, and office references enrich presentation without changing the stored event payload. Raw payload is exposed only in development.
 
-Events retain their server sequence and pagination order. Workflow, comment, and image mutations invalidate the event query rather than inserting an assumed number of local events. This is essential when one image operation can create both a removal and a replacement-cover event.
+Events retain their server sequence and pagination order. Workflow and comment mutations invalidate the event query rather than inserting assumed local events. Image events created by the separate citizen client remain visible in the authority timeline.
 
-## Append-only collaboration and revisioned images
+## Append-only collaboration and read-only revisioned images
 
 Internal notes and public comments are append-only. The composer defaults to an internal note and presents an explicit warning before a public comment. Stored entries have no edit or delete affordance. Each comment is an article with an accessible label that includes visibility, author, and timestamp.
 
-Ticket images are revisioned by the backend. The current gallery, removed-revision audit view, upload queue, cover selection, and removal dialog remain feature-owned adaptations of the shared media components. Uploads are validated and processed sequentially. Pending or failed local queue entries participate in the global unsaved-changes guard. Cover changes and removals use only server-confirmed responses and invalidate list, detail, image, and event projections.
+Ticket images are revisioned by the backend and are read-only in the authority client. The current carousel and the removed-revision audit gallery reuse the shared `MediaGallery` component also used by the Info feature. Upload, cover selection, and removal belong to the separate citizen client and have no authority-facing controls or mutation wrappers.
 
 The ticket contract deliberately has no author-provided alternative-text field. The feature therefore does not invent a visual description. Images use the existing media contract while filename, size, upload time, cover state, and revision state remain available as adjacent text. This known contract limitation is distinct from the Info feature, whose backend requires alternative text.
 
@@ -62,7 +62,7 @@ The ticket contract deliberately has no author-provided alternative-text field. 
 
 Ticket-specific error codes map to localized, non-technical presentations. A no-longer-allowed action, unavailable target, changed projection, or lost object access triggers the affected detail, options, event, and directory queries to refresh. Backend messages are not displayed verbatim.
 
-Query keys keep directory pages, detail, workflow options, events, comments, active images, and image history separate. Successful comments may extend their own confirmed projection, but workflow and image state remain server-owned. Ticket `updatedAt` and `version` are displayed so users can understand recency and the projection represented by the page.
+Query keys keep directory pages, detail, workflow options, events, comments, active images, and image history separate. Successful comments may extend their own confirmed projection, while workflow and image state remain server-owned. Ticket `updatedAt` and `version` are displayed so users can understand recency and the projection represented by the page.
 
 ## Accessibility
 
@@ -87,6 +87,6 @@ Browser tests keep selectors and API state out of the specifications:
 - `tests/e2e/fixtures/ticket-api-data.ts` owns typed reusable ticket, event, comment, image, office, and workflow-option builders,
 - `tests/e2e/fixtures/ticket-api.ts` owns the stateful route harness and request logs,
 - `tests/e2e/pages/ticket-pages.ts` owns stable user interactions and layout assertions,
-- `tests/e2e/tickets.spec.ts` covers officer workflows, dispatcher restrictions, manager completion outcomes, administrator denial, append-only collaboration, image revisions, dirty guards, focus restoration, device-adapted layouts, 320-pixel reflow, and Axe checks.
+- `tests/e2e/tickets.spec.ts` covers officer workflows, dispatcher restrictions, manager completion outcomes, administrator denial, append-only collaboration, read-only image revisions, workflow dirty guards, focus restoration, device-adapted layouts, 320-pixel reflow, and Axe checks.
 
-The generated client contains 23 ticket operations: fourteen authority-workspace or collaboration/media operations and nine citizen-facing operations. Both clients share the backend OpenAPI contract. Unused citizen operations are intentionally not wrapped by the authority feature; their presence in generated output is not an unfinished authority UI.
+The generated client contains 23 ticket operations because both clients share the backend OpenAPI contract. The authority feature wraps the internal directory, detail, workflow, event, comment, and image-read operations it needs. Citizen submission and image-mutation operations intentionally remain unwrapped; their presence in generated output is not an unfinished authority UI.

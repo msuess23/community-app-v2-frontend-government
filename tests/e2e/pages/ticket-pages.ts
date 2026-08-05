@@ -87,36 +87,6 @@ export class TicketDetailPageObject {
     ).toBeVisible()
   }
 
-  async uploadTicketImages(
-    files: readonly { buffer: Buffer; mimeType: string; name: string }[],
-  ): Promise<void> {
-    await this.page.getByLabel('Bilddateien auswählen').setInputFiles(files)
-    await this.page.getByRole('button', { name: 'Bilder hochladen' }).click()
-    await expect(
-      this.page.getByText(
-        `${files.length} hochgeladen, 0 fehlgeschlagen, 0 ausstehend`,
-      ),
-    ).toBeVisible()
-  }
-
-  async setCover(filename: string): Promise<void> {
-    await this.page
-      .getByRole('button', { name: `Als Titelbild verwenden: ${filename}` })
-      .click()
-    await expect(this.page.getByText('Titelbild aktualisiert')).toBeVisible()
-  }
-
-  async removeImage(filename: string, reason: string): Promise<void> {
-    await this.page
-      .getByRole('button', { name: `Bild entfernen: ${filename}` })
-      .click()
-    const dialog = this.page.getByRole('dialog', { name: 'Bild entfernen' })
-    await dialog.getByRole('textbox', { name: 'Begründung' }).fill(reason)
-    await dialog.getByRole('button', { name: 'Bild entfernen' }).click()
-    await expect(this.page.getByText('Ticketbild entfernt')).toBeVisible()
-    await expect(dialog).toBeHidden()
-  }
-
   async forwardTicketTo(
     targetUserId: string,
     comment: string,

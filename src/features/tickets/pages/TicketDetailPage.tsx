@@ -127,14 +127,11 @@ export function TicketDetailPage() {
           </ResourceDetailSection>
 
           <ResourceDetailSection
-            description="Aktive Bilder stammen aus der aktuellen Bildprojektion. Officer und Manager sehen zusätzlich historisch entfernte Revisionen."
+            description="Ticketbilder werden in diesem Behördenbereich ausschließlich lesend angezeigt. Officer und Manager sehen zusätzlich historisch entfernte Revisionen."
             id="images"
             title="Bilder"
           >
-            <TicketImages
-              canManageImages={ticket.canManageImages}
-              ticketId={ticket.id}
-            />
+            <TicketImages ticketId={ticket.id} />
           </ResourceDetailSection>
 
           <ResourceDetailSection

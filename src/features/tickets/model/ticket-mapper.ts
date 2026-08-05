@@ -45,7 +45,6 @@ function mapTicketRecord(
   return {
     address: response.address ? mapTicketAddress(response.address) : null,
     allowedActions,
-    canManageImages: response.can_manage_images ?? false,
     category: response.category,
     createdAt: response.created_at,
     creator: mapRequiredTicketUserReference(response.creator),
