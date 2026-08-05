@@ -8,6 +8,7 @@ import type {
 import {
   getInternalTicketApiV1TicketsTicketIdInternalGet,
   getInternalTicketEventsApiV1TicketsTicketIdEventsGet,
+  getTicketWorkflowOptionsApiV1TicketsTicketIdWorkflowOptionsGet,
   listInternalTicketsApiV1TicketsInternalGet,
   listTicketCommentsApiV1TicketsTicketIdCommentsGet,
   listTicketImagesApiV1TicketsTicketIdImagesGet,
@@ -22,6 +23,7 @@ import {
   mapTicketEventPage,
   type TicketEventRecord,
 } from '@/features/tickets/model/ticket-event'
+import { mapTicketWorkflowOptions } from '@/features/tickets/model/ticket-workflow'
 import {
   mapTicketInternalDetailResponse,
   mapTicketPage,
@@ -99,5 +101,17 @@ export function createTicketImagesQueryOptions(
         { signal },
       ),
     queryKey: ticketFeatureQueryKeys.images(ticketId, includeRemoved),
+  })
+}
+
+/** Creates the server-filtered options query shared by ticket action dialogs. */
+export function createTicketWorkflowOptionsQueryOptions(ticketId: string) {
+  return createMappedQueryOptions({
+    map: mapTicketWorkflowOptions,
+    queryFn: (signal) =>
+      getTicketWorkflowOptionsApiV1TicketsTicketIdWorkflowOptionsGet(ticketId, {
+        signal,
+      }),
+    queryKey: ticketFeatureQueryKeys.workflowOptions(ticketId),
   })
 }

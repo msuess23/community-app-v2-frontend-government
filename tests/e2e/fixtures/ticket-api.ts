@@ -4,9 +4,21 @@ export const TICKET_ID = '00000000-0000-4000-8000-000000000100'
 export const SECOND_TICKET_ID = '00000000-0000-4000-8000-000000000101'
 export const TICKET_OFFICE_ID = '00000000-0000-4000-8000-000000000010'
 
-/** Installs the ticket and office read endpoints used by workspace E2E tests. */
-export async function installTicketReadApi(page: Page): Promise<string[]> {
+export type TicketApiRequestLog = Readonly<{
+  listRequests: string[]
+  workflowRequests: unknown[]
+}>
+
+/** Installs stateful ticket read and workflow endpoints used by workspace E2E tests. */
+export async function installTicketReadApi(
+  page: Page,
+): Promise<TicketApiRequestLog> {
   const listRequests: string[] = []
+  const workflowRequests: unknown[] = []
+  let currentTicket = {
+    ...ticketResponse(),
+    allowed_actions: ['FORWARD', 'COMPLETE'],
+  }
 
   await page.route('**/api/v1/offices**', async (route) => {
     const url = new URL(route.request().url())
@@ -49,6 +61,56 @@ export async function installTicketReadApi(page: Page): Promise<string[]> {
           size: Number(url.searchParams.get('size') ?? 20),
           total: 2,
         },
+        status: 200,
+      })
+      return
+    }
+
+    if (
+      path === `/api/v1/tickets/${TICKET_ID}/workflow-options` &&
+      request.method() === 'GET'
+    ) {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: {
+          completion_outcomes: ['RESOLVED'],
+          cosignature_targets: [],
+          escalation_targets: [],
+          forward_targets: [
+            {
+              display_name: 'Erika Einsatz',
+              id: 'officer-3',
+              office: { id: 'office-2', name: 'Ordnungsamt' },
+              role: 'OFFICER',
+            },
+          ],
+          offices: [],
+          primary_officers: [],
+          ticket_id: TICKET_ID,
+          version: currentTicket.version,
+        },
+        status: 200,
+      })
+      return
+    }
+
+    if (
+      path === `/api/v1/tickets/${TICKET_ID}/workflow` &&
+      request.method() === 'POST'
+    ) {
+      const body = request.postDataJSON()
+      workflowRequests.push(body)
+      currentTicket = {
+        ...currentTicket,
+        allowed_actions: [],
+        current_assignee: { display_name: 'Erika Einsatz', id: 'officer-3' },
+        current_assignee_id: 'officer-3',
+        updated_at: '2026-08-04T10:00:00Z',
+        version: currentTicket.version + 1,
+      }
+      await route.fulfill({
+        contentType: 'application/json',
+        json: currentTicket,
         status: 200,
       })
       return
@@ -97,7 +159,7 @@ export async function installTicketReadApi(page: Page): Promise<string[]> {
     if (path === `/api/v1/tickets/${TICKET_ID}/internal`) {
       await route.fulfill({
         contentType: 'application/json',
-        json: { ...ticketResponse(), allowed_actions: ['FORWARD', 'COMPLETE'] },
+        json: currentTicket,
         status: 200,
       })
       return
@@ -115,7 +177,7 @@ export async function installTicketReadApi(page: Page): Promise<string[]> {
     await route.fulfill({ status: 404 })
   })
 
-  return listRequests
+  return { listRequests, workflowRequests }
 }
 
 function ticketResponse() {

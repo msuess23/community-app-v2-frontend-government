@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { HttpResponse, http } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
@@ -8,6 +9,8 @@ import { createQueryClient } from '@/app/query-client'
 import { AuthContext, type AuthContextValue } from '@/auth/auth-context'
 import type { AuthUser } from '@/auth/auth-types'
 import { TicketDetailPage } from '@/features/tickets/pages/TicketDetailPage'
+import { ConfirmationProvider } from '@/shared/confirmation/ConfirmationProvider'
+import { FeedbackProvider } from '@/shared/feedback/FeedbackProvider'
 import { mockApiServer } from '@/test/server'
 
 const TICKET_ID = '00000000-0000-4000-8000-000000000100'
@@ -81,8 +84,9 @@ describe('TicketDetailPage', () => {
     expect(screen.queryByText(TICKET_ID)).not.toBeInTheDocument()
     expect(screen.queryByText('officer-1')).not.toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: /weiterleiten/i }),
-    ).not.toBeInTheDocument()
+      screen.getByRole('button', { name: 'Weiterleiten' }),
+    ).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Abschließen' })).toBeVisible()
 
     expect(
       screen.getByRole('link', { name: 'Zurück zum Ticketverzeichnis' }),
@@ -91,27 +95,126 @@ describe('TicketDetailPage', () => {
       `/tickets?workflowState=IN_PROGRESS&sortBy=updatedAt&sortDirection=desc`,
     )
   })
+
+  it('executes a server-filtered forwarding action and commits the returned projection', async () => {
+    let workflowRequest: unknown
+    mockApiServer.use(
+      http.get(
+        `http://localhost/api/v1/tickets/${TICKET_ID}/internal`,
+        () => HttpResponse.json(ticketResponse()),
+      ),
+      http.get(
+        `http://localhost/api/v1/tickets/${TICKET_ID}/workflow-options`,
+        () =>
+          HttpResponse.json({
+            completion_outcomes: ['RESOLVED', 'REJECTED'],
+            cosignature_targets: [],
+            escalation_targets: [],
+            forward_targets: [
+              {
+                display_name: 'Erika Einsatz',
+                id: 'officer-3',
+                office: { id: 'office-2', name: 'Ordnungsamt' },
+                role: 'OFFICER',
+              },
+            ],
+            offices: [],
+            primary_officers: [],
+            ticket_id: TICKET_ID,
+            version: 4,
+          }),
+      ),
+      http.post(
+        `http://localhost/api/v1/tickets/${TICKET_ID}/workflow`,
+        async ({ request }) => {
+          workflowRequest = await request.json()
+          return HttpResponse.json({
+            ...ticketResponse(),
+            allowed_actions: [],
+            current_assignee: {
+              display_name: 'Erika Einsatz',
+              id: 'officer-3',
+            },
+            current_assignee_id: 'officer-3',
+            updated_at: '2026-08-02T10:00:00Z',
+            version: 5,
+          })
+        },
+      ),
+      http.get(
+        `http://localhost/api/v1/tickets/${TICKET_ID}/events`,
+        () => HttpResponse.json(ticketEventsResponse()),
+      ),
+      http.get(
+        `http://localhost/api/v1/tickets/${TICKET_ID}/comments`,
+        () => HttpResponse.json(ticketCommentsResponse()),
+      ),
+      http.get(
+        `http://localhost/api/v1/tickets/${TICKET_ID}/images`,
+        () => HttpResponse.json(ticketImagesResponse()),
+      ),
+    )
+
+    const user = userEvent.setup()
+    renderDetail()
+
+    await user.click(await screen.findByRole('button', { name: 'Weiterleiten' }))
+    expect(
+      screen.getByRole('heading', { name: 'Ticket weiterleiten' }),
+    ).toBeVisible()
+
+    await user.selectOptions(
+      await screen.findByLabelText('Weiterleiten an'),
+      'officer-3',
+    )
+    await user.type(
+      screen.getByLabelText('Optionaler Kommentar'),
+      'Bitte die Sperrung koordinieren.',
+    )
+    await user.click(
+      screen.getByRole('button', { name: 'Ticket weiterleiten' }),
+    )
+
+    expect(await screen.findByText('Ticket weitergeleitet')).toBeVisible()
+    expect(workflowRequest).toEqual({
+      action: 'FORWARD',
+      comment: 'Bitte die Sperrung koordinieren.',
+      target_user_id: 'officer-3',
+    })
+    expect(
+      within(
+        screen.getByRole('region', { name: 'Aktuelle Zuständigkeit' }),
+      ).getByText('Erika Einsatz'),
+    ).toBeVisible()
+    expect(
+      screen.queryByRole('dialog', { name: 'Ticket weiterleiten' }),
+    ).not.toBeInTheDocument()
+  })
 })
 
 function renderDetail() {
   return render(
     <QueryClientProvider client={createQueryClient()}>
-      <AuthContext.Provider value={authValue(MANAGER)}>
-        <MemoryRouter
-          initialEntries={[
-            {
-              pathname: `/tickets/${TICKET_ID}`,
-              state: {
-                from: '/tickets?workflowState=IN_PROGRESS&sortBy=updatedAt&sortDirection=desc',
-              },
-            },
-          ]}
-        >
-          <Routes>
-            <Route path="tickets/:ticketId" element={<TicketDetailPage />} />
-          </Routes>
-        </MemoryRouter>
-      </AuthContext.Provider>
+      <FeedbackProvider>
+        <ConfirmationProvider>
+          <AuthContext.Provider value={authValue(MANAGER)}>
+            <MemoryRouter
+              initialEntries={[
+                {
+                  pathname: `/tickets/${TICKET_ID}`,
+                  state: {
+                    from: '/tickets?workflowState=IN_PROGRESS&sortBy=updatedAt&sortDirection=desc',
+                  },
+                },
+              ]}
+            >
+              <Routes>
+                <Route path="tickets/:ticketId" element={<TicketDetailPage />} />
+              </Routes>
+            </MemoryRouter>
+          </AuthContext.Provider>
+        </ConfirmationProvider>
+      </FeedbackProvider>
     </QueryClientProvider>,
   )
 }

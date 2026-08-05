@@ -11,6 +11,7 @@ import {
 import { TicketComments } from '@/features/tickets/components/TicketComments'
 import { TicketEventTimeline } from '@/features/tickets/components/TicketEventTimeline'
 import { TicketImages } from '@/features/tickets/components/TicketImages'
+import { TicketWorkflowActions } from '@/features/tickets/components/TicketWorkflowActions'
 import { TICKET_READ_ERROR_MESSAGES } from '@/features/tickets/model/ticket-error-messages'
 import type {
   TicketAddress,
@@ -28,6 +29,7 @@ import {
 import { resolveResourceDetailReturnTo } from '@/shared/resource-detail/detail-navigation'
 
 const DETAIL_NAVIGATION = [
+  { id: 'workflow-actions', label: 'Aktionen' },
   { id: 'description', label: 'Beschreibung' },
   { id: 'current-status', label: 'Aktueller Status' },
   { id: 'address', label: 'Adresse' },
@@ -151,6 +153,15 @@ export function TicketDetailPage() {
 function TicketDetailAside({ ticket }: Readonly<{ ticket: TicketRecord }>) {
   return (
     <>
+      <ResourceDetailSection
+        description="Das Backend berechnet die verfügbaren Aktionen aus Rolle, Zuständigkeit und aktuellem Workflowzustand."
+        id="workflow-actions"
+        title="Workflowaktionen"
+        variant="outlined"
+      >
+        <TicketWorkflowActions ticket={ticket} />
+      </ResourceDetailSection>
+
       <ResourceDetailSection
         id="responsibility"
         title="Aktuelle Zuständigkeit"

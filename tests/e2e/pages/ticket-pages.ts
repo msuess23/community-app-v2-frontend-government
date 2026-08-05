@@ -67,6 +67,19 @@ export class TicketDetailPageObject {
     ).toContainText('Interne fachliche Prüfung läuft.')
   }
 
+  async forwardTicketTo(
+    targetUserId: string,
+    comment: string,
+  ): Promise<void> {
+    await this.page.getByRole('button', { name: 'Weiterleiten' }).click()
+    const dialog = this.page.getByRole('dialog', { name: 'Ticket weiterleiten' })
+    await expect(dialog).toBeVisible()
+    await dialog.getByLabel('Weiterleiten an').selectOption(targetUserId)
+    await dialog.getByLabel('Optionaler Kommentar').fill(comment)
+    await dialog.getByRole('button', { name: 'Ticket weiterleiten' }).click()
+    await expect(dialog).toBeHidden()
+  }
+
   async returnToDirectory(): Promise<void> {
     await this.page
       .getByRole('link', { name: 'Zurück zum Ticketverzeichnis' })

@@ -23,7 +23,7 @@ const officer = {
 test('authority users read and filter the device-adapted ticket workspace', async ({
   page,
 }, testInfo) => {
-  const listRequests = await installTicketReadApi(page)
+  const { listRequests } = await installTicketReadApi(page)
   const directory = new TicketDirectoryPageObject(page)
   const detail = new TicketDetailPageObject(page)
 
@@ -86,4 +86,33 @@ test('authority users read and filter the device-adapted ticket workspace', asyn
 
   await detail.returnToDirectory()
   await expect(page).toHaveURL(/\/tickets\?workflowState=IN_PROGRESS/)
+})
+
+test('officer executes one server-driven forwarding action', async ({ page }) => {
+  const { workflowRequests } = await installTicketReadApi(page)
+  const directory = new TicketDirectoryPageObject(page)
+  const detail = new TicketDetailPageObject(page)
+
+  await signInAsAuthorityUser(page, '/tickets', officer)
+  await directory.expectLoaded()
+  await directory.openFirstTicket()
+  await detail.expectLoaded()
+
+  await detail.forwardTicketTo(
+    'officer-3',
+    'Bitte die Straßensperrung koordinieren.',
+  )
+
+  await expect(page.getByText('Ticket weitergeleitet')).toBeVisible()
+  await expect(
+    page.getByRole('region', { name: 'Aktuelle Zuständigkeit' }),
+  ).toContainText('Erika Einsatz')
+  expect(workflowRequests).toEqual([
+    {
+      action: 'FORWARD',
+      comment: 'Bitte die Straßensperrung koordinieren.',
+      target_user_id: 'officer-3',
+    },
+  ])
+  await expectNoSeriousAccessibilityViolations(page)
 })
