@@ -59,6 +59,12 @@ export class TicketDetailPageObject {
     await expect(
       this.page.getByRole('region', { name: 'Aktuelle Zuständigkeit' }),
     ).toContainText('Olaf Ordnung')
+    await expect(
+      this.page.getByRole('region', { name: 'Ereignishistorie' }),
+    ).toContainText('Ticket eingereicht')
+    await expect(
+      this.page.getByRole('region', { name: 'Kommentare und interne Notizen' }),
+    ).toContainText('Interne fachliche Prüfung läuft.')
   }
 
   async returnToDirectory(): Promise<void> {

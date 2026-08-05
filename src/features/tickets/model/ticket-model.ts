@@ -117,6 +117,17 @@ const VISIBILITY_LABELS: Readonly<Record<TicketVisibility, string>> = {
   PUBLIC: 'Öffentlich',
 }
 
+const USER_REFERENCE_LABELS: Readonly<Record<string, string>> = {
+  'Authority employee': 'Behördenmitarbeiter',
+  Citizen: 'Bürger',
+  'Unknown user': 'Unbekannte Person',
+}
+
+/** Localizes generic backend fallbacks while preserving real display names. */
+export function getTicketUserReferenceLabel(displayName: string): string {
+  return USER_REFERENCE_LABELS[displayName] ?? displayName
+}
+
 /** Localizes one backend ticket category without changing its contract value. */
 export function getTicketCategoryLabel(category: TicketCategory): string {
   return CATEGORY_LABELS[category]

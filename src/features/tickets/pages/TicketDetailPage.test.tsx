@@ -28,6 +28,18 @@ describe('TicketDetailPage', () => {
         `http://localhost/api/v1/tickets/${TICKET_ID}/internal`,
         () => HttpResponse.json(ticketResponse()),
       ),
+      http.get(
+        `http://localhost/api/v1/tickets/${TICKET_ID}/events`,
+        () => HttpResponse.json(ticketEventsResponse()),
+      ),
+      http.get(
+        `http://localhost/api/v1/tickets/${TICKET_ID}/comments`,
+        () => HttpResponse.json(ticketCommentsResponse()),
+      ),
+      http.get(
+        `http://localhost/api/v1/tickets/${TICKET_ID}/images`,
+        () => HttpResponse.json(ticketImagesResponse()),
+      ),
     )
 
     renderDetail()
@@ -60,6 +72,10 @@ describe('TicketDetailPage', () => {
     expect(within(responsibility).getByText('Nicht zugewiesen')).toBeVisible()
 
     expect(screen.getByText('Die Bearbeitung wurde aufgenommen.')).toBeVisible()
+    expect(await screen.findByText('Ticket eingereicht')).toBeVisible()
+    expect(screen.getByText('Interne fachliche Prüfung läuft.')).toBeVisible()
+    expect(screen.getByText('schlagloch.jpg')).toBeVisible()
+    expect(screen.getByText('Historisch entfernte Bilder')).toBeVisible()
     const metadata = screen.getByRole('region', { name: 'Metadaten' })
     expect(within(metadata).getByText('4')).toBeVisible()
     expect(screen.queryByText(TICKET_ID)).not.toBeInTheDocument()
@@ -154,4 +170,69 @@ function ticketResponse() {
     visibility: 'PUBLIC',
     workflow_state: 'IN_PROGRESS',
   }
+}
+
+function ticketEventsResponse() {
+  return {
+    data: [
+      {
+        actor: { display_name: 'Clara Bürgerin', id: 'citizen-1' },
+        actor_user_id: 'citizen-1',
+        event_type: 'TICKET_SUBMITTED',
+        id: 'event-1',
+        occurred_at: '2026-08-01T08:00:00Z',
+        payload: {
+          category: 'INFRASTRUCTURE',
+          creator_user_id: 'citizen-1',
+          description:
+            'Ein tiefes Schlagloch befindet sich am rechten Fahrbahnrand.',
+          title: 'Schlagloch in der Parkstraße',
+          visibility: 'PUBLIC',
+        },
+        references: { offices: [], users: [] },
+        sequence_number: 1,
+        ticket_id: TICKET_ID,
+      },
+    ],
+    page: 1,
+    pages: 1,
+    size: 20,
+    total: 1,
+  }
+}
+
+function ticketCommentsResponse() {
+  return [
+    {
+      author: {
+        author_type: 'AUTHORITY',
+        display_name: 'Olaf Ordnung',
+        id: 'officer-1',
+      },
+      created_at: '2026-08-02T10:00:00Z',
+      id: 'comment-1',
+      is_internal: true,
+      text: 'Interne fachliche Prüfung läuft.',
+      ticket_id: TICKET_ID,
+    },
+  ]
+}
+
+function ticketImagesResponse() {
+  return [
+    {
+      height: 720,
+      id: 'image-1',
+      is_active: true,
+      is_cover: true,
+      mime_type: 'image/jpeg',
+      original_filename: 'schlagloch.jpg',
+      removed_at: null,
+      size_bytes: 1200,
+      ticket_id: TICKET_ID,
+      uploaded_at: '2026-08-02T08:00:00Z',
+      url: `/api/v1/tickets/${TICKET_ID}/images/image-1/content`,
+      width: 1280,
+    },
+  ]
 }

@@ -4,7 +4,7 @@ export const TICKET_ID = '00000000-0000-4000-8000-000000000100'
 export const SECOND_TICKET_ID = '00000000-0000-4000-8000-000000000101'
 export const TICKET_OFFICE_ID = '00000000-0000-4000-8000-000000000010'
 
-/** Installs the read-only ticket and office endpoints used by the first workspace patch. */
+/** Installs the ticket and office read endpoints used by workspace E2E tests. */
 export async function installTicketReadApi(page: Page): Promise<string[]> {
   const listRequests: string[] = []
 
@@ -49,6 +49,46 @@ export async function installTicketReadApi(page: Page): Promise<string[]> {
           size: Number(url.searchParams.get('size') ?? 20),
           total: 2,
         },
+        status: 200,
+      })
+      return
+    }
+
+    if (path === `/api/v1/tickets/${TICKET_ID}/events`) {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: ticketEventsResponse(),
+        status: 200,
+      })
+      return
+    }
+
+    if (path === `/api/v1/tickets/${TICKET_ID}/comments`) {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: ticketCommentsResponse(),
+        status: 200,
+      })
+      return
+    }
+
+    if (path === `/api/v1/tickets/${TICKET_ID}/images`) {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: ticketImagesResponse(),
+        status: 200,
+      })
+      return
+    }
+
+    if (
+      path.includes(`/api/v1/tickets/${TICKET_ID}/images/`) &&
+      path.endsWith('/content')
+    ) {
+      await route.fulfill({
+        body:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><rect width="640" height="360" fill="#ddd"/><circle cx="320" cy="180" r="80" fill="#999"/></svg>',
+        contentType: 'image/svg+xml',
         status: 200,
       })
       return
@@ -161,4 +201,114 @@ function officeResponse() {
     phone: null,
     services: [],
   }
+}
+
+function ticketEventsResponse() {
+  return {
+    data: [
+      {
+        actor: { display_name: 'Clara Bürgerin', id: 'citizen-1' },
+        actor_user_id: 'citizen-1',
+        event_type: 'TICKET_SUBMITTED',
+        id: 'event-1',
+        occurred_at: '2026-08-01T08:00:00Z',
+        payload: {
+          category: 'INFRASTRUCTURE',
+          creator_user_id: 'citizen-1',
+          description:
+            'Ein tiefes Schlagloch befindet sich am rechten Fahrbahnrand.',
+          title: 'Schlagloch in der Parkstraße',
+          visibility: 'PUBLIC',
+        },
+        references: { offices: [], users: [] },
+        sequence_number: 1,
+        ticket_id: TICKET_ID,
+      },
+      {
+        actor: { display_name: 'Olaf Ordnung', id: 'officer-1' },
+        actor_user_id: 'officer-1',
+        event_type: 'TICKET_FORWARDED',
+        id: 'event-2',
+        occurred_at: '2026-08-02T09:30:00Z',
+        payload: {
+          comment: 'Bitte die Straßensperrung koordinieren.',
+          target_user_id: 'officer-3',
+        },
+        references: {
+          offices: [],
+          users: [
+            { display_name: 'Erika Einsatz', id: 'officer-3' },
+          ],
+        },
+        sequence_number: 2,
+        ticket_id: TICKET_ID,
+      },
+    ],
+    page: 1,
+    pages: 1,
+    size: 20,
+    total: 2,
+  }
+}
+
+function ticketCommentsResponse() {
+  return [
+    {
+      author: {
+        author_type: 'AUTHORITY',
+        display_name: 'Olaf Ordnung',
+        id: 'officer-1',
+      },
+      created_at: '2026-08-02T10:00:00Z',
+      id: 'comment-1',
+      is_internal: true,
+      text: 'Interne fachliche Prüfung läuft.',
+      ticket_id: TICKET_ID,
+    },
+    {
+      author: {
+        author_type: 'CITIZEN',
+        display_name: 'Clara Bürgerin',
+        id: null,
+      },
+      created_at: '2026-08-03T10:00:00Z',
+      id: 'comment-2',
+      is_internal: false,
+      text: 'Das Foto wurde am Montag aufgenommen.',
+      ticket_id: TICKET_ID,
+    },
+  ]
+}
+
+function ticketImagesResponse() {
+  return [
+    {
+      height: 360,
+      id: 'image-active',
+      is_active: true,
+      is_cover: true,
+      mime_type: 'image/jpeg',
+      original_filename: 'schlagloch-aktuell.jpg',
+      removed_at: null,
+      size_bytes: 1200,
+      ticket_id: TICKET_ID,
+      uploaded_at: '2026-08-02T08:00:00Z',
+      url: `/api/v1/tickets/${TICKET_ID}/images/image-active/content`,
+      width: 640,
+    },
+    {
+      height: 360,
+      id: 'image-removed',
+      is_active: false,
+      is_cover: false,
+      mime_type: 'image/jpeg',
+      original_filename: 'schlagloch-alt.jpg',
+      removed_at: '2026-08-03T08:00:00Z',
+      size_bytes: 1100,
+      ticket_id: TICKET_ID,
+      uploaded_at: '2026-08-01T08:00:00Z',
+      url: `/api/v1/tickets/${TICKET_ID}/images/image-removed/content`,
+      width: 640,
+    },
+  ]
 }

@@ -8,12 +8,13 @@ import type {
   UserReference,
 } from '@/api/generated/models'
 import { mapApiPage, type PageModel } from '@/api/contract/pagination'
-import type {
-  TicketAddress,
-  TicketOfficeReference,
-  TicketRecord,
-  TicketStatusRecord,
-  TicketUserReference,
+import {
+  getTicketUserReferenceLabel,
+  type TicketAddress,
+  type TicketOfficeReference,
+  type TicketRecord,
+  type TicketStatusRecord,
+  type TicketUserReference,
 } from '@/features/tickets/model/ticket-model'
 
 /** Converts one generated internal ticket DTO into the feature read model. */
@@ -88,12 +89,11 @@ function mapTicketAddress(response: AddressResponse): TicketAddress {
   }
 }
 
-
 function mapRequiredTicketUserReference(
   response: UserReference,
 ): TicketUserReference {
   return {
-    displayName: response.display_name,
+    displayName: getTicketUserReferenceLabel(response.display_name),
     id: response.id,
   }
 }
@@ -103,7 +103,7 @@ function mapTicketUserReference(
 ): TicketUserReference | null {
   return response
     ? {
-        displayName: response.display_name,
+        displayName: getTicketUserReferenceLabel(response.display_name),
         id: response.id,
       }
     : null

@@ -4,6 +4,7 @@ import {
   getTicketCategoryLabel,
   getTicketCurrentResponsibilityLabel,
   getTicketStatusLabel,
+  getTicketUserReferenceLabel,
   getTicketVisibilityLabel,
   getTicketWorkflowStateLabel,
   type TicketRecord,
@@ -17,6 +18,17 @@ describe('ticket labels', () => {
     expect(getTicketWorkflowStateLabel('RETURNED_TO_DISPATCH')).toBe(
       'An Disposition zurückgegeben',
     )
+  })
+
+  it('localizes only generic backend reference fallbacks', () => {
+    expect(getTicketUserReferenceLabel('Unknown user')).toBe(
+      'Unbekannte Person',
+    )
+    expect(getTicketUserReferenceLabel('Authority employee')).toBe(
+      'Behördenmitarbeiter',
+    )
+    expect(getTicketUserReferenceLabel('Citizen')).toBe('Bürger')
+    expect(getTicketUserReferenceLabel('Olaf Ordnung')).toBe('Olaf Ordnung')
   })
 
   it('prefers the current assignee over the permanent responsibility', () => {

@@ -58,7 +58,11 @@ test('authority users read and filter the device-adapted ticket workspace', asyn
   await directory.selectWorkflowState('IN_PROGRESS')
   await expect(page).toHaveURL(/workflowState=IN_PROGRESS/)
   await expect
-    .poll(() => listRequests.some((request) => request.includes('workflow_state=IN_PROGRESS')))
+    .poll(() =>
+      listRequests.some((request) =>
+        request.includes('workflow_state=IN_PROGRESS'),
+      ),
+    )
     .toBe(true)
 
   await directory.openFirstTicket()
@@ -68,6 +72,16 @@ test('authority users read and filter the device-adapted ticket workspace', asyn
     'href',
     `/offices/${TICKET_OFFICE_ID}`,
   )
+  await expect(page.getByText('Ticket weitergeleitet')).toBeVisible()
+  await expect(page.getByText('Erika Einsatz')).toBeVisible()
+  await expect(page.getByText('Interne Notiz')).toBeVisible()
+  await expect(
+    page
+      .getByRole('region', { name: 'Kommentare und interne Notizen' })
+      .getByText('Öffentlich'),
+  ).toBeVisible()
+  await expect(page.getByText('Historisch entfernte Bilder')).toBeVisible()
+  await expect(page.getByText('schlagloch-alt.jpg')).toBeVisible()
   await expectNoSeriousAccessibilityViolations(page)
 
   await detail.returnToDirectory()

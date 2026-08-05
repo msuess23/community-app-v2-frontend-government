@@ -8,6 +8,9 @@ import {
   TicketVisibilityBadge,
   TicketWorkflowStateBadge,
 } from '@/features/tickets/components/TicketBadges'
+import { TicketComments } from '@/features/tickets/components/TicketComments'
+import { TicketEventTimeline } from '@/features/tickets/components/TicketEventTimeline'
+import { TicketImages } from '@/features/tickets/components/TicketImages'
 import { TICKET_READ_ERROR_MESSAGES } from '@/features/tickets/model/ticket-error-messages'
 import type {
   TicketAddress,
@@ -28,6 +31,9 @@ const DETAIL_NAVIGATION = [
   { id: 'description', label: 'Beschreibung' },
   { id: 'current-status', label: 'Aktueller Status' },
   { id: 'address', label: 'Adresse' },
+  { id: 'images', label: 'Bilder' },
+  { id: 'comments', label: 'Kommentare' },
+  { id: 'event-history', label: 'Ereignishistorie' },
   { id: 'responsibility', label: 'Zuständigkeit' },
   { id: 'metadata', label: 'Metadaten' },
 ] as const
@@ -111,6 +117,30 @@ export function TicketDetailPage() {
 
           <ResourceDetailSection id="address" title="Adresse">
             <TicketAddressView address={ticket.address} />
+          </ResourceDetailSection>
+
+          <ResourceDetailSection
+            description="Aktive Bilder stammen aus der aktuellen Bildprojektion. Officer und Manager sehen zusätzlich historisch entfernte Revisionen."
+            id="images"
+            title="Bilder"
+          >
+            <TicketImages ticketId={ticket.id} />
+          </ResourceDetailSection>
+
+          <ResourceDetailSection
+            description="Öffentliche Kommentare und interne Bearbeitungsnotizen werden unveränderlich als Ticketereignisse gespeichert."
+            id="comments"
+            title="Kommentare und interne Notizen"
+          >
+            <TicketComments ticketId={ticket.id} />
+          </ResourceDetailSection>
+
+          <ResourceDetailSection
+            description="Chronologische, unveränderliche Ereignisse des Tickets. Der aktuelle Zustand oben wird weiterhin direkt aus der Backend-Projektion gelesen."
+            id="event-history"
+            title="Ereignishistorie"
+          >
+            <TicketEventTimeline ticketId={ticket.id} />
           </ResourceDetailSection>
         </ResourceDetailLayout>
       )}

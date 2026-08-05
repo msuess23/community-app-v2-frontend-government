@@ -13,8 +13,8 @@ export const ticketFeatureQueryKeys = {
     baseTicketQueryKeys.related(ticketId, 'comments'),
   events: (ticketId: string) =>
     baseTicketQueryKeys.related(ticketId, 'events'),
-  images: (ticketId: string) =>
-    baseTicketQueryKeys.related(ticketId, 'images'),
+  images: (ticketId: string, includeRemoved = false) =>
+    baseTicketQueryKeys.related(ticketId, 'images', { includeRemoved }),
   workflowOptions: (ticketId: string) =>
     baseTicketQueryKeys.related(ticketId, 'workflow-options'),
 }
