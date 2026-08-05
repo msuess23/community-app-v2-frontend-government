@@ -126,7 +126,10 @@ export function TicketDetailPage() {
             id="images"
             title="Bilder"
           >
-            <TicketImages ticketId={ticket.id} />
+            <TicketImages
+              canManageImages={ticket.canManageImages}
+              ticketId={ticket.id}
+            />
           </ResourceDetailSection>
 
           <ResourceDetailSection

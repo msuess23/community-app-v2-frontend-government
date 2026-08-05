@@ -65,6 +65,7 @@ function createTicket(
   return {
     address: null,
     allowedActions,
+    canManageImages: false,
     category: 'INFRASTRUCTURE',
     createdAt: '2026-08-01T08:00:00Z',
     creator: { displayName: 'Clara Bürgerin', id: 'citizen-1' },

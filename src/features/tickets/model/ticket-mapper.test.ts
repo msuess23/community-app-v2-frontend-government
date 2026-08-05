@@ -23,6 +23,7 @@ function ticketResponse(): TicketInternalDetailResponse {
       zip_code: '04109',
     },
     allowed_actions: ['FORWARD', 'COMPLETE'],
+    can_manage_images: true,
     category: 'INFRASTRUCTURE',
     created_at: '2026-08-01T08:00:00Z',
     creator: {
@@ -76,6 +77,7 @@ describe('ticket mapper', () => {
         zipCode: '04109',
       },
       allowedActions: ['FORWARD', 'COMPLETE'],
+      canManageImages: true,
       category: 'INFRASTRUCTURE',
       createdAt: '2026-08-01T08:00:00Z',
       creator: { displayName: 'Clara Bürgerin', id: 'citizen-1' },

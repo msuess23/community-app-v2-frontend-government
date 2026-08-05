@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { MessageSquareText, UserRound } from 'lucide-react'
 
+import { TicketCommentComposer } from '@/features/tickets/components/TicketCommentComposer'
 import { TICKET_READ_ERROR_MESSAGES } from '@/features/tickets/model/ticket-error-messages'
 import type { TicketCommentRecord } from '@/features/tickets/model/ticket-collaboration'
 import { createTicketCommentsQueryOptions } from '@/features/tickets/queries/ticket-queries'
@@ -13,26 +14,30 @@ export function TicketComments({ ticketId }: Readonly<{ ticketId: string }>) {
   const query = useQuery(createTicketCommentsQueryOptions(ticketId))
 
   return (
-    <RemoteDataBoundary
-      empty={
-        <p className="text-on-surface-variant leading-7">
-          Für dieses Ticket wurden noch keine Kommentare oder internen Notizen erfasst.
-        </p>
-      }
-      errorOptions={{
-        fallback: {
-          description:
-            'Kommentare und interne Notizen konnten nicht geladen werden. Die übrigen Ticketdaten bleiben verfügbar.',
-          title: 'Kommentare nicht verfügbar',
-        },
-        messagesByErrorCode: TICKET_READ_ERROR_MESSAGES,
-      }}
-      isEmpty={(comments) => comments.length === 0}
-      loadingLabel="Kommentare und interne Notizen werden geladen."
-      query={query}
-    >
-      {(comments) => <TicketCommentList comments={comments} />}
-    </RemoteDataBoundary>
+    <div>
+      <TicketCommentComposer ticketId={ticketId} />
+      <RemoteDataBoundary
+        empty={
+          <p className="text-on-surface-variant leading-7">
+            Für dieses Ticket wurden noch keine Kommentare oder internen
+            Notizen erfasst.
+          </p>
+        }
+        errorOptions={{
+          fallback: {
+            description:
+              'Kommentare und interne Notizen konnten nicht geladen werden. Die übrigen Ticketdaten bleiben verfügbar.',
+            title: 'Kommentare nicht verfügbar',
+          },
+          messagesByErrorCode: TICKET_READ_ERROR_MESSAGES,
+        }}
+        isEmpty={(comments) => comments.length === 0}
+        loadingLabel="Kommentare und interne Notizen werden geladen."
+        query={query}
+      >
+        {(comments) => <TicketCommentList comments={comments} />}
+      </RemoteDataBoundary>
+    </div>
   )
 }
 

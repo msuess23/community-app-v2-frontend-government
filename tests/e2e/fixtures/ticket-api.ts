@@ -5,19 +5,68 @@ export const SECOND_TICKET_ID = '00000000-0000-4000-8000-000000000101'
 export const TICKET_OFFICE_ID = '00000000-0000-4000-8000-000000000010'
 
 export type TicketApiRequestLog = Readonly<{
+  commentRequests: unknown[]
+  imageCoverRequests: string[]
+  imageRemovalRequests: unknown[]
+  imageUploadNames: string[]
   listRequests: string[]
   workflowRequests: unknown[]
 }>
 
-/** Installs stateful ticket read and workflow endpoints used by workspace E2E tests. */
+type TicketEventFixture = Readonly<{
+  actor: Readonly<{ display_name: string; id: string }> | null
+  actor_user_id: string | null
+  event_type: string
+  id: string
+  occurred_at: string
+  payload: Readonly<Record<string, unknown>>
+  references: Readonly<{
+    offices: readonly Readonly<{ id: string; name: string }>[]
+    users: readonly Readonly<{ display_name: string; id: string }>[]
+  }>
+  sequence_number: number
+  ticket_id: string
+}>
+
+/** Installs stateful ticket read, workflow and collaboration endpoints for E2E tests. */
 export async function installTicketReadApi(
   page: Page,
 ): Promise<TicketApiRequestLog> {
+  const commentRequests: unknown[] = []
+  const imageCoverRequests: string[] = []
+  const imageRemovalRequests: unknown[] = []
+  const imageUploadNames: string[] = []
   const listRequests: string[] = []
   const workflowRequests: unknown[] = []
   let currentTicket = {
     ...ticketResponse(),
     allowed_actions: ['FORWARD', 'COMPLETE'],
+  }
+  let comments = ticketCommentsResponse()
+  let images = ticketImagesResponse()
+  let events = initialTicketEvents()
+
+  function appendEvent(eventType: string, payload: Record<string, unknown>) {
+    const sequenceNumber = events.length + 1
+    events = [
+      ...events,
+      {
+        actor: { display_name: 'Olaf Ordnung', id: 'officer-1' },
+        actor_user_id: 'officer-1',
+        event_type: eventType,
+        id: `event-${sequenceNumber}`,
+        occurred_at: '2026-08-05T07:00:00Z',
+        payload,
+        references: { offices: [], users: [] },
+        sequence_number: sequenceNumber,
+        ticket_id: TICKET_ID,
+      },
+    ]
+    currentTicket = {
+      ...currentTicket,
+      updated_at: '2026-08-05T07:00:00Z',
+      version: currentTicket.version + 1,
+    }
   }
 
   await page.route('**/api/v1/offices**', async (route) => {
@@ -55,7 +104,7 @@ export async function installTicketReadApi(
       await route.fulfill({
         contentType: 'application/json',
         json: {
-          data: [ticketResponse(), secondTicketResponse()],
+          data: [currentTicket, secondTicketResponse()],
           page: 1,
           pages: 1,
           size: Number(url.searchParams.get('size') ?? 20),
@@ -116,30 +165,177 @@ export async function installTicketReadApi(
       return
     }
 
-    if (path === `/api/v1/tickets/${TICKET_ID}/events`) {
+    if (
+      path === `/api/v1/tickets/${TICKET_ID}/events` &&
+      request.method() === 'GET'
+    ) {
       await route.fulfill({
         contentType: 'application/json',
-        json: ticketEventsResponse(),
+        json: {
+          data: events,
+          page: 1,
+          pages: 1,
+          size: 20,
+          total: events.length,
+        },
         status: 200,
       })
       return
     }
 
     if (path === `/api/v1/tickets/${TICKET_ID}/comments`) {
+      if (request.method() === 'GET') {
+        await route.fulfill({
+          contentType: 'application/json',
+          json: comments,
+          status: 200,
+        })
+        return
+      }
+
+      if (request.method() === 'POST') {
+        const body = request.postDataJSON() as {
+          is_internal?: boolean
+          text: string
+        }
+        commentRequests.push(body)
+        const comment = {
+          author: {
+            author_type: 'AUTHORITY',
+            display_name: 'Olaf Ordnung',
+            id: 'officer-1',
+          },
+          created_at: '2026-08-05T07:00:00Z',
+          id: `comment-${comments.length + 1}`,
+          is_internal: body.is_internal ?? false,
+          text: body.text,
+          ticket_id: TICKET_ID,
+        }
+        comments = [...comments, comment]
+        appendEvent('TICKET_COMMENTED', {
+          is_internal: comment.is_internal,
+          text: comment.text,
+        })
+        await route.fulfill({
+          contentType: 'application/json',
+          json: comment,
+          status: 200,
+        })
+        return
+      }
+    }
+
+    if (path === `/api/v1/tickets/${TICKET_ID}/images`) {
+      if (request.method() === 'GET') {
+        const includeRemoved =
+          url.searchParams.get('include_removed') === 'true'
+        await route.fulfill({
+          contentType: 'application/json',
+          json: includeRemoved
+            ? images
+            : images.filter((image) => image.is_active),
+          status: 200,
+        })
+        return
+      }
+
+      if (request.method() === 'POST') {
+        const multipartBody = request.postData() ?? ''
+        const filename =
+          multipartBody.match(/filename="([^"]+)"/)?.[1] ??
+          `ticket-upload-${imageUploadNames.length + 1}.jpg`
+        imageUploadNames.push(filename)
+        const imageId = `image-upload-${imageUploadNames.length}`
+        const image = {
+          height: 360,
+          id: imageId,
+          is_active: true,
+          is_cover: images.every((item) => !item.is_active),
+          mime_type: filename.endsWith('.png') ? 'image/png' : 'image/jpeg',
+          original_filename: filename,
+          removed_at: null,
+          size_bytes: 1200,
+          ticket_id: TICKET_ID,
+          uploaded_at: '2026-08-05T07:00:00Z',
+          url: `/api/v1/tickets/${TICKET_ID}/images/${imageId}/content`,
+          width: 640,
+        }
+        images = [...images, image]
+        appendEvent('TICKET_IMAGE_ADDED', {
+          height: image.height,
+          image_id: image.id,
+          is_cover: image.is_cover,
+          mime_type: image.mime_type,
+          original_filename: image.original_filename,
+          size_bytes: image.size_bytes,
+          storage_key: `ticket/${TICKET_ID}/${image.id}`,
+          width: image.width,
+        })
+        await route.fulfill({
+          contentType: 'application/json',
+          json: image,
+          status: 200,
+        })
+        return
+      }
+    }
+
+    const coverMatch = path.match(
+      new RegExp(`^/api/v1/tickets/${TICKET_ID}/images/([^/]+)/cover$`),
+    )
+    if (coverMatch && request.method() === 'PUT') {
+      const imageId = coverMatch[1]
+      imageCoverRequests.push(imageId)
+      images = images.map((image) => ({
+        ...image,
+        is_cover: image.id === imageId,
+      }))
+      appendEvent('TICKET_COVER_IMAGE_CHANGED', { image_id: imageId })
       await route.fulfill({
         contentType: 'application/json',
-        json: ticketCommentsResponse(),
+        json: images.find((image) => image.id === imageId),
         status: 200,
       })
       return
     }
 
-    if (path === `/api/v1/tickets/${TICKET_ID}/images`) {
-      await route.fulfill({
-        contentType: 'application/json',
-        json: ticketImagesResponse(),
-        status: 200,
+    const imageMatch = path.match(
+      new RegExp(`^/api/v1/tickets/${TICKET_ID}/images/([^/]+)$`),
+    )
+    if (imageMatch && request.method() === 'DELETE') {
+      const imageId = imageMatch[1]
+      const body = request.postDataJSON() as { reason?: string | null }
+      imageRemovalRequests.push({ imageId, ...body })
+      const removedWasCover = images.some(
+        (image) => image.id === imageId && image.is_cover,
+      )
+      images = images.map((image) =>
+        image.id === imageId
+          ? {
+              ...image,
+              is_active: false,
+              is_cover: false,
+              removed_at: '2026-08-05T07:00:00Z',
+            }
+          : image,
+      )
+      appendEvent('TICKET_IMAGE_REMOVED', {
+        image_id: imageId,
+        reason: body.reason ?? null,
       })
+      if (removedWasCover) {
+        const replacement = images.find((image) => image.is_active)
+        if (replacement) {
+          images = images.map((image) => ({
+            ...image,
+            is_cover: image.id === replacement.id,
+          }))
+          appendEvent('TICKET_COVER_IMAGE_CHANGED', {
+            image_id: replacement.id,
+          })
+        }
+      }
+      await route.fulfill({ status: 204 })
       return
     }
 
@@ -177,7 +373,14 @@ export async function installTicketReadApi(
     await route.fulfill({ status: 404 })
   })
 
-  return { listRequests, workflowRequests }
+  return {
+    commentRequests,
+    imageCoverRequests,
+    imageRemovalRequests,
+    imageUploadNames,
+    listRequests,
+    workflowRequests,
+  }
 }
 
 function ticketResponse() {
@@ -191,6 +394,7 @@ function ticketResponse() {
       street: 'Parkstraße',
       zip_code: '04109',
     },
+    can_manage_images: true,
     category: 'INFRASTRUCTURE',
     created_at: '2026-08-01T08:00:00Z',
     creator: { display_name: 'Clara Bürgerin', id: 'citizen-1' },
@@ -224,6 +428,7 @@ function secondTicketResponse() {
   return {
     ...ticketResponse(),
     address: null,
+    can_manage_images: false,
     category: 'CLEANING',
     current_assignee: null,
     current_assignee_id: null,
@@ -265,52 +470,44 @@ function officeResponse() {
   }
 }
 
-function ticketEventsResponse() {
-  return {
-    data: [
-      {
-        actor: { display_name: 'Clara Bürgerin', id: 'citizen-1' },
-        actor_user_id: 'citizen-1',
-        event_type: 'TICKET_SUBMITTED',
-        id: 'event-1',
-        occurred_at: '2026-08-01T08:00:00Z',
-        payload: {
-          category: 'INFRASTRUCTURE',
-          creator_user_id: 'citizen-1',
-          description:
-            'Ein tiefes Schlagloch befindet sich am rechten Fahrbahnrand.',
-          title: 'Schlagloch in der Parkstraße',
-          visibility: 'PUBLIC',
-        },
-        references: { offices: [], users: [] },
-        sequence_number: 1,
-        ticket_id: TICKET_ID,
+function initialTicketEvents(): TicketEventFixture[] {
+  return [
+    {
+      actor: { display_name: 'Clara Bürgerin', id: 'citizen-1' },
+      actor_user_id: 'citizen-1',
+      event_type: 'TICKET_SUBMITTED',
+      id: 'event-1',
+      occurred_at: '2026-08-01T08:00:00Z',
+      payload: {
+        category: 'INFRASTRUCTURE',
+        creator_user_id: 'citizen-1',
+        description:
+          'Ein tiefes Schlagloch befindet sich am rechten Fahrbahnrand.',
+        title: 'Schlagloch in der Parkstraße',
+        visibility: 'PUBLIC',
       },
-      {
-        actor: { display_name: 'Olaf Ordnung', id: 'officer-1' },
-        actor_user_id: 'officer-1',
-        event_type: 'TICKET_FORWARDED',
-        id: 'event-2',
-        occurred_at: '2026-08-02T09:30:00Z',
-        payload: {
-          comment: 'Bitte die Straßensperrung koordinieren.',
-          target_user_id: 'officer-3',
-        },
-        references: {
-          offices: [],
-          users: [
-            { display_name: 'Erika Einsatz', id: 'officer-3' },
-          ],
-        },
-        sequence_number: 2,
-        ticket_id: TICKET_ID,
+      references: { offices: [], users: [] },
+      sequence_number: 1,
+      ticket_id: TICKET_ID,
+    },
+    {
+      actor: { display_name: 'Olaf Ordnung', id: 'officer-1' },
+      actor_user_id: 'officer-1',
+      event_type: 'TICKET_FORWARDED',
+      id: 'event-2',
+      occurred_at: '2026-08-02T09:30:00Z',
+      payload: {
+        comment: 'Bitte die Straßensperrung koordinieren.',
+        target_user_id: 'officer-3',
       },
-    ],
-    page: 1,
-    pages: 1,
-    size: 20,
-    total: 2,
-  }
+      references: {
+        offices: [],
+        users: [{ display_name: 'Erika Einsatz', id: 'officer-3' }],
+      },
+      sequence_number: 2,
+      ticket_id: TICKET_ID,
+    },
+  ]
 }
 
 function ticketCommentsResponse() {
@@ -356,6 +553,20 @@ function ticketImagesResponse() {
       ticket_id: TICKET_ID,
       uploaded_at: '2026-08-02T08:00:00Z',
       url: `/api/v1/tickets/${TICKET_ID}/images/image-active/content`,
+      width: 640,
+    },
+    {
+      height: 360,
+      id: 'image-secondary',
+      is_active: true,
+      is_cover: false,
+      mime_type: 'image/jpeg',
+      original_filename: 'schlagloch-detail.jpg',
+      removed_at: null,
+      size_bytes: 1150,
+      ticket_id: TICKET_ID,
+      uploaded_at: '2026-08-02T08:10:00Z',
+      url: `/api/v1/tickets/${TICKET_ID}/images/image-secondary/content`,
       width: 640,
     },
     {

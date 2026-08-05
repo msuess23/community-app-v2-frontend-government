@@ -67,6 +67,7 @@ export type TicketStatusRecord = Readonly<{
 export type TicketRecord = Readonly<{
   address: TicketAddress | null
   allowedActions: readonly TicketWorkflowAction[]
+  canManageImages: boolean
   category: TicketCategory
   createdAt: string
   creator: TicketUserReference

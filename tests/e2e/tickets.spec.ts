@@ -4,6 +4,7 @@ import { expectNoSeriousAccessibilityViolations } from './fixtures/accessibility
 import { signInAsAuthorityUser } from './fixtures/auth'
 import {
   installTicketReadApi,
+  TICKET_ID,
   TICKET_OFFICE_ID,
 } from './fixtures/ticket-api'
 import {
@@ -74,7 +75,9 @@ test('authority users read and filter the device-adapted ticket workspace', asyn
   )
   await expect(page.getByText('Ticket weitergeleitet')).toBeVisible()
   await expect(page.getByText('Erika Einsatz')).toBeVisible()
-  await expect(page.getByText('Interne Notiz')).toBeVisible()
+  await expect(
+    page.getByRole('radio', { name: 'Interne Notiz' }),
+  ).toBeVisible()
   await expect(
     page
       .getByRole('region', { name: 'Kommentare und interne Notizen' })
@@ -115,4 +118,95 @@ test('officer executes one server-driven forwarding action', async ({ page }) =>
     },
   ])
   await expectNoSeriousAccessibilityViolations(page)
+})
+
+test('officer appends comments and manages revisioned ticket images', async ({
+  page,
+}) => {
+  const {
+    commentRequests,
+    imageCoverRequests,
+    imageRemovalRequests,
+    imageUploadNames,
+  } = await installTicketReadApi(page)
+  const directory = new TicketDirectoryPageObject(page)
+  const detail = new TicketDetailPageObject(page)
+
+  await signInAsAuthorityUser(page, '/tickets', officer)
+  await directory.openFirstTicket()
+  await detail.expectLoaded()
+
+  await detail.addInternalNote('Bitte zunächst intern abstimmen.')
+  await detail.addPublicComment('Die Absicherung ist für morgen vorgesehen.')
+  await detail.uploadTicketImages([
+    {
+      buffer: Buffer.from('first-image'),
+      mimeType: 'image/jpeg',
+      name: 'neue-aufnahme.jpg',
+    },
+    {
+      buffer: Buffer.from('second-image'),
+      mimeType: 'image/png',
+      name: 'detailaufnahme.png',
+    },
+  ])
+  await detail.setCover('schlagloch-detail.jpg')
+  await detail.removeImage(
+    'schlagloch-detail.jpg',
+    'Doppelte Perspektive ohne Zusatznutzen',
+  )
+
+  expect(commentRequests).toEqual([
+    { is_internal: true, text: 'Bitte zunächst intern abstimmen.' },
+    {
+      is_internal: false,
+      text: 'Die Absicherung ist für morgen vorgesehen.',
+    },
+  ])
+  expect(imageUploadNames).toEqual([
+    'neue-aufnahme.jpg',
+    'detailaufnahme.png',
+  ])
+  expect(imageCoverRequests).toEqual(['image-secondary'])
+  expect(imageRemovalRequests).toEqual([
+    {
+      imageId: 'image-secondary',
+      reason: 'Doppelte Perspektive ohne Zusatznutzen',
+    },
+  ])
+  await expect(
+    page.getByRole('region', { name: 'Ereignishistorie' }),
+  ).toContainText('Interne Notiz hinzugefügt')
+  await expect(
+    page.getByRole('region', { name: 'Ereignishistorie' }),
+  ).toContainText('Bild entfernt')
+  await expect(page.getByText('schlagloch-detail.jpg')).toBeVisible()
+  await expectNoSeriousAccessibilityViolations(page)
+})
+
+test('pending ticket image uploads participate in the unsaved-changes guard', async ({
+  page,
+}) => {
+  await installTicketReadApi(page)
+  const directory = new TicketDirectoryPageObject(page)
+  const detail = new TicketDetailPageObject(page)
+
+  await signInAsAuthorityUser(page, '/tickets', officer)
+  await directory.openFirstTicket()
+  await detail.expectLoaded()
+
+  await page.getByLabel('Bilddateien auswählen').setInputFiles({
+    buffer: Buffer.from('pending-image'),
+    mimeType: 'image/jpeg',
+    name: 'noch-nicht-hochgeladen.jpg',
+  })
+  await page
+    .getByRole('link', { name: 'Zurück zum Ticketverzeichnis' })
+    .click()
+
+  const dialog = page.getByRole('dialog', { name: 'Bild-Uploads verwerfen?' })
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('button', { name: 'Weiter bearbeiten' }).click()
+  await expect(page).toHaveURL(new RegExp(`/tickets/${TICKET_ID}$`))
+  await expect(dialog).toBeHidden()
 })

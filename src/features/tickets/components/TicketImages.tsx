@@ -1,19 +1,28 @@
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 
 import { useAuth } from '@/auth/auth-context'
+import { TicketImageManager } from '@/features/tickets/components/TicketImageManager'
 import { TICKET_READ_ERROR_MESSAGES } from '@/features/tickets/model/ticket-error-messages'
-import type { TicketImageRecord } from '@/features/tickets/model/ticket-collaboration'
 import { createTicketImagesQueryOptions } from '@/features/tickets/queries/ticket-queries'
-import {
-  formatDisplayDateTime,
-  formatDisplayFileSize,
-} from '@/shared/format/display-values'
-import { MediaGallery } from '@/shared/media/MediaGallery'
+import { useUnsavedChangesGuard } from '@/shared/forms/use-unsaved-changes-guard'
 import { RemoteDataBoundary } from '@/shared/remote-data/RemoteDataBoundary'
 
-/** Loads the active image projection and the staff-only removed-image audit view. */
-export function TicketImages({ ticketId }: Readonly<{ ticketId: string }>) {
+export type TicketImagesProps = Readonly<{
+  canManageImages: boolean
+  ticketId: string
+}>
+
+/**
+ * Loads revision-aware images and exposes management only when the backend
+ * permits it.
+ */
+export function TicketImages({
+  canManageImages,
+  ticketId,
+}: TicketImagesProps) {
   const { user } = useAuth()
+  const [hasPendingUploads, setHasPendingUploads] = useState(false)
   const includeRemoved =
     user?.role === 'OFFICER' || user?.role === 'MANAGER'
   const query = useQuery(
@@ -21,116 +30,46 @@ export function TicketImages({ ticketId }: Readonly<{ ticketId: string }>) {
   )
 
   return (
-    <RemoteDataBoundary
-      errorOptions={{
-        fallback: {
-          description:
-            'Die Ticketbilder konnten nicht geladen werden. Die übrigen Ticketdaten bleiben verfügbar.',
-          title: 'Bilder nicht verfügbar',
-        },
-        messagesByErrorCode: TICKET_READ_ERROR_MESSAGES,
-      }}
-      loadingLabel="Ticketbilder werden geladen."
-      query={query}
-    >
-      {(images) => (
-        <TicketImageCollections
-          canViewRemoved={includeRemoved}
-          images={images}
-        />
-      )}
-    </RemoteDataBoundary>
-  )
-}
-
-function TicketImageCollections({
-  canViewRemoved,
-  images,
-}: Readonly<{
-  canViewRemoved: boolean
-  images: readonly TicketImageRecord[]
-}>) {
-  const activeImages = images.filter((image) => image.isActive)
-  const removedImages = images.filter((image) => !image.isActive)
-
-  return (
-    <div className="space-y-7">
-      <div className="space-y-3">
-        <h3 className="text-lg font-semibold">Aktuelle Bilder</h3>
-        <MediaGallery
-          assets={activeImages.map((image) => image.asset)}
-          emptyMessage="Für dieses Ticket sind aktuell keine Bilder vorhanden."
-          label="Aktuelle Ticketbilder"
-          layout="carousel"
-          renderActions={(asset) => (
-            <TicketImageMetadata
-              image={activeImages.find((image) => image.asset.id === asset.id)}
-            />
-          )}
-        />
-      </div>
-
-      {canViewRemoved ? (
-        <div className="border-outline-variant space-y-3 border-t pt-6">
-          <div>
-            <h3 className="text-lg font-semibold">Historisch entfernte Bilder</h3>
-            <p className="text-on-surface-variant mt-1 leading-7">
-              Entfernte Bilder bleiben als unveränderliche Revision für die
-              interne Nachvollziehbarkeit erhalten.
-            </p>
-          </div>
-          <MediaGallery
-            assets={removedImages.map((image) => image.asset)}
-            emptyMessage="Es sind keine entfernten Bildrevisionen vorhanden."
-            label="Historisch entfernte Ticketbilder"
-            layout="grid"
-            renderActions={(asset) => (
-              <TicketImageMetadata
-                image={removedImages.find((image) => image.asset.id === asset.id)}
-              />
-            )}
+    <>
+      {canManageImages ? (
+        <TicketPendingUploadGuard hasPendingUploads={hasPendingUploads} />
+      ) : null}
+      <RemoteDataBoundary
+        errorOptions={{
+          fallback: {
+            description:
+              'Die Ticketbilder konnten nicht geladen werden. Die übrigen Ticketdaten bleiben verfügbar.',
+            title: 'Bilder nicht verfügbar',
+          },
+          messagesByErrorCode: TICKET_READ_ERROR_MESSAGES,
+        }}
+        loadingLabel="Ticketbilder werden geladen."
+        query={query}
+      >
+        {(images) => (
+          <TicketImageManager
+            canManageImages={canManageImages}
+            canViewRemoved={includeRemoved}
+            images={images}
+            onPendingChange={setHasPendingUploads}
+            ticketId={ticketId}
           />
-        </div>
-      ) : null}
-    </div>
+        )}
+      </RemoteDataBoundary>
+    </>
   )
 }
 
-function TicketImageMetadata({
-  image,
-}: Readonly<{ image: TicketImageRecord | undefined }>) {
-  if (!image) {
-    return null
-  }
-
-  return (
-    <dl className="grid w-full gap-2 text-sm sm:grid-cols-2">
-      <div>
-        <dt className="text-on-surface-variant font-medium">Dateiname</dt>
-        <dd className="break-all">{image.asset.originalFilename}</dd>
-      </div>
-      <div>
-        <dt className="text-on-surface-variant font-medium">Dateigröße</dt>
-        <dd>{formatDisplayFileSize(image.asset.sizeBytes)}</dd>
-      </div>
-      <div>
-        <dt className="text-on-surface-variant font-medium">Hochgeladen</dt>
-        <dd>
-          <time dateTime={image.asset.uploadedAt}>
-            {formatDisplayDateTime(image.asset.uploadedAt)}
-          </time>
-        </dd>
-      </div>
-      {!image.isActive && image.removedAt ? (
-        <div>
-          <dt className="text-on-surface-variant font-medium">Entfernt</dt>
-          <dd>
-            <time dateTime={image.removedAt}>
-              {formatDisplayDateTime(image.removedAt)}
-            </time>
-          </dd>
-        </div>
-      ) : null}
-    </dl>
-  )
+function TicketPendingUploadGuard({
+  hasPendingUploads,
+}: Readonly<{ hasPendingUploads: boolean }>) {
+  useUnsavedChangesGuard({
+    hasUnsavedChanges: hasPendingUploads,
+    message: {
+      description:
+        'Mindestens ein ausgewähltes Ticketbild wurde noch nicht erfolgreich hochgeladen. Beim Verlassen geht die lokale Warteschlange verloren.',
+      title: 'Bild-Uploads verwerfen?',
+    },
+  })
+  return null
 }
