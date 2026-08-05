@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AddressResponse } from './addressResponse'
+import type { OfficeReference } from './officeReference'
 import type { TicketCategory } from './ticketCategory'
 import type { TicketStatusResponse } from './ticketStatusResponse'
 import type { TicketVisibility } from './ticketVisibility'
@@ -18,9 +19,11 @@ export interface TicketResponse {
   description?: string | null
   category: TicketCategory
   office_id?: string | null
+  office?: OfficeReference | null
   address?: AddressResponse | null
   visibility: TicketVisibility
   created_at: string
+  updated_at: string
   current_status?: TicketStatusResponse | null
   image_url?: string | null
   can_edit?: boolean

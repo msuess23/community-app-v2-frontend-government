@@ -5,10 +5,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AddressResponse } from './addressResponse'
+import type { OfficeReference } from './officeReference'
 import type { TicketCategory } from './ticketCategory'
 import type { TicketStatusResponse } from './ticketStatusResponse'
 import type { TicketVisibility } from './ticketVisibility'
 import type { TicketWorkflowState } from './ticketWorkflowState'
+import type { UserReference } from './userReference'
 
 /**
  * Additional workflow fields shown only to authority users.
@@ -19,17 +21,23 @@ export interface TicketInternalResponse {
   description?: string | null
   category: TicketCategory
   office_id?: string | null
+  office?: OfficeReference | null
   address?: AddressResponse | null
   visibility: TicketVisibility
   created_at: string
+  updated_at: string
   current_status?: TicketStatusResponse | null
   image_url?: string | null
   can_edit?: boolean
   can_manage_images?: boolean
   version: number
   creator_user_id: string
+  creator: UserReference
   workflow_state: TicketWorkflowState
   primary_officer_id?: string | null
+  primary_officer?: UserReference | null
   current_assignee_id?: string | null
+  current_assignee?: UserReference | null
   return_to_user_id?: string | null
+  return_to_user?: UserReference | null
 }
