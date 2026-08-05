@@ -143,7 +143,7 @@ function AuthenticatedOfficeDirectoryPage({
               onPageChange={directory.setPage}
               onPageSizeChange={directory.setPageSize}
               page={page.page}
-              pageSize={page.pageSize}
+              pageSize={directory.state.pageSize}
               pageSizeOptions={config.pageSizeOptions}
               total={page.totalItems}
             />

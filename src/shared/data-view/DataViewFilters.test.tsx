@@ -104,7 +104,7 @@ describe('data view filters', () => {
     expect(select).toHaveAccessibleDescription('Behörden werden geladen.')
   })
 
-  it('emits native calendar dates with an accessible description', () => {
+  it('uses the established native date input with German locale metadata', () => {
     const onChange = vi.fn()
 
     renderWithProviders(
@@ -119,6 +119,8 @@ describe('data view filters', () => {
     const input = screen.getByLabelText('Von')
     fireEvent.change(input, { target: { value: '2026-08-03' } })
 
+    expect(input).toHaveAttribute('lang', 'de-DE')
+    expect(input).toHaveAttribute('type', 'date')
     expect(input).toHaveAccessibleDescription(
       'Der vollständige Kalendertag wird berücksichtigt.',
     )

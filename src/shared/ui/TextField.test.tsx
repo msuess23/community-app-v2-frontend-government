@@ -23,6 +23,23 @@ describe('TextField', () => {
     )
   })
 
+
+  it('forwards native date-time attributes to the input control', () => {
+    renderWithProviders(
+      <TextField
+        inputLang="de-DE"
+        label="Beginn"
+        step={60}
+        type="datetime-local"
+      />,
+    )
+
+    const input = screen.getByLabelText('Beginn')
+    expect(input).toHaveAttribute('lang', 'de-DE')
+    expect(input).toHaveAttribute('step', '60')
+    expect(input).toHaveAttribute('type', 'datetime-local')
+  })
+
   it('reports value changes', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()

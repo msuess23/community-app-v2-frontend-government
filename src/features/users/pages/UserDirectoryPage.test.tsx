@@ -44,7 +44,7 @@ describe('UserDirectoryPage', () => {
           ],
           page: 1,
           pages: 1,
-          size: 20,
+          size: 100,
           total: 1,
         })
       }),
@@ -79,6 +79,9 @@ describe('UserDirectoryPage', () => {
     expect(screen.getByLabelText('Rolle')).toHaveValue('CITIZEN')
     expect(screen.getByLabelText('Kontostatus')).toHaveValue('all')
     expect(screen.getByLabelText('Sortierung')).toHaveValue('email:desc')
+    expect(
+      screen.getByRole('combobox', { name: 'Einträge pro Seite' }),
+    ).toHaveValue('20')
     await waitFor(() => expect(screen.getByLabelText('Behörde')).toBeEnabled())
 
     const table = await screen.findByRole('table', {
@@ -98,6 +101,7 @@ describe('UserDirectoryPage', () => {
     expect(requestedUserSearch).toContain('status=all')
     expect(requestedUserSearch).toContain('sort_by=email')
     expect(requestedUserSearch).toContain('order=desc')
+    expect(requestedUserSearch).toContain('size=20')
   })
 })
 

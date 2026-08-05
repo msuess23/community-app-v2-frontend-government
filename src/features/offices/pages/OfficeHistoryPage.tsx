@@ -139,7 +139,7 @@ export function OfficeHistoryPage() {
                     onPageChange={history.setPage}
                     onPageSizeChange={history.setPageSize}
                     page={page.page}
-                    pageSize={page.pageSize}
+                    pageSize={history.state.pageSize}
                     pageSizeOptions={config.pageSizeOptions}
                     total={page.totalItems}
                   />

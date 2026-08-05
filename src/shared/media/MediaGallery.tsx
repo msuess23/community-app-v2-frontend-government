@@ -1,4 +1,10 @@
 import {
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  X,
+} from 'lucide-react'
+import {
   useEffect,
   useId,
   useRef,
@@ -7,8 +13,8 @@ import {
   type ReactNode,
   type SyntheticEvent,
 } from 'react'
-import { Eye, X } from 'lucide-react'
 
+import { cn } from '@/shared/lib/cn'
 import type { MediaAsset } from '@/shared/media/media-model'
 import { MediaImage } from '@/shared/media/MediaImage'
 import { Button } from '@/shared/ui/Button'
@@ -17,21 +23,29 @@ export interface MediaGalleryProps {
   assets: readonly MediaAsset[]
   emptyMessage?: string
   label?: string
+  layout?: 'carousel' | 'grid'
   renderActions?: (asset: MediaAsset) => ReactNode
 }
 
-/** Displays a responsive image collection and an accessible full-size preview. */
+/** Displays an accessible image collection with swipe, scroll and full-size navigation. */
 export function MediaGallery({
   assets,
   emptyMessage = 'Für diese Mitteilung wurden keine Bilder veröffentlicht.',
   label = 'Bilder der Mitteilung',
+  layout = 'grid',
   renderActions,
 }: MediaGalleryProps) {
   const [selectedAsset, setSelectedAsset] = useState<MediaAsset | null>(null)
+  const [canScrollBack, setCanScrollBack] = useState(false)
+  const [canScrollForward, setCanScrollForward] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
+  const listRef = useRef<HTMLUListElement>(null)
   const titleId = useId()
+  const selectedIndex = selectedAsset
+    ? assets.findIndex((asset) => asset.id === selectedAsset.id)
+    : -1
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -50,6 +64,25 @@ export function MediaGallery({
     }
     closeButtonRef.current?.focus()
   }, [selectedAsset])
+
+  useEffect(() => {
+    if (layout !== 'carousel') {
+      return
+    }
+
+    const list = listRef.current
+    if (!list) {
+      return
+    }
+    const update = () =>
+      updateScrollState(list, setCanScrollBack, setCanScrollForward)
+    const frame = window.requestAnimationFrame(update)
+    window.addEventListener('resize', update)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener('resize', update)
+    }
+  }, [assets.length, layout])
 
   if (assets.length === 0) {
     return <p className="text-on-surface-variant leading-7">{emptyMessage}</p>
@@ -74,17 +107,95 @@ export function MediaGallery({
     if (event.key === 'Escape') {
       event.preventDefault()
       closePreview()
+      return
     }
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      selectAdjacent(-1)
+    }
+    if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      selectAdjacent(1)
+    }
+  }
+
+  function selectAdjacent(direction: -1 | 1): void {
+    if (selectedIndex < 0) {
+      return
+    }
+    const nextIndex = selectedIndex + direction
+    if (nextIndex >= 0 && nextIndex < assets.length) {
+      setSelectedAsset(assets[nextIndex])
+    }
+  }
+
+  function scrollGallery(direction: -1 | 1): void {
+    const list = listRef.current
+    if (!list) {
+      return
+    }
+    list.scrollBy({
+      behavior: 'smooth',
+      left: direction * Math.max(list.clientWidth * 0.8, 280),
+    })
   }
 
   return (
     <>
+      {layout === 'carousel' && assets.length > 1 ? (
+        <div className="mb-3 flex justify-end gap-2">
+          <Button
+            aria-label="Zu vorherigen Bildern scrollen"
+            isDisabled={!canScrollBack}
+            onPress={() => scrollGallery(-1)}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            <ChevronLeft aria-hidden="true" size={18} />
+          </Button>
+          <Button
+            aria-label="Zu weiteren Bildern scrollen"
+            isDisabled={!canScrollForward}
+            onPress={() => scrollGallery(1)}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            <ChevronRight aria-hidden="true" size={18} />
+          </Button>
+        </div>
+      ) : null}
+
       <ul
         aria-label={label}
-        className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3"
+        aria-roledescription={layout === 'carousel' ? 'Bilderkarussell' : undefined}
+        className={cn(
+          layout === 'grid'
+            ? 'grid gap-4 sm:grid-cols-2 2xl:grid-cols-3'
+            : 'flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-3',
+        )}
+        onScroll={
+          layout === 'carousel'
+            ? (event) =>
+                updateScrollState(
+                  event.currentTarget,
+                  setCanScrollBack,
+                  setCanScrollForward,
+                )
+            : undefined
+        }
+        ref={listRef}
       >
-        {assets.map((asset) => (
-          <li key={asset.id}>
+        {assets.map((asset, index) => (
+          <li
+            aria-label={`${index + 1} von ${assets.length}`}
+            className={cn(
+              layout === 'carousel' &&
+                'w-[85vw] max-w-md shrink-0 snap-start sm:w-[22rem] lg:w-[26rem]',
+            )}
+            key={asset.id}
+          >
             <figure className="border-outline-variant bg-surface-container-lowest overflow-hidden rounded-xl border">
               <button
                 aria-label={`Bild vergrößern: ${asset.altText ?? asset.originalFilename}`}
@@ -157,9 +268,44 @@ export function MediaGallery({
               loading="eager"
               url={selectedAsset.url}
             />
+            {assets.length > 1 ? (
+              <div className="flex items-center justify-between gap-3">
+                <Button
+                  aria-label="Vorheriges Bild anzeigen"
+                  isDisabled={selectedIndex <= 0}
+                  onPress={() => selectAdjacent(-1)}
+                  variant="outline"
+                >
+                  <ChevronLeft aria-hidden="true" size={18} />
+                  Vorheriges Bild
+                </Button>
+                <span className="text-on-surface-variant text-sm">
+                  {selectedIndex + 1} von {assets.length}
+                </span>
+                <Button
+                  aria-label="Nächstes Bild anzeigen"
+                  isDisabled={selectedIndex >= assets.length - 1}
+                  onPress={() => selectAdjacent(1)}
+                  variant="outline"
+                >
+                  Nächstes Bild
+                  <ChevronRight aria-hidden="true" size={18} />
+                </Button>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </dialog>
     </>
   )
+}
+
+function updateScrollState(
+  element: HTMLElement,
+  setCanScrollBack: (value: boolean) => void,
+  setCanScrollForward: (value: boolean) => void,
+): void {
+  const maximum = element.scrollWidth - element.clientWidth
+  setCanScrollBack(element.scrollLeft > 2)
+  setCanScrollForward(element.scrollLeft < maximum - 2)
 }

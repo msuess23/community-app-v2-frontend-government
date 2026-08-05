@@ -42,6 +42,17 @@ export async function signInAsAuthorityUser(
       status: 200,
     })
   })
+  await page.route('**/api/v1/auth/refresh', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      json: {
+        access_token: 'e2e-refreshed-access-token',
+        refresh_token: 'e2e-refreshed-refresh-token',
+        token_type: 'bearer',
+      },
+      status: 200,
+    })
+  })
 
   await page.goto(`/login?returnTo=${encodeURIComponent(returnTo)}`)
   await page

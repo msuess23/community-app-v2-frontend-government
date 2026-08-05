@@ -132,7 +132,7 @@ function AuthenticatedInfoDirectoryPage({ user }: Readonly<{ user: AuthUser }>) 
               onPageChange={directory.setPage}
               onPageSizeChange={directory.setPageSize}
               page={page.page}
-              pageSize={page.pageSize}
+              pageSize={directory.state.pageSize}
               pageSizeOptions={config.pageSizeOptions}
               total={page.totalItems}
             />

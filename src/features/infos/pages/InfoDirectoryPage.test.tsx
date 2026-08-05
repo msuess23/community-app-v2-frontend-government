@@ -41,7 +41,7 @@ describe('InfoDirectoryPage', () => {
           data: [infoResponse()],
           page: 1,
           pages: 1,
-          size: 20,
+          size: 100,
           total: 1,
         })
       }),
@@ -58,6 +58,9 @@ describe('InfoDirectoryPage', () => {
     expect(screen.getByLabelText('Kategorie')).toHaveValue('EVENT')
     expect(screen.getByLabelText('Status')).toHaveValue('ACTIVE')
     expect(screen.getByLabelText('Sortierung')).toHaveValue('updatedAt:desc')
+    expect(
+      screen.getByRole('combobox', { name: 'Einträge pro Seite' }),
+    ).toHaveValue('20')
 
     const card = await screen.findByRole('listitem')
     expect(within(card).getByRole('link', { name: 'Stadtteilfest' })).toHaveAttribute(
@@ -77,6 +80,7 @@ describe('InfoDirectoryPage', () => {
       expect(requestedSearch).toContain('ends_to=2026-08-12T21%3A59%3A59.999Z')
       expect(requestedSearch).toContain('sort_by=updated_at')
       expect(requestedSearch).toContain('order=desc')
+      expect(requestedSearch).toContain('size=20')
       expect(requestedSearch).not.toContain('bbox=')
     })
   })

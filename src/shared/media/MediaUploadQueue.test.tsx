@@ -1,8 +1,12 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { createRef } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { MediaUploadQueue } from '@/shared/media/MediaUploadQueue'
+import {
+  MediaUploadQueue,
+  type MediaUploadQueueHandle,
+} from '@/shared/media/MediaUploadQueue'
 
 const createObjectURL = vi.fn((file: File) => `blob:${file.name}`)
 const revokeObjectURL = vi.fn()
@@ -171,5 +175,76 @@ describe('MediaUploadQueue', () => {
     expect(
       screen.queryByRole('list', { name: 'Upload-Warteschlange' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('supports deferred validation and prioritizes a selected primary image', async () => {
+    const user = userEvent.setup()
+    const queueRef = createRef<MediaUploadQueueHandle>()
+    const calls: string[] = []
+    const onUpload = vi.fn(async ({ file }: { file: File }) => {
+      calls.push(file.name)
+    })
+
+    render(
+      <MediaUploadQueue
+        accept="image/png"
+        allowedMimeTypes={['image/png']}
+        descriptionField={{ label: 'Alternativtext', required: true }}
+        onUpload={onUpload}
+        primarySelection={{
+          actionLabel: 'Als Titelbild vormerken',
+          selectedLabel: 'Vorgemerktes Titelbild',
+        }}
+        ref={queueRef}
+        showUploadAction={false}
+      />,
+    )
+
+    const firstFile = new File(['first'], 'erstes.png', { type: 'image/png' })
+    const secondFile = new File(['second'], 'zweites.png', {
+      type: 'image/png',
+    })
+    await user.upload(
+      screen.getByLabelText('Bilddateien auswählen'),
+      [firstFile, secondFile],
+    )
+    let isValid = true
+    act(() => {
+      isValid = queueRef.current?.validateAll() ?? true
+    })
+    expect(isValid).toBe(false)
+    expect(
+      screen.getAllByText('Alternativtext ist erforderlich.'),
+    ).toHaveLength(2)
+
+    await user.type(
+      screen.getByRole('textbox', { name: 'Alternativtext für erstes.png' }),
+      'Erstes Bild',
+    )
+    await user.type(
+      screen.getByRole('textbox', { name: 'Alternativtext für zweites.png' }),
+      'Zweites Bild',
+    )
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Als Titelbild vormerken: zweites.png',
+      }),
+    )
+    act(() => {
+      isValid = queueRef.current?.validateAll() ?? false
+    })
+    expect(isValid).toBe(true)
+    expect(
+      screen.queryByRole('button', { name: 'Bilder hochladen' }),
+    ).not.toBeInTheDocument()
+
+    await act(async () => {
+      await expect(queueRef.current?.uploadAll()).resolves.toEqual({
+        attemptedCount: 2,
+        failedCount: 0,
+        uploadedCount: 2,
+      })
+    })
+    expect(calls).toEqual(['zweites.png', 'erstes.png'])
   })
 })

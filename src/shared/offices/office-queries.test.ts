@@ -28,7 +28,7 @@ describe('office directory query', () => {
           ],
           page,
           pages: 2,
-          size: 100,
+          size: 20,
           total: 2,
         })
       }),

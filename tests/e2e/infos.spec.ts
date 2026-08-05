@@ -35,6 +35,22 @@ test(
     await expect(
       page.getByRole('heading', { level: 1, name: 'Mitteilungen' }),
     ).toBeVisible()
+    await expect(
+      page.getByRole('combobox', { name: 'Einträge pro Seite' }),
+    ).toHaveValue('20')
+
+    const reloadedDirectoryRequest = page.waitForRequest((request) => {
+      const url = new URL(request.url())
+      return (
+        url.pathname === '/api/v1/infos' &&
+        url.searchParams.get('size') === '20'
+      )
+    })
+    await page.reload()
+    await reloadedDirectoryRequest
+    await expect(
+      page.getByRole('combobox', { name: 'Einträge pro Seite' }),
+    ).toHaveValue('20')
 
     const searchbox = page.getByRole('searchbox', {
       name: 'Mitteilungen suchen',
@@ -51,9 +67,20 @@ test(
     }
     await page.getByRole('combobox', { name: 'Kategorie' }).selectOption('EVENT')
     await page.getByRole('combobox', { name: 'Status' }).selectOption('ACTIVE')
+    const sortedRequest = page.waitForRequest((request) => {
+      const url = new URL(request.url())
+      return (
+        url.pathname === '/api/v1/infos' &&
+        url.searchParams.get('category') === 'EVENT' &&
+        url.searchParams.get('status') === 'ACTIVE' &&
+        url.searchParams.get('sort_by') === 'updated_at' &&
+        url.searchParams.get('order') === 'desc'
+      )
+    })
     await page
       .getByRole('combobox', { name: 'Sortierung' })
       .selectOption('updatedAt:desc')
+    await sortedRequest
 
     await page.getByRole('link', { name: 'Stadtteilfest' }).click()
     await expect(page).toHaveURL(new RegExp(`/infos/${INFO_ID}$`))
@@ -93,12 +120,14 @@ test(
   'administrators upload Info images sequentially and manage the cover',
   async ({ page }) => {
     const requests = await installInfoImageManagementApi(page)
-    await signInAsAuthorityUser(page, `/infos/${INFO_ID}`, adminUser)
+    await signInAsAuthorityUser(page, `/infos/${INFO_ID}/edit`, adminUser)
 
     await expect(
       page.getByRole('heading', { level: 1, name: 'Stadtteilfest' }),
     ).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Bilder hochladen' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Bilder hochladen' }),
+    ).toBeVisible()
 
     await page.getByLabel('Bilddateien auswählen').setInputFiles([
       {
@@ -208,13 +237,48 @@ test(
     await page
       .getByRole('combobox', { name: 'Zuständige Behörde' })
       .selectOption(OFFICE_ID)
-    await page.getByLabel(/Beginn/).fill('2026-08-12T17:00')
-    await page.getByLabel(/Ende/).fill('2026-08-12T20:00')
-    await page.getByRole('checkbox', { name: 'Adresse hinterlegen' }).check()
+    await page.getByLabel('Beginn').fill('2026-08-12T17:00')
+    await page.getByLabel('Ende').fill('2026-08-12T20:00')
+    const addressCheckbox = page.getByRole('checkbox', {
+      name: 'Adresse hinterlegen',
+    })
+    await addressCheckbox.focus()
+    await addressCheckbox.press('Space')
+    await expect(addressCheckbox).toBeChecked()
     await page.getByRole('textbox', { name: /Straße/ }).fill('Markt')
     await page.getByRole('textbox', { name: /Hausnummer/ }).fill('1')
     await page.getByRole('textbox', { name: /Postleitzahl/ }).fill('04109')
     await page.getByRole('textbox', { name: /Ort/ }).fill('Leipzig')
+    const imageBuffer = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+      'base64',
+    )
+    await page.getByLabel('Bilddateien auswählen').setInputFiles([
+      {
+        buffer: imageBuffer,
+        mimeType: 'image/png',
+        name: 'sperrung.png',
+      },
+      {
+        buffer: imageBuffer,
+        mimeType: 'image/png',
+        name: 'titelbild.png',
+      },
+    ])
+    await page
+      .getByRole('textbox', { name: 'Alternativtext für sperrung.png' })
+      .fill('Absperrung und ausgeschilderte Umleitung am Markt')
+    await page
+      .getByRole('textbox', { name: 'Alternativtext für titelbild.png' })
+      .fill('Blick auf die abgesperrte Straße am Leipziger Markt')
+    await page
+      .getByRole('button', {
+        name: 'Als Titelbild vormerken: titelbild.png',
+      })
+      .click()
+    await expect(
+      page.getByRole('button', { name: 'Bilder hochladen' }),
+    ).toHaveCount(0)
 
     await expectNoSeriousAccessibilityViolations(page)
     await page.getByRole('button', { name: 'Mitteilung anlegen' }).click()
@@ -226,6 +290,14 @@ test(
         name: 'Straßensperrung Innenstadt',
       }),
     ).toBeVisible()
+    expect(requests.requestOrder).toEqual(['info', 'image', 'image'])
+    expect(requests.uploadBodies).toHaveLength(2)
+    expect(requests.uploadBodies[0]).toContain(
+      'Blick auf die abgesperrte Straße am Leipziger Markt',
+    )
+    expect(requests.uploadBodies[1]).toContain(
+      'Absperrung und ausgeschilderte Umleitung am Markt',
+    )
 
     await page.getByRole('link', { name: 'Mitteilung bearbeiten' }).click()
     const description = page.getByRole('textbox', { name: 'Beschreibung' })
@@ -473,13 +545,18 @@ function officeResponse() {
 
 async function installInfoManagementApi(page: Page): Promise<{
   create: unknown
+  requestOrder: string[]
   update: unknown
+  uploadBodies: string[]
 }> {
-  const requests: { create: unknown; update: unknown } = {
-    create: null,
-    update: null,
+  const requests = {
+    create: null as unknown,
+    requestOrder: [] as string[],
+    update: null as unknown,
+    uploadBodies: [] as string[],
   }
   let storedInfo: Record<string, unknown> = infoResponse()
+  let images: Array<ReturnType<typeof imageResponse>> = []
 
   await page.route('**/api/v1/offices**', async (route) => {
     const url = new URL(route.request().url())
@@ -511,6 +588,7 @@ async function installInfoManagementApi(page: Page): Promise<{
     const path = url.pathname
 
     if (path === '/api/v1/infos' && request.method() === 'POST') {
+      requests.requestOrder.push('info')
       const body = request.postDataJSON() as Record<string, unknown>
       requests.create = body
       storedInfo = {
@@ -538,6 +616,32 @@ async function installInfoManagementApi(page: Page): Promise<{
       await route.fulfill({
         contentType: 'application/json',
         json: storedInfo,
+        status: 201,
+      })
+      return
+    }
+
+    if (
+      path === `/api/v1/infos/${INFO_ID}/images` &&
+      request.method() === 'POST'
+    ) {
+      requests.requestOrder.push('image')
+      const body = request.postDataBuffer()?.toString('utf8') ?? ''
+      requests.uploadBodies.push(body)
+      const imageNumber = images.length + 1
+      const uploaded = imageResponse({
+        altText: readMultipartValue(body, 'alt_text'),
+        id: `created-image-${imageNumber}`,
+        isCover: images.length === 0,
+        originalFilename: readMultipartFilename(body) ?? 'upload.png',
+      })
+      images = [...images, uploaded]
+      if (uploaded.is_cover) {
+        storedInfo = { ...storedInfo, image_url: uploaded.url }
+      }
+      await route.fulfill({
+        contentType: 'application/json',
+        json: uploaded,
         status: 201,
       })
       return
@@ -582,7 +686,7 @@ async function installInfoManagementApi(page: Page): Promise<{
     if (path.endsWith('/images')) {
       await route.fulfill({
         contentType: 'application/json',
-        json: [],
+        json: images,
         status: 200,
       })
       return
@@ -624,9 +728,19 @@ async function installInfoImageManagementApi(page: Page): Promise<{
   let images: Array<ReturnType<typeof imageResponse>> = [imageResponse()]
 
   await page.route('**/api/v1/offices**', async (route) => {
+    const url = new URL(route.request().url())
     await route.fulfill({
       contentType: 'application/json',
-      json: officeResponse(),
+      json:
+        url.pathname === '/api/v1/offices'
+          ? {
+              data: [officeResponse()],
+              page: 1,
+              pages: 1,
+              size: 100,
+              total: 1,
+            }
+          : officeResponse(),
       status: 200,
     })
   })

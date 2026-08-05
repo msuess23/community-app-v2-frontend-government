@@ -9,7 +9,7 @@ import { mapOfficeReference } from '@/shared/offices/office-mapper'
 import type { OfficeReference } from '@/shared/offices/office-model'
 import { createResourceQueryKeys } from '@/shared/remote-data/query-keys'
 
-const OFFICE_PAGE_SIZE = 100
+const OFFICE_PAGE_SIZE = 20
 
 export const officeQueryKeys = createResourceQueryKeys<
   Readonly<{ status: LifecycleStatusFilter }>,
@@ -28,7 +28,10 @@ export function createOfficeReferenceQueryOptions(officeId: string) {
   })
 }
 
-/** Loads every visible office so native filter controls remain complete and keyboard friendly. */
+/**
+ * Loads every visible office in normal-sized pages so reference requests are
+ * not mistaken for a visible 100-item directory page.
+ */
 export function createOfficeDirectoryQueryOptions(
   status: LifecycleStatusFilter,
 ) {

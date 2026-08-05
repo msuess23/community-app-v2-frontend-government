@@ -18,19 +18,26 @@ export type InfoImageIdentifier = Readonly<{
   imageId: string
 }>
 
+/** Uploads one Info image without coupling callers to generated multipart names. */
+export async function uploadInfoImage(
+  infoId: string,
+  { altText, file }: UploadInfoImageVariables,
+): Promise<MediaAsset> {
+  return mapInfoImageResponse(
+    await uploadInfoImageApiV1InfosInfoIdImagesPost(infoId, {
+      alt_text: altText,
+      file,
+    }),
+  )
+}
+
 /** Uploads one image and adds the server-confirmed asset to the current gallery. */
 export function useUploadInfoImageMutation(infoId: string) {
   const queryClient = useQueryClient()
   const imagesKey = infoFeatureQueryKeys.images(infoId)
 
   return useMutation<MediaAsset, unknown, UploadInfoImageVariables>({
-    mutationFn: async ({ altText, file }) =>
-      mapInfoImageResponse(
-        await uploadInfoImageApiV1InfosInfoIdImagesPost(infoId, {
-          alt_text: altText,
-          file,
-        }),
-      ),
+    mutationFn: (variables) => uploadInfoImage(infoId, variables),
     mutationKey: ['infos', infoId, 'images', 'upload'],
     onSuccess: async (uploadedAsset) => {
       await queryClient.cancelQueries({ exact: true, queryKey: imagesKey })

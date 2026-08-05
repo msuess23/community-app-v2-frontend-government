@@ -1,13 +1,18 @@
 import { Info as InfoIcon, ShieldAlert } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 
 import { useAuth } from '@/auth/auth-context'
 import type { AuthUser } from '@/auth/auth-types'
 import { InfoForm } from '@/features/infos/components/InfoForm'
+import { InfoImageUploadQueue } from '@/features/infos/components/InfoImageUploadQueue'
 import { canCreateInfo } from '@/features/infos/model/info-permissions'
 import { useCreateInfoMutation } from '@/features/infos/queries/info-admin-mutations'
+import { uploadInfoImage } from '@/features/infos/queries/info-image-mutations'
+import { infoFeatureQueryKeys } from '@/features/infos/queries/info-query-keys'
 import { useFeedback } from '@/shared/feedback/feedback-context'
+import type { MediaUploadQueueHandle, MediaUploadSummary } from '@/shared/media/MediaUploadQueue'
 import { createOfficeDirectoryQueryOptions } from '@/shared/offices/office-queries'
 import { RemoteDataBoundary } from '@/shared/remote-data/RemoteDataBoundary'
 import { resolveResourceDetailReturnTo } from '@/shared/resource-detail/detail-navigation'
@@ -26,7 +31,11 @@ function AuthenticatedInfoCreatePage({
 }: Readonly<{ user: AuthUser }>) {
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { notify } = useFeedback()
+  const uploadQueueRef = useRef<MediaUploadQueueHandle>(null)
+  const createdInfoIdRef = useRef<string | null>(null)
+  const uploadSummaryRef = useRef<MediaUploadSummary | null>(null)
   const officesQuery = useQuery(createOfficeDirectoryQueryOptions('active'))
   const returnTo = resolveResourceDetailReturnTo(location.state, '/infos')
   const mutation = useCreateInfoMutation(user)
@@ -76,31 +85,97 @@ function AuthenticatedInfoCreatePage({
                   <InfoIcon aria-hidden="true" size={24} />
                 </span>
               }
-              description="Lege Inhalt, Zeitraum, Zuständigkeit und optionale Adresse an. Bilder werden anschließend als getrennte Ressourcen verwaltet."
+              description="Lege Stammdaten und Bilder in einem gemeinsamen Formular fest. Beim Speichern werden zuerst die Stammdaten angelegt und danach die Bilder nacheinander hochgeladen."
               eyebrow="Mitteilungsverwaltung"
               title="Mitteilung anlegen"
             />
 
             <InfoForm
               currentUser={user}
+              imageSection={
+                <InfoImageUploadQueue
+                  allowCoverSelection
+                  id="info-create-images"
+                  onUpload={async ({ description, file }) => {
+                    const infoId = createdInfoIdRef.current
+                    if (!infoId || !description) {
+                      throw new Error(
+                        'Info image upload requires a persisted Info and an alternative text.',
+                      )
+                    }
+                    await uploadInfoImage(infoId, {
+                      altText: description,
+                      file,
+                    })
+                  }}
+                  ref={uploadQueueRef}
+                  showUploadAction={false}
+                />
+              }
               isPending={mutation.isPending}
               mode="create"
               offices={offices}
               onCancel={() => navigate(returnTo)}
               onSaved={(info) => {
+                const summary = uploadSummaryRef.current
+                const hasFailedImages = Boolean(summary?.failedCount)
                 notify({
                   dedupeKey: `info-create:${info.id}`,
-                  description:
-                    'Die Mitteilung entspricht dem bestätigten Serverstand. Bilder können anschließend getrennt ergänzt werden.',
-                  title: 'Mitteilung angelegt',
-                  tone: 'success',
+                  description: hasFailedImages
+                    ? `${summary?.failedCount} Bilddatei(en) konnten nicht hochgeladen werden. Die Mitteilung wurde angelegt; wähle die fehlgeschlagenen Dateien auf der Bearbeitungsseite erneut aus.`
+                    : summary?.uploadedCount
+                      ? 'Die Mitteilung und alle ausgewählten Bilder entsprechen dem bestätigten Serverstand.'
+                      : 'Die Mitteilung entspricht dem bestätigten Serverstand.',
+                  title: hasFailedImages
+                    ? 'Mitteilung angelegt, Bilder unvollständig'
+                    : 'Mitteilung angelegt',
+                  tone: hasFailedImages ? 'warning' : 'success',
                 })
-                navigate(`/infos/${info.id}`, {
-                  replace: true,
-                  state: { from: returnTo },
-                })
+                navigate(
+                  hasFailedImages
+                    ? `/infos/${info.id}/edit`
+                    : `/infos/${info.id}`,
+                  {
+                    replace: true,
+                    state: { from: returnTo, listFrom: returnTo },
+                  },
+                )
               }}
-              save={(values) => mutation.mutateAsync(values)}
+              save={async (values) => {
+                const info = await mutation.mutateAsync(values)
+                createdInfoIdRef.current = info.id
+                uploadSummaryRef.current =
+                  (await uploadQueueRef.current?.uploadAll()) ?? null
+
+                if (uploadSummaryRef.current?.attemptedCount) {
+                  await Promise.all([
+                    queryClient.invalidateQueries({
+                      exact: true,
+                      queryKey: infoFeatureQueryKeys.detail(info.id),
+                    }),
+                    queryClient.invalidateQueries({
+                      exact: true,
+                      queryKey: infoFeatureQueryKeys.images(info.id),
+                    }),
+                    queryClient.invalidateQueries({
+                      queryKey: infoFeatureQueryKeys.lists(),
+                    }),
+                  ])
+                }
+                return info
+              }}
+              validateBeforeSave={() =>
+                uploadQueueRef.current?.validateAll() === false
+                  ? [
+                      {
+                        fieldId: 'info-create-images',
+                        id: 'info-create-images-invalid',
+                        message:
+                          'Prüfe die ausgewählten Bilder und ihre Alternativtexte.',
+                      },
+                    ]
+                  : []
+              }
             />
           </div>
         )

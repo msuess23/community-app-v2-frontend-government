@@ -18,9 +18,11 @@ export interface TextFieldProps extends Omit<
   description?: ReactNode
   errorMessage?: ReactNode
   inputClassName?: string
+  inputLang?: string
   inputRef?: Ref<HTMLInputElement>
   label: ReactNode
   placeholder?: string
+  step?: number | string
 }
 
 export function TextField({
@@ -28,10 +30,12 @@ export function TextField({
   description,
   errorMessage,
   inputClassName,
+  inputLang,
   inputRef,
   isRequired,
   label,
   placeholder,
+  step,
   validationBehavior = 'aria',
   ...props
 }: TextFieldProps) {
@@ -52,8 +56,10 @@ export function TextField({
       </Label>
 
       <Input
+        lang={inputLang}
         ref={inputRef}
         placeholder={placeholder}
+        step={step}
         className={cn(
           'border-outline bg-surface min-h-11 w-full rounded-lg border px-3 py-2.5',
           'text-on-surface text-base shadow-sm transition-colors outline-none',

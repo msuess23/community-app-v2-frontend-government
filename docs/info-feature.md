@@ -22,9 +22,9 @@ The Info status endpoint is presented as a public status log. It is not labeled 
 
 The second feature slice adds `/infos/new` and `/infos/:infoId/edit` behind `manageInfos`. Administrators may create cross-office publications or select an active office. Officers and managers are bound to their authenticated `officeId`; the edit page additionally mirrors the backend object rule and does not render a form for another office's Info.
 
-Create and update use one accessible form but separate request mappers. Local `datetime-local` values are interpreted in `Europe/Berlin` and serialized as timezone-aware instants, including daylight-saving validation. Updates contain only normalized fields that differ from the current server projection. Explicitly clearing description, office assignment (admin only), or address sends `null`, while unchanged address coordinates remain omitted and therefore preserved.
+Create and update use one accessible form but separate request mappers. A browser-independent German calendar and `HH:MM` time field produce the canonical local wall-clock value, which is interpreted in `Europe/Berlin` and serialized as a timezone-aware instant, including daylight-saving validation. Updates contain only normalized fields that differ from the current server projection. Explicitly clearing description, office assignment (admin only), or address sends `null`, while unchanged address coordinates remain omitted and therefore preserved.
 
-Images remain outside the create request. After the server has created the Info and returned its identifier, media can be managed as separate resources by the following image-management slice. This keeps partial upload failures visible instead of presenting a misleading atomic create workflow.
+Images remain outside the create request, but the create page presents one coordinated form submission. It validates the selected files and required alternative texts, creates the Info first, then uploads the queue sequentially only after the server returns the identifier. A selected prospective cover is uploaded first so the backend's first-image rule makes it the cover. Partial failures are reported explicitly and continue on the edit page rather than being presented as an atomic rollback.
 
 ## Current image management
 
@@ -32,7 +32,7 @@ The third feature slice keeps Info image semantics inside the Info feature while
 
 Info management requires one normalized alternative text per selected image, allows JPEG, PNG, and WebP files up to 5 MiB, and uploads queued files sequentially. Successful files remain successful when a later upload fails; failed entries can be retried individually. Local preview object URLs are revoked when entries are removed or the queue unmounts.
 
-Cover selection and physical deletion use the dedicated Info endpoints. The gallery updates only from confirmed responses. Deleting the current cover forces a server reload because the backend deterministically selects the oldest remaining image as the replacement. Detail and list projections are invalidated after media mutations because `image_url` and `updated_at` may change.
+Upload, cover selection, and physical deletion live on the create/edit surfaces. Existing-image cover selection and deletion use the dedicated Info endpoints and update only from confirmed responses. Deleting the current cover forces a server reload because the backend deterministically selects the oldest remaining image as the replacement. Detail and list projections are invalidated after media mutations because `image_url` and `updated_at` may change. The read-only detail page renders a horizontally scrollable, swipeable gallery with explicit scroll controls and keyboard navigation in the full-size preview.
 
 ## Status maintenance and permanent deletion
 

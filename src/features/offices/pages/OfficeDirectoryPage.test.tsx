@@ -32,7 +32,7 @@ describe('OfficeDirectoryPage', () => {
           data: [createOfficeResponse()],
           page: 1,
           pages: 1,
-          size: 20,
+          size: 100,
           total: 1,
         })
       }),
@@ -47,6 +47,9 @@ describe('OfficeDirectoryPage', () => {
     ).toBeInTheDocument()
     expect(screen.getByLabelText('Behördenstatus')).toHaveValue('all')
     expect(screen.getByLabelText('Sortierung')).toHaveValue('createdAt:desc')
+    expect(
+      screen.getByRole('combobox', { name: 'Einträge pro Seite' }),
+    ).toHaveValue('20')
     expect(
       screen.getByRole('link', { name: 'Behörde anlegen' }),
     ).toHaveAttribute('href', '/offices/new')
@@ -72,6 +75,7 @@ describe('OfficeDirectoryPage', () => {
       expect(requestedSearch).toContain('status=all')
       expect(requestedSearch).toContain('sort_by=created_at')
       expect(requestedSearch).toContain('order=desc')
+      expect(requestedSearch).toContain('size=20')
       expect(requestedSearch).not.toContain('bbox=')
     })
   })

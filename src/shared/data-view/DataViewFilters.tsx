@@ -181,7 +181,7 @@ export interface DataViewFilterDateFieldProps {
   value: string
 }
 
-/** Renders a native calendar-date filter with explicit accessible help text. */
+/** Renders the established native date filter with German locale metadata. */
 export function DataViewFilterDateField({
   className,
   description,
@@ -206,6 +206,7 @@ export function DataViewFilterDateField({
         aria-describedby={description ? descriptionId : undefined}
         className="border-outline bg-surface text-on-surface hover:border-secondary focus-visible:border-primary focus-visible:ring-primary min-h-11 w-full rounded-lg border px-3 py-2.5 text-base shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         id={inputId}
+        lang="de-DE"
         max={max}
         min={min}
         onChange={(event) => onChange(event.currentTarget.value)}

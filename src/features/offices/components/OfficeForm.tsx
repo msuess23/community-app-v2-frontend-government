@@ -216,7 +216,7 @@ export function OfficeForm({
           </Card>
         ) : null}
 
-        <FormActions className="bg-surface/95 sticky bottom-0 z-20 rounded-xl px-4 pb-4 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur sm:px-5">
+        <FormActions>
           <Button
             isDisabled={isSubmitting || isPending}
             onPress={() => void cancel()}

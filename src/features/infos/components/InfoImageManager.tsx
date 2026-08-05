@@ -1,9 +1,7 @@
 import { Check, Trash2 } from 'lucide-react'
 
-import {
-  getInfoImageErrorPresentation,
-  getInfoImageUploadErrorMessage,
-} from '@/features/infos/model/info-image-errors'
+import { InfoImageUploadQueue } from '@/features/infos/components/InfoImageUploadQueue'
+import { getInfoImageErrorPresentation } from '@/features/infos/model/info-image-errors'
 import {
   useDeleteInfoImageMutation,
   useSetInfoCoverImageMutation,
@@ -12,17 +10,8 @@ import {
 import { useConfirmation } from '@/shared/confirmation/confirmation-context'
 import { useFeedback } from '@/shared/feedback/feedback-context'
 import { MediaGallery } from '@/shared/media/MediaGallery'
-import { MediaUploadQueue } from '@/shared/media/MediaUploadQueue'
 import type { MediaAsset } from '@/shared/media/media-model'
 import { Button } from '@/shared/ui/Button'
-
-const INFO_IMAGE_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-] as const
-const INFO_IMAGE_MAX_BYTES = 5 * 1024 * 1024
-const INFO_IMAGE_ALT_TEXT_MAX_LENGTH = 500
 
 /** Combines reusable media UI with Info-specific endpoints and permissions. */
 export function InfoImageManager({
@@ -87,20 +76,8 @@ export function InfoImageManager({
 
   return (
     <div className="space-y-6">
-      <MediaUploadQueue
-        accept={INFO_IMAGE_MIME_TYPES.join(',')}
-        allowedMimeTypes={INFO_IMAGE_MIME_TYPES}
-        descriptionField={{
-          description:
-            'Beschreibe den relevanten Bildinhalt so, dass die Mitteilung auch ohne visuelle Wahrnehmung verständlich bleibt.',
-          label: 'Alternativtext',
-          maxLength: INFO_IMAGE_ALT_TEXT_MAX_LENGTH,
-          placeholder: 'Zum Beispiel: Umleitungsskizze rund um die gesperrte Parkstraße',
-          required: true,
-        }}
-        formatUploadError={getInfoImageUploadErrorMessage}
+      <InfoImageUploadQueue
         isDisabled={isCollectionActionPending}
-        maxBytes={INFO_IMAGE_MAX_BYTES}
         onUpload={async ({ description, file }) => {
           if (!description) {
             throw new Error('Info images require an alternative text.')
@@ -138,6 +115,7 @@ export function InfoImageManager({
                   }
                   onPress={() => void setCover(asset)}
                   size="sm"
+                  type="button"
                   variant="outline"
                 >
                   <Check aria-hidden="true" size={16} />
@@ -151,6 +129,7 @@ export function InfoImageManager({
                 }
                 onPress={() => void deleteImage(asset)}
                 size="sm"
+                type="button"
                 variant="danger"
               >
                 <Trash2 aria-hidden="true" size={16} />

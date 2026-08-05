@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HttpResponse, http } from 'msw'
 import { createMemoryRouter } from 'react-router'
@@ -44,6 +44,9 @@ describe('InfoEditPage', () => {
           total: 1,
         }),
       ),
+      http.get(`http://localhost/api/v1/infos/${INFO_ID}/images`, () =>
+        HttpResponse.json([]),
+      ),
       http.put(
         `http://localhost/api/v1/infos/${INFO_ID}`,
         async ({ request }) => {
@@ -82,6 +85,172 @@ describe('InfoEditPage', () => {
       description: 'Aktualisierte Beschreibung',
     })
   })
+
+  it(
+    'uploads images with alt text, selects a cover and reloads the replacement after deletion',
+    async () => {
+      const user = userEvent.setup()
+      const uploadRequests: Array<{ altText: string; filename: string }> = []
+      const coverRequests: string[] = []
+      const deleteRequests: string[] = []
+      let images = [imageResponse()]
+
+      mockApiServer.use(
+        http.get(`http://localhost/api/v1/infos/${INFO_ID}`, () =>
+          HttpResponse.json(infoResponse()),
+        ),
+        http.get('http://localhost/api/v1/offices', () =>
+          HttpResponse.json({
+            data: [officeResponse()],
+            page: 1,
+            pages: 1,
+            size: 100,
+            total: 1,
+          }),
+        ),
+        http.get(`http://localhost/api/v1/infos/${INFO_ID}/images`, () =>
+          HttpResponse.json(images),
+        ),
+        http.post(
+          `http://localhost/api/v1/infos/${INFO_ID}/images`,
+          async ({ request }) => {
+            const body = await request.formData()
+            const file = body.get('file')
+            const altText = String(body.get('alt_text') ?? '')
+            if (
+              typeof file !== 'object' ||
+              file === null ||
+              !('name' in file)
+            ) {
+              return HttpResponse.json({}, { status: 422 })
+            }
+
+            uploadRequests.push({ altText, filename: String(file.name) })
+            const uploaded = imageResponse({
+              altText,
+              id: 'image-2',
+              isCover: false,
+              originalFilename: String(file.name),
+            })
+            images = [...images, uploaded]
+            return HttpResponse.json(uploaded, { status: 201 })
+          },
+        ),
+        http.put(
+          `http://localhost/api/v1/infos/${INFO_ID}/images/:imageId/cover`,
+          ({ params }) => {
+            const imageId = String(params.imageId)
+            coverRequests.push(imageId)
+            images = images.map((image) => ({
+              ...image,
+              is_cover: image.id === imageId,
+            }))
+            return HttpResponse.json(
+              images.find((image) => image.id === imageId),
+            )
+          },
+        ),
+        http.delete(
+          `http://localhost/api/v1/infos/${INFO_ID}/images/:imageId`,
+          ({ params }) => {
+            const imageId = String(params.imageId)
+            deleteRequests.push(imageId)
+            const deletedCover = images.find(
+              (image) => image.id === imageId,
+            )?.is_cover
+            images = images.filter((image) => image.id !== imageId)
+            if (deletedCover && images.length > 0) {
+              images = images.map((image, index) => ({
+                ...image,
+                is_cover: index === 0,
+              }))
+            }
+            return new HttpResponse(null, { status: 204 })
+          },
+        ),
+      )
+
+      renderEditPage(ADMIN)
+
+      await screen.findByRole('heading', { level: 1, name: 'Stadtteilfest' })
+      const uploadFile = new File(['second-image'], 'umleitung.png', {
+        type: 'image/png',
+      })
+      await user.upload(
+        await screen.findByLabelText('Bilddateien auswählen'),
+        uploadFile,
+      )
+      await user.type(
+        screen.getByRole('textbox', {
+          name: 'Alternativtext für umleitung.png',
+        }),
+        'Umleitung rund um die Parkstraße',
+      )
+      await user.click(
+        screen.getByRole('button', { name: 'Bilder hochladen' }),
+      )
+
+      expect(
+        await screen.findByRole('img', {
+          name: 'Umleitung rund um die Parkstraße',
+        }),
+      ).toBeVisible()
+      expect(uploadRequests).toEqual([
+        {
+          altText: 'Umleitung rund um die Parkstraße',
+          filename: 'umleitung.png',
+        },
+      ])
+
+      await user.click(
+        screen.getByRole('button', {
+          name: 'Als Titelbild verwenden: Umleitung rund um die Parkstraße',
+        }),
+      )
+      await waitFor(() => expect(coverRequests).toEqual(['image-2']))
+      const newCoverFigure = screen
+        .getByRole('img', { name: 'Umleitung rund um die Parkstraße' })
+        .closest('figure')
+      expect(newCoverFigure).not.toBeNull()
+      expect(
+        await within(newCoverFigure as HTMLElement).findByText('Titelbild'),
+      ).toBeVisible()
+
+      await user.click(
+        screen.getByRole('button', {
+          name: 'Bild löschen: Umleitung rund um die Parkstraße',
+        }),
+      )
+      const confirmation = screen.getByRole('dialog', {
+        name: 'Bild löschen?',
+      })
+      await user.click(
+        within(confirmation).getByRole('button', {
+          name: 'Bild endgültig löschen',
+        }),
+      )
+
+      await waitFor(() => {
+        expect(
+          screen.queryByRole('img', {
+            name: 'Umleitung rund um die Parkstraße',
+          }),
+        ).not.toBeInTheDocument()
+      })
+      expect(deleteRequests).toEqual(['image-2'])
+      const replacementCoverFigure = screen
+        .getByRole('img', {
+          name: 'Bühne und Informationsstände auf dem Leipziger Markt',
+        })
+        .closest('figure')
+      expect(replacementCoverFigure).not.toBeNull()
+      expect(
+        await within(replacementCoverFigure as HTMLElement).findByText(
+          'Titelbild',
+        ),
+      ).toBeVisible()
+    },
+  )
 
   it('does not expose the form for another office to a case worker', async () => {
     const officer: AuthUser = {
@@ -191,6 +360,33 @@ function infoResponse(overrides: Record<string, unknown> = {}) {
     title: 'Stadtteilfest',
     updated_at: '2026-08-01T08:00:00Z',
     ...overrides,
+  }
+}
+
+
+function imageResponse(
+  overrides: Readonly<{
+    altText?: string
+    id?: string
+    isCover?: boolean
+    originalFilename?: string
+  }> = {},
+) {
+  const id = overrides.id ?? 'image-1'
+  return {
+    alt_text:
+      overrides.altText ??
+      'Bühne und Informationsstände auf dem Leipziger Markt',
+    height: 1,
+    id,
+    info_id: INFO_ID,
+    is_cover: overrides.isCover ?? true,
+    mime_type: 'image/png',
+    original_filename: overrides.originalFilename ?? 'markt.png',
+    size_bytes: 68,
+    uploaded_at: '2026-08-01T08:00:00Z',
+    url: `/api/v1/infos/${INFO_ID}/images/${id}/content`,
+    width: 1,
   }
 }
 

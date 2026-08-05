@@ -41,7 +41,15 @@ describe('InfoDetailPage', () => {
         HttpResponse.json(infoResponse()),
       ),
       http.get(`http://localhost/api/v1/infos/${INFO_ID}/images`, () =>
-        HttpResponse.json([imageResponse()]),
+        HttpResponse.json([
+          imageResponse(),
+          imageResponse({
+            altText: 'Umleitungsskizze rund um die Parkstraße',
+            id: 'image-2',
+            isCover: false,
+            originalFilename: 'umleitung.webp',
+          }),
+        ]),
       ),
       http.get(`http://localhost/api/v1/infos/${INFO_ID}/status`, () =>
         HttpResponse.json([
@@ -93,6 +101,9 @@ describe('InfoDetailPage', () => {
       }),
     ).toBeVisible()
     expect(within(gallery).getByText('Titelbild')).toBeVisible()
+    expect(
+      screen.getByRole('button', { name: 'Zu weiteren Bildern scrollen' }),
+    ).toBeVisible()
 
     const statusRegion = screen.getByRole('region', { name: 'Statusverlauf' })
     expect(
@@ -115,180 +126,20 @@ describe('InfoDetailPage', () => {
       }),
     ).toBeVisible()
     await user.click(
+      within(dialog).getByRole('button', { name: 'Nächstes Bild anzeigen' }),
+    )
+    expect(
+      within(dialog).getByRole('img', {
+        name: 'Umleitungsskizze rund um die Parkstraße',
+      }),
+    ).toBeVisible()
+    await user.click(
       within(dialog).getByRole('button', { name: 'Bildvorschau schließen' }),
     )
     expect(
       screen.queryByRole('dialog', { name: 'Bildvorschau' }),
     ).not.toBeInTheDocument()
   })
-
-  it(
-    'uploads images with alt text, selects a cover and reloads the replacement after deletion',
-    async () => {
-      const user = userEvent.setup()
-      const uploadRequests: Array<{ altText: string; filename: string }> = []
-      const coverRequests: string[] = []
-      const deleteRequests: string[] = []
-      let images = [imageResponse()]
-
-      mockApiServer.use(
-        http.get(`http://localhost/api/v1/infos/${INFO_ID}`, () =>
-          HttpResponse.json(infoResponse()),
-        ),
-        http.get(`http://localhost/api/v1/infos/${INFO_ID}/images`, () =>
-          HttpResponse.json(images),
-        ),
-        http.post(
-          `http://localhost/api/v1/infos/${INFO_ID}/images`,
-          async ({ request }) => {
-            const body = await request.formData()
-            const file = body.get('file')
-            const altText = String(body.get('alt_text') ?? '')
-            if (
-              typeof file !== 'object' ||
-              file === null ||
-              !('name' in file)
-            ) {
-              return HttpResponse.json({}, { status: 422 })
-            }
-
-            uploadRequests.push({ altText, filename: String(file.name) })
-            const uploaded = imageResponse({
-              altText,
-              id: 'image-2',
-              isCover: false,
-              originalFilename: String(file.name),
-            })
-            images = [...images, uploaded]
-            return HttpResponse.json(uploaded, { status: 201 })
-          },
-        ),
-        http.put(
-          `http://localhost/api/v1/infos/${INFO_ID}/images/:imageId/cover`,
-          ({ params }) => {
-            const imageId = String(params.imageId)
-            coverRequests.push(imageId)
-            images = images.map((image) => ({
-              ...image,
-              is_cover: image.id === imageId,
-            }))
-            return HttpResponse.json(
-              images.find((image) => image.id === imageId),
-            )
-          },
-        ),
-        http.delete(
-          `http://localhost/api/v1/infos/${INFO_ID}/images/:imageId`,
-          ({ params }) => {
-            const imageId = String(params.imageId)
-            deleteRequests.push(imageId)
-            const deletedCover = images.find(
-              (image) => image.id === imageId,
-            )?.is_cover
-            images = images.filter((image) => image.id !== imageId)
-            if (deletedCover && images.length > 0) {
-              images = images.map((image, index) => ({
-                ...image,
-                is_cover: index === 0,
-              }))
-            }
-            return new HttpResponse(null, { status: 204 })
-          },
-        ),
-        http.get(`http://localhost/api/v1/infos/${INFO_ID}/status`, () =>
-          HttpResponse.json([infoResponse().current_status]),
-        ),
-        http.get(`http://localhost/api/v1/offices/${OFFICE_ID}`, () =>
-          HttpResponse.json(officeResponse()),
-        ),
-      )
-
-      renderDetail(ADMIN)
-
-      await screen.findByRole('heading', { level: 1, name: 'Stadtteilfest' })
-      const uploadFile = new File(['second-image'], 'umleitung.png', {
-        type: 'image/png',
-      })
-      await user.upload(
-        screen.getByLabelText('Bilddateien auswählen'),
-        uploadFile,
-      )
-      await user.type(
-        screen.getByRole('textbox', {
-          name: 'Alternativtext für umleitung.png',
-        }),
-        'Umleitung rund um die Parkstraße',
-      )
-      await user.click(
-        screen.getByRole('button', { name: 'Bilder hochladen' }),
-      )
-
-      expect(
-        await screen.findByRole('img', {
-          name: 'Umleitung rund um die Parkstraße',
-        }),
-      ).toBeVisible()
-      expect(uploadRequests).toEqual([
-        {
-          altText: 'Umleitung rund um die Parkstraße',
-          filename: 'umleitung.png',
-        },
-      ])
-
-      await user.click(
-        screen.getByRole('button', {
-          name: 'Als Titelbild verwenden: Umleitung rund um die Parkstraße',
-        }),
-      )
-      await waitFor(() => expect(coverRequests).toEqual(['image-2']))
-      const newCoverFigure = screen
-        .getByRole('img', { name: 'Umleitung rund um die Parkstraße' })
-        .closest('figure')
-      expect(newCoverFigure).not.toBeNull()
-      expect(
-        await within(newCoverFigure as HTMLElement).findByText('Titelbild'),
-      ).toBeVisible()
-
-      await user.click(
-        screen.getByRole('button', {
-          name: 'Bild löschen: Umleitung rund um die Parkstraße',
-        }),
-      )
-      const confirmation = screen.getByRole('dialog', {
-        name: 'Bild löschen?',
-      })
-      await user.click(
-        within(confirmation).getByRole('button', {
-          name: 'Bild endgültig löschen',
-        }),
-      )
-
-      expect(
-        await screen.findByRole('img', {
-          name: 'Bühne und Informationsstände auf dem Leipziger Markt',
-        }),
-      ).toBeVisible()
-      await waitFor(() => {
-        expect(
-          screen.queryByRole('img', {
-            name: 'Umleitung rund um die Parkstraße',
-          }),
-        ).not.toBeInTheDocument()
-      })
-      expect(deleteRequests).toEqual(['image-2'])
-      const replacementCoverFigure = screen
-        .getByRole('img', {
-          name: 'Bühne und Informationsstände auf dem Leipziger Markt',
-        })
-        .closest('figure')
-      expect(replacementCoverFigure).not.toBeNull()
-      expect(
-        await within(replacementCoverFigure as HTMLElement).findByText(
-          'Titelbild',
-        ),
-      ).toBeVisible()
-    },
-  )
 
   it('publishes a new public status entry and updates the current projection', async () => {
     const user = userEvent.setup()

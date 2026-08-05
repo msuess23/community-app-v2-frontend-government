@@ -6,10 +6,14 @@ import { useAuth } from '@/auth/auth-context'
 import type { AuthUser } from '@/auth/auth-types'
 import { InfoCategoryBadge } from '@/features/infos/components/InfoBadges'
 import { InfoForm } from '@/features/infos/components/InfoForm'
+import { InfoImageManager } from '@/features/infos/components/InfoImageManager'
 import { canManageInfo } from '@/features/infos/model/info-permissions'
 import type { InfoRecord } from '@/features/infos/model/info-model'
 import { useUpdateInfoMutation } from '@/features/infos/queries/info-admin-mutations'
-import { createInfoDetailQueryOptions } from '@/features/infos/queries/info-queries'
+import {
+  createInfoDetailQueryOptions,
+  createInfoImagesQueryOptions,
+} from '@/features/infos/queries/info-queries'
 import { useFeedback } from '@/shared/feedback/feedback-context'
 import { createOfficeDirectoryQueryOptions } from '@/shared/offices/office-queries'
 import type { OfficeReference } from '@/shared/offices/office-model'
@@ -97,6 +101,7 @@ function InfoEditForm({
   const location = useLocation()
   const navigate = useNavigate()
   const mutation = useUpdateInfoMutation(user)
+  const imagesQuery = useQuery(createInfoImagesQueryOptions(info.id))
   const detailPath = `/infos/${info.id}`
   const listReturnTo = resolveListReturnTo(location.state)
 
@@ -104,13 +109,30 @@ function InfoEditForm({
     <div className="space-y-8">
       <PageHeader
         actions={<InfoCategoryBadge category={info.category} />}
-        description="Passe den aktuellen Inhalt direkt an. Das Backend führt für Stammdaten keine unveränderliche Inhaltsversionierung."
+        description="Passe Stammdaten und Bilder an. Bildaktionen werden über eigene Endpunkte unmittelbar gespeichert; Stammdaten erst mit dem Formularabschluss."
         eyebrow="Mitteilungsverwaltung"
         title={info.title}
       />
 
       <InfoForm
         currentUser={user}
+        imageSection={
+          <RemoteDataBoundary
+            errorOptions={{
+              fallback: {
+                description:
+                  'Die Bilder konnten nicht für die Bearbeitung geladen werden. Die Stammdaten bleiben bearbeitbar.',
+                title: 'Bildverwaltung nicht verfügbar',
+              },
+            }}
+            loadingLabel="Bilder werden für die Bearbeitung geladen."
+            query={imagesQuery}
+          >
+            {(images) => (
+              <InfoImageManager assets={images} infoId={info.id} />
+            )}
+          </RemoteDataBoundary>
+        }
         info={info}
         isPending={mutation.isPending}
         mode="edit"

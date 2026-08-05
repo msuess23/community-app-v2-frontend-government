@@ -1,5 +1,5 @@
 import { Save, Undo2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
 import type { AuthUser } from '@/auth/auth-types'
@@ -39,17 +39,20 @@ import { FormSubmitButton } from '@/shared/ui/FormSubmitButton'
 export interface InfoFormProps {
   currentUser: AuthUser
   info?: InfoRecord
+  imageSection?: ReactNode
   isPending: boolean
   mode: 'create' | 'edit'
   offices: readonly OfficeReference[]
   onCancel: () => void
   onSaved: (info: InfoRecord) => void
   save: (values: InfoFormValues) => Promise<InfoRecord>
+  validateBeforeSave?: () => readonly FormErrorSummaryItem[]
 }
 
 /** Renders the shared accessible Info create/edit workflow. */
 export function InfoForm({
   currentUser,
+  imageSection,
   info,
   isPending,
   mode,
@@ -57,6 +60,7 @@ export function InfoForm({
   onCancel,
   onSaved,
   save,
+  validateBeforeSave,
 }: InfoFormProps) {
   const [submissionErrors, setSubmissionErrors] = useState<
     FormErrorSummaryItem[]
@@ -101,7 +105,11 @@ export function InfoForm({
       className="space-y-6"
       noValidate
       onSubmit={handleSubmit(async (values) => {
-        setSubmissionErrors([])
+        const preparationErrors = validateBeforeSave?.() ?? []
+        setSubmissionErrors([...preparationErrors])
+        if (preparationErrors.length > 0) {
+          return
+        }
 
         try {
           const savedInfo = await save(values)
@@ -165,6 +173,7 @@ export function InfoForm({
                 <div className="grid gap-5 sm:grid-cols-2">
                   <ControlledTextField
                     control={control}
+                    inputLang="de-DE"
                     isRequired
                     label="Beginn"
                     name="startsAt"
@@ -173,6 +182,7 @@ export function InfoForm({
                   />
                   <ControlledTextField
                     control={control}
+                    inputLang="de-DE"
                     isRequired
                     label="Ende"
                     name="endsAt"
@@ -217,17 +227,22 @@ export function InfoForm({
           </FormSection>
         </Card>
 
-        {mode === 'create' ? (
-          <Card variant="subtle">
-            <p className="leading-7">
-              Bilder werden nach dem Anlegen auf der Detailseite ergänzt. So
-              bleibt sichtbar, welche Stammdaten bereits gespeichert wurden,
-              falls ein späterer Datei-Upload fehlschlägt.
-            </p>
+        {imageSection ? (
+          <Card>
+            <FormSection
+              description={
+                mode === 'create'
+                  ? 'Die Stammdaten werden zuerst angelegt. Anschließend lädt derselbe Speichervorgang die ausgewählten Bilder nacheinander hoch.'
+                  : 'Bild-Uploads, Titelbildwechsel und Löschungen werden unmittelbar über die separaten Bildendpunkte gespeichert.'
+              }
+              title="Bilder"
+            >
+              {imageSection}
+            </FormSection>
           </Card>
         ) : null}
 
-        <FormActions className="bg-surface/95 sticky bottom-0 z-20 rounded-xl px-4 pb-4 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur sm:px-5">
+        <FormActions>
           <Button
             isDisabled={isSubmitting || isPending}
             onPress={() => void cancel()}

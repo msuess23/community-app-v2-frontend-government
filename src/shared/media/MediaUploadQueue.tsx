@@ -7,8 +7,10 @@ import {
   Upload,
 } from 'lucide-react'
 import {
+  forwardRef,
   useEffect,
   useId,
+  useImperativeHandle,
   useRef,
   useState,
   type ChangeEvent,
@@ -33,15 +35,36 @@ export type MediaUploadDescriptionField = Readonly<{
   required?: boolean
 }>
 
+export type MediaUploadSummary = Readonly<{
+  attemptedCount: number
+  failedCount: number
+  uploadedCount: number
+}>
+
+export interface MediaUploadQueueHandle {
+  hasItems: () => boolean
+  uploadAll: () => Promise<MediaUploadSummary>
+  validateAll: () => boolean
+}
+
+export type MediaUploadPrimarySelection = Readonly<{
+  actionLabel: string
+  description?: ReactNode
+  selectedLabel: string
+}>
+
 export interface MediaUploadQueueProps {
   accept: string
   allowedMimeTypes?: readonly string[]
   descriptionField?: MediaUploadDescriptionField
   formatUploadError?: (error: unknown) => string
+  id?: string
   isDisabled?: boolean
   label?: string
   maxBytes?: number
   onUpload: (request: MediaUploadRequest) => Promise<void>
+  primarySelection?: MediaUploadPrimarySelection
+  showUploadAction?: boolean
 }
 
 type UploadState = 'failed' | 'ready' | 'uploaded' | 'uploading'
@@ -51,30 +74,52 @@ type UploadItem = Readonly<{
   errorMessage: string | null
   file: File
   id: string
+  isPrimary: boolean
   previewUrl: string | null
   state: UploadState
 }>
 
 let uploadItemSequence = 0
 
-/** Collects multiple image files and uploads them sequentially with optional descriptions. */
-export function MediaUploadQueue({
-  accept,
-  allowedMimeTypes,
-  descriptionField,
-  formatUploadError = () =>
-    'Das Bild konnte nicht hochgeladen werden. Versuche es erneut.',
-  isDisabled = false,
-  label = 'Bilder hochladen',
-  maxBytes,
-  onUpload,
-}: MediaUploadQueueProps) {
-  const [items, setItems] = useState<UploadItem[]>([])
+/** Collects image files and can upload them sequentially now or from a parent form. */
+export const MediaUploadQueue = forwardRef<
+  MediaUploadQueueHandle,
+  MediaUploadQueueProps
+>(function MediaUploadQueue(
+  {
+    accept,
+    allowedMimeTypes,
+    descriptionField,
+    formatUploadError = () =>
+      'Das Bild konnte nicht hochgeladen werden. Versuche es erneut.',
+    id,
+    isDisabled = false,
+    label = 'Bilder hochladen',
+    maxBytes,
+    onUpload,
+    primarySelection,
+    showUploadAction = true,
+  },
+  ref,
+) {
+  const [items, setItemsState] = useState<UploadItem[]>([])
   const [isUploading, setIsUploading] = useState(false)
-  const inputId = useId()
+  const generatedId = useId()
+  const inputId = id ?? generatedId
   const descriptionId = `${inputId}-description`
   const previewUrlsRef = useRef(new Set<string>())
+  const itemsRef = useRef(items)
+  const isUploadingRef = useRef(false)
   const hasUploadableItems = items.some((item) => item.state !== 'uploaded')
+
+  function setItems(
+    update: UploadItem[] | ((current: UploadItem[]) => UploadItem[]),
+  ): void {
+    const nextItems =
+      typeof update === 'function' ? update(itemsRef.current) : update
+    itemsRef.current = nextItems
+    setItemsState(nextItems)
+  }
 
   useEffect(
     () => () => {
@@ -84,6 +129,15 @@ export function MediaUploadQueue({
       previewUrlsRef.current.clear()
     },
     [],
+  )
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      hasItems: () => itemsRef.current.length > 0,
+      uploadAll: () => uploadItems(createUploadOrder(itemsRef.current)),
+      validateAll: validateAllItems,
+    }),
   )
 
   function handleSelection(event: ChangeEvent<HTMLInputElement>): void {
@@ -96,8 +150,14 @@ export function MediaUploadQueue({
 
     setItems((current) => [
       ...current,
-      ...selectedFiles.map((file) =>
-        createUploadItem(file, previewUrlsRef.current),
+      ...selectedFiles.map((file, index) =>
+        createUploadItem(
+          file,
+          previewUrlsRef.current,
+          Boolean(primarySelection) &&
+            !current.some((item) => item.isPrimary) &&
+            index === 0,
+        ),
       ),
     ])
   }
@@ -123,31 +183,87 @@ export function MediaUploadQueue({
       if (item?.previewUrl) {
         revokePreviewUrl(item.previewUrl, previewUrlsRef.current)
       }
-      return current.filter((candidate) => candidate.id !== itemId)
+      const remaining = current.filter((candidate) => candidate.id !== itemId)
+      if (item?.isPrimary && primarySelection && remaining.length > 0) {
+        return remaining.map((candidate, index) => ({
+          ...candidate,
+          isPrimary: index === 0,
+        }))
+      }
+      return remaining
     })
   }
 
-  async function uploadItems(itemIds: readonly string[]): Promise<void> {
-    if (isUploading || isDisabled) {
-      return
+  function selectPrimary(itemId: string): void {
+    setItems((current) =>
+      current.map((item) => ({ ...item, isPrimary: item.id === itemId })),
+    )
+  }
+
+  function validateAllItems(): boolean {
+    let isValid = true
+    setItems((current) =>
+      current.map((item) => {
+        if (item.state === 'uploaded') {
+          return item
+        }
+        const errorMessage = validateUploadItem(item, {
+          allowedMimeTypes,
+          descriptionField,
+          maxBytes,
+          normalizedDescription: normalizeDescription(item.description),
+        })
+        if (errorMessage) {
+          isValid = false
+        }
+        return {
+          ...item,
+          errorMessage,
+          state: errorMessage ? 'failed' : item.state === 'failed' ? 'ready' : item.state,
+        }
+      }),
+    )
+    return isValid
+  }
+
+  async function uploadItems(
+    itemIds: readonly string[],
+  ): Promise<MediaUploadSummary> {
+    if (isUploadingRef.current || isDisabled) {
+      return { attemptedCount: 0, failedCount: 0, uploadedCount: 0 }
     }
 
+    isUploadingRef.current = true
     setIsUploading(true)
+    let attemptedCount = 0
+    let failedCount = 0
+    let uploadedCount = 0
+
     try {
       for (const itemId of itemIds) {
-        const item = items.find((candidate) => candidate.id === itemId)
+        const item = itemsRef.current.find(
+          (candidate) => candidate.id === itemId,
+        )
         if (!item || item.state === 'uploaded') {
           continue
         }
 
-        await uploadItem(item)
+        attemptedCount += 1
+        if (await uploadItem(item)) {
+          uploadedCount += 1
+        } else {
+          failedCount += 1
+        }
       }
     } finally {
+      isUploadingRef.current = false
       setIsUploading(false)
     }
+
+    return { attemptedCount, failedCount, uploadedCount }
   }
 
-  async function uploadItem(item: UploadItem): Promise<void> {
+  async function uploadItem(item: UploadItem): Promise<boolean> {
     const normalizedDescription = normalizeDescription(item.description)
     const validationError = validateUploadItem(item, {
       allowedMimeTypes,
@@ -161,7 +277,7 @@ export function MediaUploadQueue({
         errorMessage: validationError,
         state: 'failed',
       })
-      return
+      return false
     }
 
     updateItem(item.id, { errorMessage: null, state: 'uploading' })
@@ -176,11 +292,13 @@ export function MediaUploadQueue({
         errorMessage: null,
         state: 'uploaded',
       })
+      return true
     } catch (error) {
       updateItem(item.id, {
         errorMessage: formatUploadError(error),
         state: 'failed',
       })
+      return false
     }
   }
 
@@ -210,13 +328,18 @@ export function MediaUploadQueue({
           <h3 className="text-lg font-semibold" id={`${inputId}-heading`}>
             {label}
           </h3>
-          <p
-            className="text-on-surface-variant max-w-3xl text-sm leading-6"
+          <div
+            className="text-on-surface-variant max-w-3xl space-y-1 text-sm leading-6"
             id={descriptionId}
           >
-            Wähle eine oder mehrere Dateien aus. Die Warteschlange überträgt sie
-            nacheinander, damit Fehler pro Bild nachvollziehbar bleiben.
-          </p>
+            <p>
+              Wähle eine oder mehrere Dateien aus. Die Warteschlange überträgt
+              sie nacheinander, damit Fehler pro Bild nachvollziehbar bleiben.
+            </p>
+            {primarySelection?.description ? (
+              <p>{primarySelection.description}</p>
+            ) : null}
+          </div>
         </div>
         <span className="bg-primary-container text-on-primary-container flex size-11 shrink-0 items-center justify-center rounded-full">
           <Upload aria-hidden="true" size={20} />
@@ -302,13 +425,35 @@ export function MediaUploadQueue({
                       </p>
                     ) : null}
 
+                    {primarySelection ? (
+                      <div className="space-y-2">
+                        {item.isPrimary ? (
+                          <p className="bg-primary-container text-on-primary-container inline-flex min-h-8 items-center rounded-full px-2.5 py-1 text-sm font-semibold">
+                            {primarySelection.selectedLabel}
+                          </p>
+                        ) : (
+                          <Button
+                            aria-label={`${primarySelection.actionLabel}: ${item.file.name}`}
+                            isDisabled={isItemDisabled || item.state === 'uploaded'}
+                            onPress={() => selectPrimary(item.id)}
+                            size="sm"
+                            type="button"
+                            variant="outline"
+                          >
+                            {primarySelection.actionLabel}
+                          </Button>
+                        )}
+                      </div>
+                    ) : null}
+
                     <div className="flex flex-wrap gap-2">
-                      {item.state === 'failed' ? (
+                      {item.state === 'failed' && showUploadAction ? (
                         <Button
                           aria-label={`Erneut versuchen: ${item.file.name}`}
                           isDisabled={isItemDisabled}
                           onPress={() => void uploadItems([item.id])}
                           size="sm"
+                          type="button"
                           variant="outline"
                         >
                           <RefreshCw aria-hidden="true" size={16} />
@@ -324,6 +469,7 @@ export function MediaUploadQueue({
                         isDisabled={isItemDisabled || item.state === 'uploading'}
                         onPress={() => removeItem(item.id)}
                         size="sm"
+                        type="button"
                         variant="ghost"
                       >
                         <Trash2 aria-hidden="true" size={16} />
@@ -350,24 +496,28 @@ export function MediaUploadQueue({
             {uploadedCount} hochgeladen, {failedCount} fehlgeschlagen,{' '}
             {pendingCount} ausstehend
           </p>
-          <Button
-            isDisabled={isDisabled || isUploading || !hasUploadableItems}
-            onPress={() =>
-              void uploadItems(
-                items
-                  .filter((item) => item.state !== 'uploaded')
-                  .map((item) => item.id),
-              )
-            }
-          >
-            <Upload aria-hidden="true" size={18} />
-            {isUploading ? 'Bilder werden hochgeladen …' : 'Bilder hochladen'}
-          </Button>
+          {showUploadAction ? (
+            <Button
+              isDisabled={isDisabled || isUploading || !hasUploadableItems}
+              onPress={() =>
+                void uploadItems(createUploadOrder(itemsRef.current))
+              }
+              type="button"
+            >
+              <Upload aria-hidden="true" size={18} />
+              {isUploading ? 'Bilder werden hochgeladen …' : 'Bilder hochladen'}
+            </Button>
+          ) : (
+            <p className="text-on-surface-variant text-sm leading-6">
+              Die ausgewählten Bilder werden nach dem erfolgreichen Speichern
+              der Stammdaten automatisch hochgeladen.
+            </p>
+          )}
         </div>
       ) : null}
     </section>
   )
-}
+})
 
 function UploadPreview({ item }: Readonly<{ item: UploadItem }>) {
   return (
@@ -420,7 +570,11 @@ function UploadStateLabel({ state }: Readonly<{ state: UploadState }>) {
   )
 }
 
-function createUploadItem(file: File, previewUrls: Set<string>): UploadItem {
+function createUploadItem(
+  file: File,
+  previewUrls: Set<string>,
+  isPrimary: boolean,
+): UploadItem {
   uploadItemSequence += 1
   const previewUrl = createPreviewUrl(file)
   if (previewUrl) {
@@ -432,9 +586,18 @@ function createUploadItem(file: File, previewUrls: Set<string>): UploadItem {
     errorMessage: null,
     file,
     id: `media-upload-${uploadItemSequence}`,
+    isPrimary,
     previewUrl,
     state: 'ready',
   }
+}
+
+
+function createUploadOrder(items: readonly UploadItem[]): string[] {
+  return items
+    .filter((item) => item.state !== 'uploaded')
+    .toSorted((left, right) => Number(right.isPrimary) - Number(left.isPrimary))
+    .map((item) => item.id)
 }
 
 function createPreviewUrl(file: File): string | null {

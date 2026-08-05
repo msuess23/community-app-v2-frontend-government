@@ -46,7 +46,7 @@ export function CheckboxField({
       aria-labelledby={ariaLabelledBy ?? labelId}
       className={({ isDisabled, isFocusVisible }) =>
         cn(
-          'group flex w-fit max-w-full items-start gap-3 rounded-lg',
+          'group flex w-fit max-w-full cursor-pointer items-start gap-3 rounded-lg',
           'text-on-surface outline-none',
           isDisabled && 'cursor-not-allowed opacity-60',
           isFocusVisible &&
@@ -61,7 +61,7 @@ export function CheckboxField({
           <span
             aria-hidden="true"
             className={cn(
-              'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border-2 transition-colors',
+              'pointer-events-none mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border-2 transition-colors',
               isSelected || isIndeterminate
                 ? 'border-primary bg-primary text-on-primary'
                 : 'border-outline bg-surface text-transparent',
@@ -80,7 +80,7 @@ export function CheckboxField({
             )}
           </span>
 
-          <span className="grid min-w-0 gap-1">
+          <span className="pointer-events-none grid min-w-0 gap-1">
             <span className="text-sm leading-5 font-semibold" id={labelId}>
               {label}
             </span>

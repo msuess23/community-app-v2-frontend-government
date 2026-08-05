@@ -117,9 +117,12 @@ test(
       .selectOption('open')
     await page.getByLabel('Startzeit, Intervall 1').fill('08:00')
     await page.getByLabel('Endzeit, Intervall 1').fill('12:00')
-    await page
-      .getByRole('checkbox', { name: 'Postadresse hinterlegen' })
-      .check()
+    const addressCheckbox = page.getByRole('checkbox', {
+      name: 'Postadresse hinterlegen',
+    })
+    await addressCheckbox.focus()
+    await addressCheckbox.press('Space')
+    await expect(addressCheckbox).toBeChecked()
     await page.getByRole('textbox', { name: 'Straße' }).fill('Südstraße')
     await page.getByRole('textbox', { name: 'Hausnummer' }).fill('8')
     await page.getByRole('textbox', { name: 'Postleitzahl' }).fill('04275')
