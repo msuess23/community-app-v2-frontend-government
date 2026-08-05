@@ -36,6 +36,21 @@ describe('data view URL state', () => {
     expect(getSingleFilterValue(state, 'status')).toBe('OPEN')
   })
 
+  it('limits restored and submitted search terms to the backend maximum', () => {
+    const restored = parseDataViewUrlState(
+      new URLSearchParams(`search=${'x'.repeat(205)}`),
+      config,
+    )
+    const submitted = createDataViewSearchParams(
+      new URLSearchParams(),
+      config,
+      { search: 'y'.repeat(205) },
+    )
+
+    expect(restored.search).toHaveLength(200)
+    expect(submitted.get('search')).toBe('y'.repeat(200))
+  })
+
   it('resets the page when filters change and preserves unrelated parameters', () => {
     const nextSearchParams = createDataViewSearchParams(
       new URLSearchParams(

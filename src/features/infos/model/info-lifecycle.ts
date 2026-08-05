@@ -114,6 +114,11 @@ export function getInfoLifecycleErrorPresentation(
           'Die Mitteilung wurde zwischenzeitlich gelöscht oder ist nicht mehr verfügbar.',
         title: 'Mitteilung nicht verfügbar',
       },
+      INFO_STATUS_NOT_FOUND: {
+        description:
+          'Für diese Mitteilung fehlt der aktuelle Status. Der Datenbestand muss administrativ geprüft werden.',
+        title: 'Status der Mitteilung nicht verfügbar',
+      },
     },
   })
 }

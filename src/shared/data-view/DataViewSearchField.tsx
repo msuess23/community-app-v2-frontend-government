@@ -9,12 +9,14 @@ import {
 } from 'react'
 import { Search, X } from 'lucide-react'
 
+import { DEFAULT_DATA_VIEW_SEARCH_MAX_LENGTH } from '@/shared/data-view/data-view-url-state'
 import { Button } from '@/shared/ui/Button'
 
 export interface DataViewSearchFieldProps {
   debounceMs?: number
   description?: string
   label?: string
+  maxLength?: number
   onSearch: (value: string) => void
   placeholder?: string
   value: string
@@ -31,6 +33,7 @@ export function DataViewSearchField({
   debounceMs = 400,
   description = 'Die Suche wird nach einer kurzen Eingabepause ausgeführt.',
   label = 'Suche',
+  maxLength = DEFAULT_DATA_VIEW_SEARCH_MAX_LENGTH,
   onSearch,
   placeholder = 'Einträge durchsuchen',
   value,
@@ -40,19 +43,21 @@ export function DataViewSearchField({
   const inputRef = useRef<HTMLInputElement | null>(null)
   const timeoutRef = useRef<number | null>(null)
   const [searchState, setSearchState] = useState<SearchDraftState>(() => ({
-    committedValue: normalizeSearch(value),
-    draft: value,
+    committedValue: normalizeSearch(value, maxLength),
+    draft: normalizeSearch(value, maxLength),
     externalValue: value,
   }))
 
   if (searchState.externalValue !== value) {
-    const normalizedExternalValue = normalizeSearch(value)
+    const normalizedExternalValue = normalizeSearch(value, maxLength)
     const draftAlreadyRepresentsValue =
-      normalizeSearch(searchState.draft) === normalizedExternalValue
+      normalizeSearch(searchState.draft, maxLength) === normalizedExternalValue
 
     setSearchState({
       committedValue: normalizedExternalValue,
-      draft: draftAlreadyRepresentsValue ? searchState.draft : value,
+      draft: draftAlreadyRepresentsValue
+        ? searchState.draft
+        : normalizedExternalValue,
       externalValue: value,
     })
   }
@@ -71,7 +76,7 @@ export function DataViewSearchField({
   const commitSearch = useCallback(
     (nextValue: string) => {
       clearPendingCommit()
-      const normalizedValue = normalizeSearch(nextValue)
+      const normalizedValue = normalizeSearch(nextValue, maxLength)
 
       if (normalizedValue === searchState.committedValue) {
         return
@@ -83,11 +88,11 @@ export function DataViewSearchField({
       }))
       onSearch(normalizedValue)
     },
-    [clearPendingCommit, onSearch, searchState.committedValue],
+    [clearPendingCommit, maxLength, onSearch, searchState.committedValue],
   )
 
   useEffect(() => {
-    const normalizedDraft = normalizeSearch(draft)
+    const normalizedDraft = normalizeSearch(draft, maxLength)
 
     if (normalizedDraft === searchState.committedValue) {
       return undefined
@@ -107,6 +112,7 @@ export function DataViewSearchField({
     clearPendingCommit,
     debounceMs,
     draft,
+    maxLength,
     onSearch,
     searchState.committedValue,
   ])
@@ -149,6 +155,7 @@ export function DataViewSearchField({
             aria-describedby={descriptionId}
             className="border-outline bg-surface text-on-surface placeholder:text-on-surface-variant hover:border-secondary focus-visible:border-primary focus-visible:ring-primary min-h-11 w-full rounded-lg border py-2.5 pr-11 pl-10 text-base shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             id={inputId}
+            maxLength={maxLength}
             onChange={handleChange}
             placeholder={placeholder}
             ref={inputRef}
@@ -181,6 +188,6 @@ export function DataViewSearchField({
 }
 
 /** Normalizes user input before it becomes server query state. */
-function normalizeSearch(value: string): string {
-  return value.trim()
+function normalizeSearch(value: string, maxLength: number): string {
+  return value.trim().slice(0, maxLength)
 }

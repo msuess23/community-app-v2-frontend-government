@@ -1,4 +1,5 @@
 import { Check, Trash2 } from 'lucide-react'
+import { forwardRef } from 'react'
 
 import { InfoImageUploadQueue } from '@/features/infos/components/InfoImageUploadQueue'
 import { getInfoImageErrorPresentation } from '@/features/infos/model/info-image-errors'
@@ -10,17 +11,22 @@ import {
 import { useConfirmation } from '@/shared/confirmation/confirmation-context'
 import { useFeedback } from '@/shared/feedback/feedback-context'
 import { MediaGallery } from '@/shared/media/MediaGallery'
+import type { MediaUploadQueueHandle } from '@/shared/media/MediaUploadQueue'
 import type { MediaAsset } from '@/shared/media/media-model'
 import { Button } from '@/shared/ui/Button'
 
 /** Combines reusable media UI with Info-specific endpoints and permissions. */
-export function InfoImageManager({
-  assets,
-  infoId,
-}: Readonly<{
-  assets: readonly MediaAsset[]
-  infoId: string
-}>) {
+export const InfoImageManager = forwardRef<
+  MediaUploadQueueHandle,
+  Readonly<{
+    assets: readonly MediaAsset[]
+    infoId: string
+    onPendingChange?: (hasPendingItems: boolean) => void
+  }>
+>(function InfoImageManager(
+  { assets, infoId, onPendingChange },
+  ref,
+) {
   const { confirm } = useConfirmation()
   const { notify } = useFeedback()
   const uploadMutation = useUploadInfoImageMutation(infoId)
@@ -78,12 +84,14 @@ export function InfoImageManager({
     <div className="space-y-6">
       <InfoImageUploadQueue
         isDisabled={isCollectionActionPending}
+        onPendingChange={onPendingChange}
         onUpload={async ({ description, file }) => {
           if (!description) {
             throw new Error('Info images require an alternative text.')
           }
           await uploadMutation.mutateAsync({ altText: description, file })
         }}
+        ref={ref}
       />
 
       <section
@@ -141,4 +149,4 @@ export function InfoImageManager({
       </section>
     </div>
   )
-}
+})

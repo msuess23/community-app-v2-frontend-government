@@ -1,7 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
+import { ApiError } from '@/api/client/api-error'
 import type { AuthUser } from '@/auth/auth-types'
 import {
+  applyInfoSubmissionError,
   createEmptyInfoFormValues,
   createInfoFormSchema,
   hasInfoChanges,
@@ -86,6 +88,26 @@ describe('Info form mapping', () => {
       address: null,
       office_id: null,
     })
+  })
+
+  it('translates a missing status projection during an update', () => {
+    const setError = vi.fn()
+    const errors = applyInfoSubmissionError(
+      new ApiError({
+        errorCode: 'INFO_STATUS_NOT_FOUND',
+        message: 'Info status not found',
+        status: 404,
+      }),
+      setError,
+    )
+
+    expect(errors).toEqual([
+      {
+        message:
+          'Für diese Mitteilung fehlt der aktuelle Status. Der Datenbestand muss administrativ geprüft werden.',
+      },
+    ])
+    expect(setError).not.toHaveBeenCalled()
   })
 
   it('rejects incomplete addresses and invalid time windows', () => {

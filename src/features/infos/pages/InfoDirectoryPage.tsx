@@ -7,6 +7,7 @@ import { useAuth } from '@/auth/auth-context'
 import type { AuthUser } from '@/auth/auth-types'
 import { InfoDirectoryFilters } from '@/features/infos/components/InfoDirectoryFilters'
 import { InfoDirectoryView } from '@/features/infos/components/InfoDirectoryView'
+import { INFO_DIRECTORY_ERROR_MESSAGES } from '@/features/infos/model/info-error-messages'
 import { canCreateInfo } from '@/features/infos/model/info-permissions'
 import {
   createInfoDirectoryUrlConfig,
@@ -110,6 +111,14 @@ function AuthenticatedInfoDirectoryPage({ user }: Readonly<{ user: AuthUser }>) 
       />
 
       <RemoteDataBoundary
+        errorOptions={{
+          fallback: {
+            description:
+              'Das Mitteilungsverzeichnis konnte nicht geladen werden. Prüfe die Filter und versuche es erneut.',
+            title: 'Mitteilungen nicht verfügbar',
+          },
+          messagesByErrorCode: INFO_DIRECTORY_ERROR_MESSAGES,
+        }}
         empty={
           <RemoteDataEmptyState
             description={

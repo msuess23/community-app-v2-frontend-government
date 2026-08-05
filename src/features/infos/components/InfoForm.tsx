@@ -39,29 +39,42 @@ import { FormSubmitButton } from '@/shared/ui/FormSubmitButton'
 export interface InfoFormProps {
   currentUser: AuthUser
   info?: InfoRecord
+  hasExternalUnsavedChanges?: boolean
   imageSection?: ReactNode
   isPending: boolean
   mode: 'create' | 'edit'
   offices: readonly OfficeReference[]
   onCancel: () => void
+  onDiscardExternalChanges?: () => void
   onSaved: (info: InfoRecord) => void
   save: (values: InfoFormValues) => Promise<InfoRecord>
+  saveHandlesExternalChanges?: boolean
   validateBeforeSave?: () => readonly FormErrorSummaryItem[]
 }
 
-/** Renders the shared accessible Info create/edit workflow. */
+/**
+ * Renders the shared accessible Info create/edit workflow.
+ *
+ * External unsaved state is used for local media selections that are managed
+ * outside react-hook-form. Set `saveHandlesExternalChanges` only when the
+ * submit workflow persists or deliberately clears those selections itself.
+ */
 export function InfoForm({
   currentUser,
+  hasExternalUnsavedChanges = false,
   imageSection,
   info,
   isPending,
   mode,
   offices,
   onCancel,
+  onDiscardExternalChanges,
   onSaved,
   save,
+  saveHandlesExternalChanges = false,
   validateBeforeSave,
 }: InfoFormProps) {
+  const [hasCompletedSubmit, setHasCompletedSubmit] = useState(false)
   const [submissionErrors, setSubmissionErrors] = useState<
     FormErrorSummaryItem[]
   >([])
@@ -88,8 +101,16 @@ export function InfoForm({
   const hasMasterDataChanges = info
     ? hasInfoChanges(currentValues, info, currentUser)
     : isDirty
+  const hasUnsavedChanges = isDirty || hasExternalUnsavedChanges
   const { confirmDiscardChanges } = useUnsavedChangesGuard({
-    hasUnsavedChanges: isDirty,
+    hasUnsavedChanges,
+    isEnabled: !hasCompletedSubmit,
+    message: hasExternalUnsavedChanges
+      ? {
+          description:
+            'Deine Stammdaten oder ausgewählten Bilder wurden noch nicht vollständig gespeichert. Wenn du die Seite verlässt, gehen die lokalen Änderungen verloren.',
+        }
+      : undefined,
   })
   const formErrors = [...submissionErrors, ...getFormErrorSummary(errors)]
 
@@ -113,6 +134,9 @@ export function InfoForm({
 
         try {
           const savedInfo = await save(values)
+          setHasCompletedSubmit(
+            saveHandlesExternalChanges || !hasExternalUnsavedChanges,
+          )
           reset(toInfoFormValues(savedInfo))
           onSaved(savedInfo)
         } catch (error) {
@@ -252,9 +276,11 @@ export function InfoForm({
             {mode === 'edit' ? 'Zurück zur Mitteilung' : 'Abbrechen'}
           </Button>
           <Button
-            isDisabled={!isDirty || isSubmitting || isPending}
+            isDisabled={!hasUnsavedChanges || isSubmitting || isPending}
             onPress={() => {
+              setHasCompletedSubmit(false)
               reset(initialValues)
+              onDiscardExternalChanges?.()
               setSubmissionErrors([])
             }}
             type="button"

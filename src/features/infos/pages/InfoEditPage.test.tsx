@@ -252,6 +252,106 @@ describe('InfoEditPage', () => {
     },
   )
 
+  it('protects selected but not yet uploaded images from accidental navigation', async () => {
+    const user = userEvent.setup()
+
+    mockApiServer.use(
+      http.get(`http://localhost/api/v1/infos/${INFO_ID}`, () =>
+        HttpResponse.json(infoResponse()),
+      ),
+      http.get('http://localhost/api/v1/offices', () =>
+        HttpResponse.json({
+          data: [officeResponse()],
+          page: 1,
+          pages: 1,
+          size: 20,
+          total: 1,
+        }),
+      ),
+      http.get(`http://localhost/api/v1/infos/${INFO_ID}/images`, () =>
+        HttpResponse.json([]),
+      ),
+    )
+
+    renderEditPage(ADMIN)
+
+    await user.upload(
+      await screen.findByLabelText('Bilddateien auswählen'),
+      new File(['image'], 'ungespeichert.png', { type: 'image/png' }),
+    )
+    await user.click(
+      screen.getByRole('button', { name: 'Zurück zur Mitteilung' }),
+    )
+
+    const dialog = screen.getByRole('dialog', {
+      name: 'Ungespeicherte Änderungen verwerfen?',
+    })
+    expect(dialog).toContainElement(
+      within(dialog).getByText(/ausgewählten Bilder wurden noch nicht/),
+    )
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Weiter bearbeiten' }),
+    )
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Stadtteilfest' }),
+    ).toBeVisible()
+  })
+
+  it('keeps pending images protected after saving only master data', async () => {
+    const user = userEvent.setup()
+
+    mockApiServer.use(
+      http.get(`http://localhost/api/v1/infos/${INFO_ID}`, () =>
+        HttpResponse.json(infoResponse()),
+      ),
+      http.get('http://localhost/api/v1/offices', () =>
+        HttpResponse.json({
+          data: [officeResponse()],
+          page: 1,
+          pages: 1,
+          size: 20,
+          total: 1,
+        }),
+      ),
+      http.get(`http://localhost/api/v1/infos/${INFO_ID}/images`, () =>
+        HttpResponse.json([]),
+      ),
+      http.put(`http://localhost/api/v1/infos/${INFO_ID}`, () =>
+        HttpResponse.json(
+          infoResponse({ description: 'Aktualisierte Beschreibung' }),
+        ),
+      ),
+    )
+
+    renderEditPage(ADMIN)
+
+    await user.upload(
+      await screen.findByLabelText('Bilddateien auswählen'),
+      new File(['image'], 'noch-offen.png', { type: 'image/png' }),
+    )
+    const description = screen.getByRole('textbox', { name: 'Beschreibung' })
+    await user.clear(description)
+    await user.type(description, 'Aktualisierte Beschreibung')
+    await user.click(
+      screen.getByRole('button', { name: 'Änderungen speichern' }),
+    )
+
+    expect(await screen.findByText('Stammdaten gespeichert')).toBeVisible()
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Stadtteilfest' }),
+    ).toBeVisible()
+    expect(screen.getByText('noch-offen.png')).toBeVisible()
+
+    await user.click(
+      screen.getByRole('button', { name: 'Zurück zur Mitteilung' }),
+    )
+    expect(
+      screen.getByRole('dialog', {
+        name: 'Ungespeicherte Änderungen verwerfen?',
+      }),
+    ).toBeVisible()
+  })
+
   it('does not expose the form for another office to a case worker', async () => {
     const officer: AuthUser = {
       ...ADMIN,
@@ -362,7 +462,6 @@ function infoResponse(overrides: Record<string, unknown> = {}) {
     ...overrides,
   }
 }
-
 
 function imageResponse(
   overrides: Readonly<{

@@ -4,7 +4,7 @@ import { Info as InfoIcon } from 'lucide-react'
 import { defineFeatureModule } from '@/app/feature-module'
 import { RequireCapability } from '@/auth/RequireCapability'
 
-/** Registers the authority-only readable Info directory and detail routes. */
+/** Registers authority-only Info read, create and edit routes with capability guards. */
 export const infoFeature = defineFeatureModule({
   capability: 'viewInfos',
   id: 'infos',

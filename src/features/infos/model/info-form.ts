@@ -215,6 +215,14 @@ export function applyInfoSubmissionError(
   if (error.errorCode === 'INFO_NOT_FOUND') {
     return [{ message: 'Die Mitteilung wurde nicht gefunden.' }]
   }
+  if (error.errorCode === 'INFO_STATUS_NOT_FOUND') {
+    return [
+      {
+        message:
+          'Für diese Mitteilung fehlt der aktuelle Status. Der Datenbestand muss administrativ geprüft werden.',
+      },
+    ]
+  }
   if (error.errorCode === 'INFO_OFFICE_NOT_FOUND') {
     setError('officeId', {
       message: 'Die ausgewählte Behörde wurde nicht gefunden.',

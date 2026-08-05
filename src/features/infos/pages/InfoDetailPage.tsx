@@ -6,6 +6,7 @@ import { useAuth } from '@/auth/auth-context'
 import { InfoCategoryBadge, InfoStatusBadge } from '@/features/infos/components/InfoBadges'
 import { InfoLifecycleActions } from '@/features/infos/components/InfoLifecycleActions'
 import { InfoStatusTimeline } from '@/features/infos/components/InfoStatusTimeline'
+import { INFO_READ_ERROR_MESSAGES } from '@/features/infos/model/info-error-messages'
 import type { InfoAddress, InfoRecord } from '@/features/infos/model/info-model'
 import { canManageInfo } from '@/features/infos/model/info-permissions'
 import {
@@ -48,13 +49,7 @@ export function InfoDetailPage() {
   return (
     <RemoteDataBoundary
       errorOptions={{
-        messagesByErrorCode: {
-          INFO_NOT_FOUND: {
-            description:
-              'Die Mitteilung wurde gelöscht oder ist nicht mehr verfügbar.',
-            title: 'Mitteilung nicht verfügbar',
-          },
-        },
+        messagesByErrorCode: INFO_READ_ERROR_MESSAGES,
         fallback: {
           description:
             'Die Mitteilung konnte nicht geladen werden. Versuche es erneut.',
@@ -122,6 +117,9 @@ function InfoImagesSection({ infoId }: Readonly<{ infoId: string }>) {
               'Die Bilder konnten nicht geladen werden. Die übrigen Inhalte bleiben verfügbar.',
             title: 'Bilder nicht verfügbar',
           },
+          messagesByErrorCode: {
+            INFO_NOT_FOUND: INFO_READ_ERROR_MESSAGES.INFO_NOT_FOUND,
+          },
         }}
         loadingLabel="Bilder der Mitteilung werden geladen."
         query={imagesQuery}
@@ -148,6 +146,7 @@ function InfoStatusHistorySection({ infoId }: Readonly<{ infoId: string }>) {
               'Der Statusverlauf konnte nicht geladen werden. Der aktuelle Status steht weiterhin im Seitenkopf.',
             title: 'Statusverlauf nicht verfügbar',
           },
+          messagesByErrorCode: INFO_READ_ERROR_MESSAGES,
         }}
         loadingLabel="Statusverlauf wird geladen."
         query={statusQuery}

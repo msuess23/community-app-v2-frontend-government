@@ -1,6 +1,6 @@
-import { AxeBuilder } from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 
+import { expectNoSeriousAccessibilityViolations } from './fixtures/accessibility.js'
 import { signInAsAuthorityUser } from './fixtures/auth.js'
 
 test('anonymous users are redirected to login', async ({ page }) => {
@@ -70,18 +70,3 @@ test('authenticated app shell has no serious accessibility violations', async ({
   ).toBeVisible()
   await expectNoSeriousAccessibilityViolations(page)
 })
-
-/** Fails the scenario when Axe reports serious WCAG violations. */
-async function expectNoSeriousAccessibilityViolations(
-  page: import('@playwright/test').Page,
-): Promise<void> {
-  const scan = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-    .analyze()
-  const seriousViolations = scan.violations.filter(
-    (violation) =>
-      violation.impact === 'serious' || violation.impact === 'critical',
-  )
-
-  expect(seriousViolations).toEqual([])
-}

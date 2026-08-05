@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
+import { ApiError } from '@/api/client/api-error'
+
 import {
   createInfoStatusUpdateValues,
   getInfoDeletionConsequences,
+  getInfoLifecycleErrorPresentation,
   infoStatusUpdateSchema,
   toInfoStatusCreateRequest,
 } from '@/features/infos/model/info-lifecycle'
@@ -37,6 +40,23 @@ describe('Info lifecycle model', () => {
     })
 
     expect(result.success).toBe(false)
+  })
+
+  it('translates a missing current status into an actionable domain message', () => {
+    const presentation = getInfoLifecycleErrorPresentation(
+      new ApiError({
+        errorCode: 'INFO_STATUS_NOT_FOUND',
+        message: 'Info status not found',
+        status: 404,
+      }),
+      'status',
+    )
+
+    expect(presentation).toEqual({
+      description:
+        'Für diese Mitteilung fehlt der aktuelle Status. Der Datenbestand muss administrativ geprüft werden.',
+      title: 'Status der Mitteilung nicht verfügbar',
+    })
   })
 
   it('describes the complete destructive delete scope', () => {

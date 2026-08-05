@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { ShieldAlert } from 'lucide-react'
+import { useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router'
 
 import { useAuth } from '@/auth/auth-context'
@@ -7,6 +8,7 @@ import type { AuthUser } from '@/auth/auth-types'
 import { InfoCategoryBadge } from '@/features/infos/components/InfoBadges'
 import { InfoForm } from '@/features/infos/components/InfoForm'
 import { InfoImageManager } from '@/features/infos/components/InfoImageManager'
+import { INFO_READ_ERROR_MESSAGES } from '@/features/infos/model/info-error-messages'
 import { canManageInfo } from '@/features/infos/model/info-permissions'
 import type { InfoRecord } from '@/features/infos/model/info-model'
 import { useUpdateInfoMutation } from '@/features/infos/queries/info-admin-mutations'
@@ -15,6 +17,7 @@ import {
   createInfoImagesQueryOptions,
 } from '@/features/infos/queries/info-queries'
 import { useFeedback } from '@/shared/feedback/feedback-context'
+import type { MediaUploadQueueHandle } from '@/shared/media/MediaUploadQueue'
 import { createOfficeDirectoryQueryOptions } from '@/shared/offices/office-queries'
 import type { OfficeReference } from '@/shared/offices/office-model'
 import { RemoteDataBoundary } from '@/shared/remote-data/RemoteDataBoundary'
@@ -45,13 +48,7 @@ export function InfoEditPage() {
   return (
     <RemoteDataBoundary
       errorOptions={{
-        messagesByErrorCode: {
-          INFO_NOT_FOUND: {
-            description:
-              'Die Mitteilung wurde gelöscht oder ist nicht mehr verfügbar.',
-            title: 'Bearbeitung nicht verfügbar',
-          },
-        },
+        messagesByErrorCode: INFO_READ_ERROR_MESSAGES,
         fallback: {
           description:
             'Die Mitteilung konnte nicht für die Bearbeitung geladen werden.',
@@ -102,6 +99,8 @@ function InfoEditForm({
   const navigate = useNavigate()
   const mutation = useUpdateInfoMutation(user)
   const imagesQuery = useQuery(createInfoImagesQueryOptions(info.id))
+  const uploadQueueRef = useRef<MediaUploadQueueHandle>(null)
+  const [hasPendingImages, setHasPendingImages] = useState(false)
   const detailPath = `/infos/${info.id}`
   const listReturnTo = resolveListReturnTo(location.state)
 
@@ -116,6 +115,7 @@ function InfoEditForm({
 
       <InfoForm
         currentUser={user}
+        hasExternalUnsavedChanges={hasPendingImages}
         imageSection={
           <RemoteDataBoundary
             errorOptions={{
@@ -129,7 +129,12 @@ function InfoEditForm({
             query={imagesQuery}
           >
             {(images) => (
-              <InfoImageManager assets={images} infoId={info.id} />
+              <InfoImageManager
+                assets={images}
+                infoId={info.id}
+                onPendingChange={setHasPendingImages}
+                ref={uploadQueueRef}
+              />
             )}
           </RemoteDataBoundary>
         }
@@ -140,7 +145,19 @@ function InfoEditForm({
         onCancel={() =>
           navigate(detailPath, { state: { from: listReturnTo } })
         }
+        onDiscardExternalChanges={() => uploadQueueRef.current?.clearAll()}
         onSaved={(updatedInfo) => {
+          if (hasPendingImages) {
+            notify({
+              dedupeKey: `info-update:${updatedInfo.id}:pending-images`,
+              description:
+                'Die Stammdaten wurden gespeichert. Ausgewählte Bilder sind noch nicht hochgeladen und bleiben auf dieser Seite vorgemerkt.',
+              title: 'Stammdaten gespeichert',
+              tone: 'warning',
+            })
+            return
+          }
+
           notify({
             dedupeKey: `info-update:${updatedInfo.id}`,
             description:

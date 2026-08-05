@@ -177,6 +177,38 @@ describe('MediaUploadQueue', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('reports pending local files and clears them through the imperative handle', async () => {
+    const user = userEvent.setup()
+    const queueRef = createRef<MediaUploadQueueHandle>()
+    const onPendingChange = vi.fn()
+
+    render(
+      <MediaUploadQueue
+        accept="image/png"
+        allowedMimeTypes={['image/png']}
+        onPendingChange={onPendingChange}
+        onUpload={vi.fn(async () => undefined)}
+        ref={queueRef}
+      />,
+    )
+
+    await user.upload(
+      screen.getByLabelText('Bilddateien auswählen'),
+      new File(['image'], 'plan.png', { type: 'image/png' }),
+    )
+
+    expect(queueRef.current?.hasPendingItems()).toBe(true)
+    expect(onPendingChange).toHaveBeenLastCalledWith(true)
+
+    act(() => queueRef.current?.clearAll())
+
+    expect(queueRef.current?.hasPendingItems()).toBe(false)
+    expect(onPendingChange).toHaveBeenLastCalledWith(false)
+    expect(
+      screen.queryByRole('list', { name: 'Upload-Warteschlange' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('supports deferred validation and prioritizes a selected primary image', async () => {
     const user = userEvent.setup()
     const queueRef = createRef<MediaUploadQueueHandle>()

@@ -1,9 +1,4 @@
-import {
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  X,
-} from 'lucide-react'
+import { ChevronLeft, ChevronRight, Eye, X } from 'lucide-react'
 import {
   useEffect,
   useId,
@@ -14,9 +9,8 @@ import {
   type SyntheticEvent,
 } from 'react'
 
-import { cn } from '@/shared/lib/cn'
-import type { MediaAsset } from '@/shared/media/media-model'
 import { MediaImage } from '@/shared/media/MediaImage'
+import type { MediaAsset } from '@/shared/media/media-model'
 import { Button } from '@/shared/ui/Button'
 
 export interface MediaGalleryProps {
@@ -27,7 +21,10 @@ export interface MediaGalleryProps {
   renderActions?: (asset: MediaAsset) => ReactNode
 }
 
-/** Displays an accessible image collection with swipe, scroll and full-size navigation. */
+/**
+ * Displays a static grid or a named, non-rotating carousel. The carousel keeps
+ * every slide in the DOM and supports scrolling, swiping and explicit controls.
+ */
 export function MediaGallery({
   assets,
   emptyMessage = 'Für diese Mitteilung wurden keine Bilder veröffentlicht.',
@@ -38,10 +35,10 @@ export function MediaGallery({
   const [selectedAsset, setSelectedAsset] = useState<MediaAsset | null>(null)
   const [canScrollBack, setCanScrollBack] = useState(false)
   const [canScrollForward, setCanScrollForward] = useState(false)
-  const dialogRef = useRef<HTMLDialogElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
-  const listRef = useRef<HTMLUListElement>(null)
+  const carouselRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
   const selectedIndex = selectedAsset
     ? assets.findIndex((asset) => asset.id === selectedAsset.id)
@@ -49,7 +46,6 @@ export function MediaGallery({
 
   useEffect(() => {
     const dialog = dialogRef.current
-
     if (!selectedAsset || !dialog) {
       return
     }
@@ -70,12 +66,13 @@ export function MediaGallery({
       return
     }
 
-    const list = listRef.current
-    if (!list) {
+    const carousel = carouselRef.current
+    if (!carousel) {
       return
     }
+
     const update = () =>
-      updateScrollState(list, setCanScrollBack, setCanScrollForward)
+      updateScrollState(carousel, setCanScrollBack, setCanScrollForward)
     const frame = window.requestAnimationFrame(update)
     window.addEventListener('resize', update)
     return () => {
@@ -130,106 +127,100 @@ export function MediaGallery({
   }
 
   function scrollGallery(direction: -1 | 1): void {
-    const list = listRef.current
-    if (!list) {
+    const carousel = carouselRef.current
+    if (!carousel) {
       return
     }
-    list.scrollBy({
+    carousel.scrollBy({
       behavior: 'smooth',
-      left: direction * Math.max(list.clientWidth * 0.8, 280),
+      left: direction * Math.max(carousel.clientWidth * 0.8, 280),
     })
   }
 
-  return (
-    <>
-      {layout === 'carousel' && assets.length > 1 ? (
-        <div className="mb-3 flex justify-end gap-2">
-          <Button
-            aria-label="Zu vorherigen Bildern scrollen"
-            isDisabled={!canScrollBack}
-            onPress={() => scrollGallery(-1)}
-            size="sm"
-            type="button"
-            variant="outline"
+  const gallery =
+    layout === 'carousel' ? (
+      <section
+        aria-label={label}
+        aria-roledescription="Karussell"
+        role="region"
+      >
+        {assets.length > 1 ? (
+          <div
+            aria-label="Karussellsteuerung"
+            className="mb-3 flex justify-end gap-2"
+            role="group"
           >
-            <ChevronLeft aria-hidden="true" size={18} />
-          </Button>
-          <Button
-            aria-label="Zu weiteren Bildern scrollen"
-            isDisabled={!canScrollForward}
-            onPress={() => scrollGallery(1)}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            <ChevronRight aria-hidden="true" size={18} />
-          </Button>
-        </div>
-      ) : null}
+            <Button
+              aria-label="Zu vorherigen Bildern scrollen"
+              isDisabled={!canScrollBack}
+              onPress={() => scrollGallery(-1)}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <ChevronLeft aria-hidden="true" size={18} />
+            </Button>
+            <Button
+              aria-label="Zu weiteren Bildern scrollen"
+              isDisabled={!canScrollForward}
+              onPress={() => scrollGallery(1)}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <ChevronRight aria-hidden="true" size={18} />
+            </Button>
+          </div>
+        ) : null}
 
+        <div
+          className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-3"
+          onScroll={(event) =>
+            updateScrollState(
+              event.currentTarget,
+              setCanScrollBack,
+              setCanScrollForward,
+            )
+          }
+          ref={carouselRef}
+        >
+          {assets.map((asset, index) => (
+            <div
+              aria-label={`${index + 1} von ${assets.length}`}
+              aria-roledescription="Folie"
+              className="w-[85vw] max-w-md shrink-0 snap-start sm:w-[22rem] lg:w-[26rem]"
+              key={asset.id}
+              role="group"
+            >
+              <GalleryFigure
+                asset={asset}
+                onOpen={() => setSelectedAsset(asset)}
+                renderActions={renderActions}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+    ) : (
       <ul
         aria-label={label}
-        aria-roledescription={layout === 'carousel' ? 'Bilderkarussell' : undefined}
-        className={cn(
-          layout === 'grid'
-            ? 'grid gap-4 sm:grid-cols-2 2xl:grid-cols-3'
-            : 'flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-3',
-        )}
-        onScroll={
-          layout === 'carousel'
-            ? (event) =>
-                updateScrollState(
-                  event.currentTarget,
-                  setCanScrollBack,
-                  setCanScrollForward,
-                )
-            : undefined
-        }
-        ref={listRef}
+        className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3"
       >
-        {assets.map((asset, index) => (
-          <li
-            aria-label={`${index + 1} von ${assets.length}`}
-            className={cn(
-              layout === 'carousel' &&
-                'w-[85vw] max-w-md shrink-0 snap-start sm:w-[22rem] lg:w-[26rem]',
-            )}
-            key={asset.id}
-          >
-            <figure className="border-outline-variant bg-surface-container-lowest overflow-hidden rounded-xl border">
-              <button
-                aria-label={`Bild vergrößern: ${asset.altText ?? asset.originalFilename}`}
-                className="focus-visible:outline-primary group relative block w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2"
-                onClick={() => setSelectedAsset(asset)}
-                type="button"
-              >
-                <MediaImage
-                  altText={asset.altText}
-                  className="aspect-video w-full object-cover transition-transform group-hover:scale-[1.02]"
-                  url={asset.url}
-                />
-                <span className="bg-scrim text-on-primary absolute right-2 bottom-2 inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold">
-                  <Eye aria-hidden="true" size={16} />
-                  Vergrößern
-                </span>
-              </button>
-              <figcaption className="space-y-1 p-3 text-sm">
-                <span className="text-on-surface block font-medium">
-                  {asset.altText ?? 'Keine Bildbeschreibung verfügbar'}
-                </span>
-                {asset.isCover ? (
-                  <span className="text-on-surface-variant block">Titelbild</span>
-                ) : null}
-                {renderActions ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {renderActions(asset)}
-                  </div>
-                ) : null}
-              </figcaption>
-            </figure>
+        {assets.map((asset) => (
+          <li key={asset.id}>
+            <GalleryFigure
+              asset={asset}
+              onOpen={() => setSelectedAsset(asset)}
+              renderActions={renderActions}
+            />
           </li>
         ))}
       </ul>
+    )
+
+  return (
+    <>
+      {gallery}
 
       <dialog
         aria-labelledby={titleId}
@@ -263,8 +254,8 @@ export function MediaGallery({
             </header>
             <MediaImage
               altText={selectedAsset.altText}
-              key={selectedAsset.id}
               className="max-h-[75vh] w-full rounded-xl object-contain"
+              key={selectedAsset.id}
               loading="eager"
               url={selectedAsset.url}
             />
@@ -279,7 +270,7 @@ export function MediaGallery({
                   <ChevronLeft aria-hidden="true" size={18} />
                   Vorheriges Bild
                 </Button>
-                <span className="text-on-surface-variant text-sm">
+                <span aria-live="polite" className="text-on-surface-variant text-sm">
                   {selectedIndex + 1} von {assets.length}
                 </span>
                 <Button
@@ -297,6 +288,50 @@ export function MediaGallery({
         ) : null}
       </dialog>
     </>
+  )
+}
+
+function GalleryFigure({
+  asset,
+  onOpen,
+  renderActions,
+}: Readonly<{
+  asset: MediaAsset
+  onOpen: () => void
+  renderActions?: (asset: MediaAsset) => ReactNode
+}>) {
+  return (
+    <figure className="border-outline-variant bg-surface-container-lowest overflow-hidden rounded-xl border">
+      <button
+        aria-label={`Bild vergrößern: ${asset.altText ?? asset.originalFilename}`}
+        className="focus-visible:outline-primary group relative block w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2"
+        onClick={onOpen}
+        type="button"
+      >
+        <MediaImage
+          altText={asset.altText}
+          className="aspect-video w-full object-cover transition-transform group-hover:scale-[1.02]"
+          url={asset.url}
+        />
+        <span className="bg-scrim text-on-primary absolute right-2 bottom-2 inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold">
+          <Eye aria-hidden="true" size={16} />
+          Vergrößern
+        </span>
+      </button>
+      <figcaption className="space-y-1 p-3 text-sm">
+        <span className="text-on-surface block font-medium">
+          {asset.altText ?? 'Keine Bildbeschreibung verfügbar'}
+        </span>
+        {asset.isCover ? (
+          <span className="text-on-surface-variant block">Titelbild</span>
+        ) : null}
+        {renderActions ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {renderActions(asset)}
+          </div>
+        ) : null}
+      </figcaption>
+    </figure>
   )
 }
 

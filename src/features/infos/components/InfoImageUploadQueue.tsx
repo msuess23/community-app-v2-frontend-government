@@ -19,6 +19,7 @@ export interface InfoImageUploadQueueProps {
   allowCoverSelection?: boolean
   id?: string
   isDisabled?: boolean
+  onPendingChange?: (hasPendingItems: boolean) => void
   onUpload: (request: MediaUploadRequest) => Promise<void>
   showUploadAction?: boolean
 }
@@ -28,7 +29,14 @@ export const InfoImageUploadQueue = forwardRef<
   MediaUploadQueueHandle,
   InfoImageUploadQueueProps
 >(function InfoImageUploadQueue(
-  { allowCoverSelection = false, id, isDisabled, onUpload, showUploadAction },
+  {
+    allowCoverSelection = false,
+    id,
+    isDisabled,
+    onPendingChange,
+    onUpload,
+    showUploadAction,
+  },
   ref,
 ) {
   return (
@@ -48,6 +56,7 @@ export const InfoImageUploadQueue = forwardRef<
       id={id}
       isDisabled={isDisabled}
       maxBytes={INFO_IMAGE_MAX_BYTES}
+      onPendingChange={onPendingChange}
       onUpload={onUpload}
       primarySelection={
         allowCoverSelection

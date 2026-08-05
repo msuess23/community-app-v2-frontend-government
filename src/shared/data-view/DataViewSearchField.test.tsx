@@ -93,6 +93,23 @@ describe('DataViewSearchField', () => {
     expect(searchbox).toHaveFocus()
   })
 
+  it('limits search input to the backend maximum length', async () => {
+    const user = userEvent.setup()
+    const onSearch = vi.fn()
+
+    renderWithProviders(
+      <DataViewSearchField onSearch={onSearch} value="" />,
+    )
+
+    const searchbox = screen.getByRole('searchbox', { name: 'Suche' })
+    expect(searchbox).toHaveAttribute('maxlength', '200')
+    await user.type(searchbox, 'x'.repeat(205))
+    await user.click(screen.getByRole('button', { name: 'Suchen' }))
+
+    expect(searchbox).toHaveValue('x'.repeat(200))
+    expect(onSearch).toHaveBeenCalledWith('x'.repeat(200))
+  })
+
   it('adopts a search value restored from external URL navigation', () => {
     const onSearch = vi.fn()
     const { rerender } = renderWithProviders(

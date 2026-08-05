@@ -20,6 +20,7 @@ export type DataViewUrlConfig<
   defaultPageSize: number
   defaultSort?: DataViewSort<TSortField>
   filters?: readonly DataViewFilterDefinition<TFilterKey>[]
+  maxSearchLength?: number
   pageSizeOptions: readonly number[]
   sortFields?: readonly TSortField[]
 }>
@@ -56,6 +57,8 @@ const SEARCH_PARAM = 'search'
 const SORT_DIRECTION_PARAM = 'sortDirection'
 const SORT_FIELD_PARAM = 'sortBy'
 
+export const DEFAULT_DATA_VIEW_SEARCH_MAX_LENGTH = 200
+
 /** Reads a normalized list-view state from URL search parameters. */
 export function parseDataViewUrlState<
   TSortField extends string,
@@ -68,7 +71,10 @@ export function parseDataViewUrlState<
     filters: parseFilters(searchParams, config.filters ?? []),
     page: parsePositiveInteger(searchParams.get(PAGE_PARAM), 1),
     pageSize: parsePageSize(searchParams.get(PAGE_SIZE_PARAM), config),
-    search: searchParams.get(SEARCH_PARAM)?.trim() ?? '',
+    search: normalizeSearch(
+      searchParams.get(SEARCH_PARAM) ?? '',
+      config.maxSearchLength,
+    ),
     sort: parseSort(searchParams, config),
   }
 }
@@ -94,7 +100,10 @@ export function createDataViewSearchParams<
       update.pageSize ?? currentState.pageSize,
       config,
     ),
-    search: normalizeSearch(update.search ?? currentState.search),
+    search: normalizeSearch(
+      update.search ?? currentState.search,
+      config.maxSearchLength,
+    ),
     sort: normalizeSort(
       update.sort === undefined ? currentState.sort : update.sort,
       config,
@@ -321,8 +330,10 @@ function normalizePositiveInteger(value: number, fallback: number): number {
 }
 
 /** Removes surrounding whitespace before persisting a search term. */
-function normalizeSearch(value: string): string {
-  return value.trim()
+function normalizeSearch(value: string, maxLength?: number): string {
+  return value
+    .trim()
+    .slice(0, maxLength ?? DEFAULT_DATA_VIEW_SEARCH_MAX_LENGTH)
 }
 
 /** Trims, removes empty entries and deduplicates filter values. */

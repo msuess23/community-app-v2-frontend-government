@@ -1,6 +1,6 @@
 import { Info as InfoIcon, ShieldAlert } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 
 import { useAuth } from '@/auth/auth-context'
@@ -34,6 +34,7 @@ function AuthenticatedInfoCreatePage({
   const queryClient = useQueryClient()
   const { notify } = useFeedback()
   const uploadQueueRef = useRef<MediaUploadQueueHandle>(null)
+  const [hasPendingImages, setHasPendingImages] = useState(false)
   const createdInfoIdRef = useRef<string | null>(null)
   const uploadSummaryRef = useRef<MediaUploadSummary | null>(null)
   const officesQuery = useQuery(createOfficeDirectoryQueryOptions('active'))
@@ -92,10 +93,12 @@ function AuthenticatedInfoCreatePage({
 
             <InfoForm
               currentUser={user}
+              hasExternalUnsavedChanges={hasPendingImages}
               imageSection={
                 <InfoImageUploadQueue
                   allowCoverSelection
                   id="info-create-images"
+                  onPendingChange={setHasPendingImages}
                   onUpload={async ({ description, file }) => {
                     const infoId = createdInfoIdRef.current
                     if (!infoId || !description) {
@@ -116,7 +119,11 @@ function AuthenticatedInfoCreatePage({
               mode="create"
               offices={offices}
               onCancel={() => navigate(returnTo)}
+              onDiscardExternalChanges={() =>
+                uploadQueueRef.current?.clearAll()
+              }
               onSaved={(info) => {
+                uploadQueueRef.current?.clearAll()
                 const summary = uploadSummaryRef.current
                 const hasFailedImages = Boolean(summary?.failedCount)
                 notify({
@@ -164,6 +171,7 @@ function AuthenticatedInfoCreatePage({
                 }
                 return info
               }}
+              saveHandlesExternalChanges
               validateBeforeSave={() =>
                 uploadQueueRef.current?.validateAll() === false
                   ? [
