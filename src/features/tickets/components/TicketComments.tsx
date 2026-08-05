@@ -51,7 +51,9 @@ function TicketCommentList({
           className="border-outline-variant bg-surface-container-lowest rounded-xl border p-4 sm:p-5"
           key={comment.id}
         >
-          <article>
+          <article
+            aria-label={createTicketCommentLabel(comment)}
+          >
             <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex min-w-0 items-start gap-3">
                 <span className="bg-primary-container text-on-primary-container flex size-10 shrink-0 items-center justify-center rounded-full">
@@ -92,4 +94,12 @@ function TicketCommentList({
       ))}
     </ol>
   )
+}
+
+/** Builds a stable accessible name without hiding the comment body. */
+function createTicketCommentLabel(comment: TicketCommentRecord): string {
+  const kind = comment.isInternal
+    ? 'Interne Notiz'
+    : 'Öffentlicher Kommentar'
+  return `${kind} von ${comment.author.displayName}, ${formatDisplayDateTime(comment.createdAt)}`
 }

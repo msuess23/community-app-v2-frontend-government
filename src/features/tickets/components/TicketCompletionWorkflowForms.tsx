@@ -1,27 +1,18 @@
 import {
   EmptyOptionsNotice,
-  OptionalCommentField,
-  StaffSelectionField,
   WorkflowForm,
   useWorkflowDialogForm,
 } from '@/features/tickets/components/TicketWorkflowFormShared'
 import {
   applyTicketWorkflowSubmissionError,
   completeTicketSchema,
-  decideEscalationSchema,
-  escalateTicketSchema,
-  getEscalationDecisionLabel,
   getTicketCompletionOutcomeLabel,
   requestCitizenResponseSchema,
   returnToDispatchSchema,
   toCompleteTicketAction,
-  toDecideEscalationAction,
-  toEscalateTicketAction,
   toRequestCitizenResponseAction,
   toReturnToDispatchAction,
   type CompleteTicketFormValues,
-  type DecideEscalationFormValues,
-  type EscalateTicketFormValues,
   type RequestCitizenResponseFormValues,
   type ReturnToDispatchFormValues,
   type TicketWorkflowOptions,
@@ -32,127 +23,7 @@ import { useConfirmation } from '@/shared/confirmation/confirmation-context'
 import { ControlledRadioGroupField } from '@/shared/forms/ControlledRadioGroupField'
 import { ControlledTextAreaField } from '@/shared/forms/ControlledTextAreaField'
 
-export function EscalateTicketForm({
-  options,
-  ticket,
-}: Readonly<{ options: TicketWorkflowOptions; ticket: TicketRecord }>) {
-  const mutation = useExecuteTicketWorkflowMutation()
-  const dialog = useWorkflowDialogForm<EscalateTicketFormValues>({
-    defaultValues: { managerUserId: '', reason: '' },
-    discardDescription:
-      'Der ausgewählte Manager und die eingetragene Begründung gehen verloren.',
-    schema: escalateTicketSchema,
-  })
-  const hasOptions = options.escalationTargets.length > 0
-
-  return (
-    <WorkflowForm
-      form={dialog.form}
-      isDisabled={!hasOptions}
-      onSubmit={dialog.form.handleSubmit(async (values) => {
-        dialog.setSubmissionErrors([])
-        try {
-          await mutation.mutateAsync({
-            request: toEscalateTicketAction(values),
-            ticketId: ticket.id,
-          })
-          dialog.form.reset()
-          dialog.close()
-        } catch (error) {
-          dialog.setSubmissionErrors(
-            applyTicketWorkflowSubmissionError(error, dialog.form.setError, {
-              manager_user_id: 'managerUserId',
-              reason: 'reason',
-            }),
-          )
-        }
-      })}
-      pendingLabel="Ticket wird eskaliert …"
-      submissionErrors={dialog.submissionErrors}
-      submitLabel="Eskalation anfordern"
-    >
-      <EmptyOptionsNotice
-        hasOptions={hasOptions}
-        message="Aktuell ist kein weiterer aktiver Manager für eine Eskalation verfügbar."
-      />
-      <StaffSelectionField
-        control={dialog.form.control}
-        description="Der ausgewählte Manager trifft die Entscheidung und gibt das Ticket anschließend an die bisherige Bearbeitung zurück."
-        label="Entscheidender Manager"
-        name="managerUserId"
-        options={options.escalationTargets}
-      />
-      <ControlledTextAreaField
-        control={dialog.form.control}
-        description="Die Begründung wird dauerhaft im Ereignisstrom dokumentiert."
-        label="Begründung"
-        maxLength={1000}
-        name="reason"
-        required
-        rows={5}
-      />
-    </WorkflowForm>
-  )
-}
-
-export function DecideEscalationForm({ ticket }: Readonly<{ ticket: TicketRecord }>) {
-  const mutation = useExecuteTicketWorkflowMutation()
-  const dialog = useWorkflowDialogForm<DecideEscalationFormValues>({
-    defaultValues: { comment: '', decision: 'APPROVED' },
-    discardDescription:
-      'Die ausgewählte Entscheidung und der optionale Kommentar gehen verloren.',
-    schema: decideEscalationSchema,
-  })
-
-  return (
-    <WorkflowForm
-      form={dialog.form}
-      onSubmit={dialog.form.handleSubmit(async (values) => {
-        dialog.setSubmissionErrors([])
-        try {
-          await mutation.mutateAsync({
-            request: toDecideEscalationAction(values),
-            ticketId: ticket.id,
-          })
-          dialog.form.reset()
-          dialog.close()
-        } catch (error) {
-          dialog.setSubmissionErrors(
-            applyTicketWorkflowSubmissionError(error, dialog.form.setError, {
-              comment: 'comment',
-              decision: 'decision',
-            }),
-          )
-        }
-      })}
-      pendingLabel="Entscheidung wird gespeichert …"
-      submissionErrors={dialog.submissionErrors}
-      submitLabel="Entscheidung dokumentieren"
-    >
-      <ControlledRadioGroupField
-        control={dialog.form.control}
-        description="Die Entscheidung beendet nur die Eskalation. Das Ticket kehrt anschließend zur vorherigen Bearbeitung zurück."
-        isRequired
-        label="Entscheidung"
-        name="decision"
-        options={(['APPROVED', 'REJECTED'] as const).map((decision) => ({
-          description:
-            decision === 'APPROVED'
-              ? 'Die eskalierte Vorgehensweise wird genehmigt.'
-              : 'Die eskalierte Vorgehensweise wird abgelehnt.',
-          label: getEscalationDecisionLabel(decision),
-          value: decision,
-        }))}
-        orientation="horizontal"
-      />
-      <OptionalCommentField
-        control={dialog.form.control}
-        description="Optionaler fachlicher Hinweis zur Entscheidung."
-      />
-    </WorkflowForm>
-  )
-}
-
+/** Publishes a question and pauses authority processing until the citizen replies. */
 export function RequestCitizenResponseForm({
   ticket,
 }: Readonly<{ ticket: TicketRecord }>) {
@@ -207,7 +78,10 @@ export function RequestCitizenResponseForm({
   )
 }
 
-export function ReturnToDispatchForm({ ticket }: Readonly<{ ticket: TicketRecord }>) {
+/** Returns a misrouted ticket to dispatch after an explicit destructive confirmation. */
+export function ReturnToDispatchForm({
+  ticket,
+}: Readonly<{ ticket: TicketRecord }>) {
   const { confirm } = useConfirmation()
   const mutation = useExecuteTicketWorkflowMutation()
   const dialog = useWorkflowDialogForm<ReturnToDispatchFormValues>({
@@ -263,6 +137,7 @@ export function ReturnToDispatchForm({ ticket }: Readonly<{ ticket: TicketRecord
   )
 }
 
+/** Completes the workflow with only the outcomes approved by the backend. */
 export function CompleteTicketForm({
   options,
   ticket,

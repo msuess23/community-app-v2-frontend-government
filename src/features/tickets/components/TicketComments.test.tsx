@@ -37,6 +37,16 @@ describe('TicketComments', () => {
     ).toBeVisible()
     expect(screen.getByText('Behördenmitarbeiter')).toBeVisible()
     expect(screen.getByText('Bürger')).toBeVisible()
+    expect(
+      screen.getByRole('article', {
+        name: /Interne Notiz von Olaf Ordnung/,
+      }),
+    ).toBeVisible()
+    expect(
+      screen.getByRole('article', {
+        name: /Öffentlicher Kommentar von Clara Bürgerin/,
+      }),
+    ).toBeVisible()
   })
 
   it('defaults to an internal note and appends the server-confirmed response', async () => {

@@ -130,6 +130,31 @@ export class TicketDetailPageObject {
     await expect(dialog).toBeHidden()
   }
 
+
+  async openWorkflowAction(
+    actionLabel: string,
+    dialogName: string,
+  ): Promise<Readonly<{ dialog: Locator; trigger: Locator }>> {
+    const trigger = this.page.getByRole('button', { name: actionLabel })
+    await trigger.click()
+    const dialog = this.page.getByRole('dialog', { name: dialogName })
+    await expect(dialog).toBeVisible()
+
+    return { dialog, trigger }
+  }
+
+  async expectNoHorizontalOverflow(): Promise<void> {
+    await expect
+      .poll(() =>
+        this.page.evaluate(
+          () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+        ),
+      )
+      .toBeLessThanOrEqual(1)
+  }
+
   async returnToDirectory(): Promise<void> {
     await this.page
       .getByRole('link', { name: 'Zurück zum Ticketverzeichnis' })

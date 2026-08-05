@@ -1,11 +1,13 @@
-import type { TicketWorkflowAction } from '@/api/generated/models'
+import type { TicketWorkflowAction } from '@/features/tickets/model/ticket-workflow'
 import {
   CompleteTicketForm,
-  DecideEscalationForm,
-  EscalateTicketForm,
   RequestCitizenResponseForm,
   ReturnToDispatchForm,
-} from '@/features/tickets/components/TicketDecisionWorkflowForms'
+} from '@/features/tickets/components/TicketCompletionWorkflowForms'
+import {
+  DecideEscalationForm,
+  EscalateTicketForm,
+} from '@/features/tickets/components/TicketEscalationWorkflowForms'
 import {
   AssignPrimaryOfficerForm,
   CosignTicketForm,

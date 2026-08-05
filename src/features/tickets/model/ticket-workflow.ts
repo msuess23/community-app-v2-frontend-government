@@ -17,9 +17,27 @@ import type {
   StaffUserReference,
   TicketCompletionOutcome,
   TicketDispatchRequest,
+  TicketWorkflowAction,
   TicketWorkflowOptionsResponse,
 } from '@/api/generated/models'
+
 import type { FormErrorSummaryItem } from '@/shared/ui/FormErrorSummary'
+
+export type { TicketWorkflowAction } from '@/api/generated/models'
+
+export const ALL_TICKET_WORKFLOW_ACTIONS = [
+  'DISPATCH',
+  'ASSIGN_PRIMARY_OFFICER',
+  'REASSIGN_PRIMARY_OFFICER',
+  'FORWARD',
+  'REQUEST_COSIGNATURE',
+  'COSIGN',
+  'ESCALATE',
+  'DECIDE_ESCALATION',
+  'REQUEST_CITIZEN_RESPONSE',
+  'RETURN_TO_DISPATCH',
+  'COMPLETE',
+] as const satisfies readonly TicketWorkflowAction[]
 
 export const ESCALATION_DECISIONS = ['APPROVED', 'REJECTED'] as const
 export const TICKET_COMPLETION_OUTCOMES = ['RESOLVED', 'REJECTED'] as const satisfies readonly TicketCompletionOutcome[]

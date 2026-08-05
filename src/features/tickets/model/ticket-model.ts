@@ -6,6 +6,13 @@ import type {
   TicketWorkflowState,
 } from '@/api/generated/models'
 
+export type {
+  TicketCategory,
+  TicketStatus,
+  TicketVisibility,
+  TicketWorkflowState,
+} from '@/api/generated/models'
+
 export const TICKET_CATEGORIES = [
   'INFRASTRUCTURE',
   'CLEANING',

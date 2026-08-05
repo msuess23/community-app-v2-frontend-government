@@ -1,14 +1,12 @@
-import type {
-  TicketCategory,
-  TicketStatus,
-  TicketVisibility,
-  TicketWorkflowState,
-} from '@/api/generated/models'
 import {
   getTicketCategoryLabel,
   getTicketStatusLabel,
   getTicketVisibilityLabel,
   getTicketWorkflowStateLabel,
+  type TicketCategory,
+  type TicketStatus,
+  type TicketVisibility,
+  type TicketWorkflowState,
 } from '@/features/tickets/model/ticket-model'
 import {
   DataViewStatusBadge,
@@ -21,7 +19,8 @@ export function TicketCategoryBadge({
 }: Readonly<{ category: TicketCategory }>) {
   return (
     <DataViewStatusBadge tone="neutral">
-      {getTicketCategoryLabel(category)}
+      <span className="sr-only">Kategorie: </span>
+      <span>{getTicketCategoryLabel(category)}</span>
     </DataViewStatusBadge>
   )
 }
@@ -32,7 +31,10 @@ export function TicketStatusBadge({
 }: Readonly<{ status: TicketStatus | null }>) {
   return (
     <DataViewStatusBadge tone={status ? getStatusTone(status) : 'danger'}>
-      {status ? getTicketStatusLabel(status) : 'Status nicht verfügbar'}
+      <span className="sr-only">Öffentlicher Status: </span>
+      <span>
+        {status ? getTicketStatusLabel(status) : 'Status nicht verfügbar'}
+      </span>
     </DataViewStatusBadge>
   )
 }
@@ -43,7 +45,8 @@ export function TicketWorkflowStateBadge({
 }: Readonly<{ state: TicketWorkflowState }>) {
   return (
     <DataViewStatusBadge tone={getWorkflowStateTone(state)}>
-      {getTicketWorkflowStateLabel(state)}
+      <span className="sr-only">Workflowzustand: </span>
+      <span>{getTicketWorkflowStateLabel(state)}</span>
     </DataViewStatusBadge>
   )
 }
@@ -54,7 +57,8 @@ export function TicketVisibilityBadge({
 }: Readonly<{ visibility: TicketVisibility }>) {
   return (
     <DataViewStatusBadge tone={visibility === 'PUBLIC' ? 'info' : 'neutral'}>
-      {getTicketVisibilityLabel(visibility)}
+      <span className="sr-only">Sichtbarkeit: </span>
+      <span>{getTicketVisibilityLabel(visibility)}</span>
     </DataViewStatusBadge>
   )
 }

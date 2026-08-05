@@ -2,7 +2,7 @@ import { ClipboardList } from 'lucide-react'
 
 import { defineFeatureModule } from '@/app/feature-module'
 
-/** Registers the role-scoped authority ticket workspace and its read routes. */
+/** Registers the complete role-scoped authority workspace for event-sourced tickets. */
 export const ticketFeature = defineFeatureModule({
   capability: 'viewTicketWorkspace',
   id: 'tickets',

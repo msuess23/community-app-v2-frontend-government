@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { useMemo } from 'react'
 
-import type { TicketWorkflowAction } from '@/api/generated/models'
+import type { TicketWorkflowAction } from '@/features/tickets/model/ticket-workflow'
 import { TicketWorkflowForm } from '@/features/tickets/components/TicketWorkflowForms'
 import type { TicketRecord } from '@/features/tickets/model/ticket-model'
 import { ResourceActionBar } from '@/shared/resource-detail/ResourceActionBar'

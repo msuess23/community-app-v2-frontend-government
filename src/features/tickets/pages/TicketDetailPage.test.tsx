@@ -79,6 +79,9 @@ describe('TicketDetailPage', () => {
     expect(screen.getByText('Interne fachliche Prüfung läuft.')).toBeVisible()
     expect(screen.getByText('schlagloch.jpg')).toBeVisible()
     expect(screen.getByText('Historisch entfernte Bilder')).toBeVisible()
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Ticketstand Version 4',
+    )
     const metadata = screen.getByRole('region', { name: 'Metadaten' })
     expect(within(metadata).getByText('4')).toBeVisible()
     expect(screen.queryByText(TICKET_ID)).not.toBeInTheDocument()

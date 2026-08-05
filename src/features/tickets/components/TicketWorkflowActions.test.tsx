@@ -1,24 +1,11 @@
 import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import type { TicketWorkflowAction } from '@/api/generated/models'
+import type { TicketWorkflowAction } from '@/features/tickets/model/ticket-workflow'
 import { TicketWorkflowActions } from '@/features/tickets/components/TicketWorkflowActions'
 import type { TicketRecord } from '@/features/tickets/model/ticket-model'
+import { ALL_TICKET_WORKFLOW_ACTIONS } from '@/features/tickets/model/ticket-workflow'
 import { renderWithProviders } from '@/test/render'
-
-const ALL_TICKET_WORKFLOW_ACTIONS = [
-  'DISPATCH',
-  'ASSIGN_PRIMARY_OFFICER',
-  'REASSIGN_PRIMARY_OFFICER',
-  'FORWARD',
-  'REQUEST_COSIGNATURE',
-  'COSIGN',
-  'ESCALATE',
-  'DECIDE_ESCALATION',
-  'REQUEST_CITIZEN_RESPONSE',
-  'RETURN_TO_DISPATCH',
-  'COMPLETE',
-] as const satisfies readonly TicketWorkflowAction[]
 
 const ACTION_LABELS = [
   'Behörde zuordnen',
