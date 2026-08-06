@@ -17,12 +17,12 @@ import {
 import { resolveResourceDetailReturnTo } from '@/shared/resource-detail/detail-navigation'
 
 const DETAIL_NAVIGATION = [
-  { id: 'lifecycle-actions', label: 'Aktionen' },
   { id: 'appointment', label: 'Termin' },
   { id: 'concern', label: 'Anliegen' },
   { id: 'linked-ticket', label: 'Ticket' },
   { id: 'documents', label: 'Dokumente' },
   { id: 'event-history', label: 'Ereignishistorie' },
+  { id: 'lifecycle-actions', label: 'Aktionen' },
   { id: 'responsibility', label: 'Beteiligte' },
   { id: 'metadata', label: 'Metadaten' },
 ] as const
@@ -65,6 +65,7 @@ export function AppointmentDetailPage() {
             <div>
               <AppointmentStatusBadge status={appointment.status} />
               <p
+                aria-atomic="true"
                 aria-label="Aktueller Terminstand"
                 aria-live="polite"
                 className="sr-only"

@@ -29,7 +29,10 @@ export const APPOINTMENT_OFFICE_ID = '00000000-0000-4000-8000-000000000010'
 export const APPOINTMENT_CITIZEN_ID = '00000000-0000-4000-8000-000000000020'
 export const APPOINTMENT_TICKET_ID = '00000000-0000-4000-8000-000000000030'
 
-export function appointmentResponse(): AppointmentFixture {
+/** Creates the scheduled, ticket-linked appointment used by browser tests. */
+export function appointmentResponse(
+  overrides: Partial<AppointmentFixture> = {},
+): AppointmentFixture {
   return {
     allowed_actions: ['RESCHEDULE', 'CANCEL'],
     cancelled_at: null,
@@ -56,12 +59,23 @@ export function appointmentResponse(): AppointmentFixture {
     ticket_id: APPOINTMENT_TICKET_ID,
     updated_at: '2026-08-02T08:00:00Z',
     version: 1,
+    ...overrides,
   }
 }
 
+/** Creates a begun appointment for terminal Officer and Manager actions. */
+export function startedAppointmentResponse(
+  allowedActions: readonly string[] = ['COMPLETE', 'MARK_NO_SHOW'],
+): AppointmentFixture {
+  return appointmentResponse({
+    allowed_actions: [...allowedActions],
+    ends_at: '2026-08-05T10:30:00Z',
+    starts_at: '2026-08-05T10:00:00Z',
+  })
+}
+
 export function secondAppointmentResponse(): AppointmentFixture {
-  return {
-    ...appointmentResponse(),
+  return appointmentResponse({
     allowed_actions: [],
     citizen: {
       display_name: 'Bernd Beispiel',
@@ -79,7 +93,7 @@ export function secondAppointmentResponse(): AppointmentFixture {
     ticket_id: null,
     updated_at: '2026-08-05T10:45:00Z',
     version: 2,
-  }
+  })
 }
 
 export type AppointmentSlotFixture = Readonly<{

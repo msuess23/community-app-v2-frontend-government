@@ -30,7 +30,12 @@ export function AppointmentDocuments({
     <div className="space-y-5">
       {currentDocuments ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-on-surface-variant text-sm" aria-live="polite">
+          <p
+            aria-atomic="true"
+            aria-live="polite"
+            className="text-on-surface-variant text-sm"
+            role="status"
+          >
             {currentDocuments.length}{' '}
             {currentDocuments.length === 1
               ? 'aktuelle Dokumentgruppe'

@@ -312,6 +312,7 @@ export function AppointmentDocumentUploadDialog({
                     ? 'border-primary bg-primary-container text-on-primary-container rounded-xl border p-4'
                     : 'border-secondary bg-secondary-container text-on-secondary-container rounded-xl border p-4'
                 }
+                aria-atomic="true"
                 role="status"
               >
                 <p className="font-semibold">

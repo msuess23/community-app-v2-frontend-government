@@ -124,7 +124,12 @@ export function AppointmentSlotBatchForm({
                 ist beliebig; der Batch wird chronologisch übermittelt.
               </p>
             </div>
-            <p className="text-on-surface-variant text-sm font-medium" aria-live="polite">
+            <p
+              aria-atomic="true"
+              aria-live="polite"
+              className="text-on-surface-variant text-sm font-medium"
+              role="status"
+            >
               {fields.length} von {MAX_APPOINTMENT_SLOTS_PER_BATCH} Slots
             </p>
           </div>

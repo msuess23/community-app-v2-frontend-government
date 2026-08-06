@@ -97,9 +97,67 @@ infrastructure.
 
 ## Deliberate boundaries
 
-The remaining authority-client appointment work is the final cross-feature
-accessibility, functional completeness and test-architecture review.
-
 Citizen booking, `/appointments/mine`, citizen lifecycle commands and citizen
 document access belong to the separate citizen client and are not registered
 in this application.
+
+## Final quality review
+
+The authority-client contract is now connected end to end:
+
+| Backend operation | Frontend surface |
+| --- | --- |
+| internal appointment list and filter options | URL-owned appointment directory |
+| appointment detail projection | appointment detail workspace |
+| reschedule, cancel, complete and no-show | `allowed_actions`-driven dialogs |
+| newest-first event stream | incrementally loaded event timeline |
+| office slot list, batch creation and deactivation | slot-capacity workspace |
+| current documents, immutable versions, upload and content | document section and authenticated PDF download |
+
+The frontend deliberately does not call citizen booking, `/appointments/mine`,
+citizen lifecycle or citizen document endpoints.
+
+Officer and Manager roles receive the appointment workspace, slot capacity and
+document management capabilities. Dispatcher and Administrator roles are
+verified as denied both in the capability matrix and browser routing tests.
+The UI never expands the backend permission matrix locally: lifecycle buttons
+continue to come exclusively from `allowed_actions`.
+
+### Accessibility and responsive verification
+
+The final appointment scenarios cover semantic desktop tables and equivalent
+compact cards, named regions and landmarks, textual statuses, machine-readable
+`time` values, keyboard-operable dynamic slot rows, focused error summaries,
+dialog focus restoration, guarded dirty forms and polite atomic mutation
+status. Document visibility and selected reschedule times are announced without
+relying on color.
+
+Playwright runs the appointment workflows in desktop, tablet and smartphone
+projects with Axe checks. A dedicated 320 CSS-pixel reflow scenario verifies
+that the detail workspace, lifecycle controls, document management and local
+section navigation do not create horizontal page scrolling; interactive
+controls retain at least a 44 CSS-pixel target height. The same scenario also
+checks a short landscape viewport. Manual review at 200 and 400 percent browser
+zoom remains part of the study handover checklist because browser zoom behavior
+cannot be represented reliably by viewport emulation alone.
+
+### Test architecture
+
+Appointment browser tests use only reusable feature fixtures and page objects:
+
+```text
+tests/e2e/
+├── fixtures/
+│   ├── appointment-api-data.ts
+│   └── appointment-api.ts
+├── pages/
+│   └── appointment-pages.ts
+└── appointments.spec.ts
+```
+
+The mutable API fixture records lifecycle, slot, upload, download and pagination
+requests while updating only server-returned projections. It supports scheduled
+and begun appointments, all four lifecycle outcomes, paginated history and a
+future unknown event type. Unit tests continue to own mapper, URL-state,
+validation, request-contract, renderer and query-cache behavior; E2E tests own
+role routing, responsive composition and complete user workflows.

@@ -66,13 +66,143 @@ export class AppointmentDetailPageObject {
     ).toBeVisible()
     await expect(
       this.page.getByRole('region', { name: 'Terminplanung' }),
-    ).toContainText('12.08.2026')
+    ).toContainText('Beginn')
     await expect(
       this.page.getByRole('region', { name: 'Beteiligte' }),
     ).toContainText('Bürgeramt Mitte')
     await expect(
       this.page.getByRole('region', { name: 'Ereignishistorie' }),
+    ).toBeVisible()
+  }
+
+  async expectBookedEvent(): Promise<void> {
+    await expect(
+      this.page.getByRole('region', { name: 'Ereignishistorie' }),
     ).toContainText('Termin gebucht')
+  }
+
+  async cancelAppointment(reason: string): Promise<void> {
+    await this.page.getByRole('button', { name: 'Stornieren' }).click()
+    const actionDialog = this.page.getByRole('dialog', {
+      name: 'Termin stornieren',
+    })
+    await actionDialog.getByLabel('Stornierungsbegründung').fill(reason)
+    await actionDialog
+      .getByRole('button', { name: 'Termin stornieren' })
+      .click()
+    const confirmation = this.page.getByRole('dialog', {
+      name: 'Termin wirklich stornieren?',
+    })
+    await confirmation
+      .getByRole('button', { name: 'Termin stornieren' })
+      .click()
+    await expect(actionDialog).toBeHidden()
+    await expect(
+      this.page
+        .getByRole('region', { name: 'Benachrichtigungen' })
+        .getByText('Termin storniert'),
+    ).toBeVisible()
+  }
+
+  async completeAppointment(comment: string): Promise<void> {
+    await this.page.getByRole('button', { name: 'Abschließen' }).click()
+    const actionDialog = this.page.getByRole('dialog', {
+      name: 'Termin abschließen',
+    })
+    await actionDialog.getByLabel('Interne Notiz').fill(comment)
+    await actionDialog
+      .getByRole('button', { name: 'Termin abschließen' })
+      .click()
+    const confirmation = this.page.getByRole('dialog', {
+      name: 'Termin als abgeschlossen dokumentieren?',
+    })
+    await confirmation
+      .getByRole('button', { name: 'Termin abschließen' })
+      .click()
+    await expect(actionDialog).toBeHidden()
+    await expect(
+      this.page
+        .getByRole('region', { name: 'Benachrichtigungen' })
+        .getByText('Termin abgeschlossen'),
+    ).toBeVisible()
+  }
+
+  async markAppointmentNoShow(comment: string): Promise<void> {
+    await this.page.getByRole('button', { name: 'Nicht erschienen' }).click()
+    const actionDialog = this.page.getByRole('dialog', {
+      name: 'Nichterscheinen dokumentieren',
+    })
+    await actionDialog.getByLabel('Interne Notiz').fill(comment)
+    await actionDialog
+      .getByRole('button', { name: 'Nichterscheinen dokumentieren' })
+      .click()
+    const confirmation = this.page.getByRole('dialog', {
+      name: 'Nichterscheinen wirklich dokumentieren?',
+    })
+    await confirmation
+      .getByRole('button', { name: 'Nichterscheinen dokumentieren' })
+      .click()
+    await expect(actionDialog).toBeHidden()
+    await expect(
+      this.page
+        .getByRole('region', { name: 'Benachrichtigungen' })
+        .getByText('Nicht erschienen dokumentiert'),
+    ).toBeVisible()
+  }
+
+  async expectDirtyActionGuardAndFocusRestoration(): Promise<void> {
+    const trigger = this.page.getByRole('button', { name: 'Stornieren' })
+    await trigger.click()
+    const actionDialog = this.page.getByRole('dialog', {
+      name: 'Termin stornieren',
+    })
+    await expect(
+      actionDialog.getByRole('button', { name: 'Aktionsdialog schließen' }),
+    ).toBeFocused()
+    await actionDialog
+      .getByLabel('Stornierungsbegründung')
+      .fill('Noch nicht speichern')
+    await this.page.keyboard.press('Escape')
+
+    const confirmation = this.page.getByRole('dialog', {
+      name: 'Terminaktion abbrechen?',
+    })
+    await expect(confirmation).toBeVisible()
+    await confirmation.getByRole('button', { name: 'Abbrechen' }).click()
+    await expect(actionDialog).toBeVisible()
+
+    await actionDialog
+      .getByRole('button', { name: 'Aktionsdialog schließen' })
+      .click()
+    await confirmation
+      .getByRole('button', { name: 'Eingaben verwerfen' })
+      .click()
+    await expect(actionDialog).toBeHidden()
+    await expect(trigger).toBeFocused()
+  }
+
+  async loadOlderEvents(): Promise<void> {
+    await this.page
+      .getByRole('button', { name: 'Ältere Ereignisse laden' })
+      .click()
+  }
+
+  async expectNoHorizontalOverflow(): Promise<void> {
+    await expect
+      .poll(() =>
+        this.page.evaluate(() => {
+          const browser = globalThis as unknown as {
+            document: {
+              documentElement: { clientWidth: number; scrollWidth: number }
+            }
+          }
+          return (
+            browser.document.documentElement.scrollWidth -
+            browser.document.documentElement.clientWidth
+          )
+        }),
+      )
+      .toBeLessThanOrEqual(1)
   }
 
   async expectDocumentsLoaded(): Promise<void> {
@@ -133,7 +263,12 @@ export class AppointmentDetailPageObject {
       .getByRole('button', { name: 'Neue Version hochladen' })
       .click()
     await expect(dialog).toBeHidden()
-    await expect(this.page.getByText('terminhinweis-v3.pdf')).toBeVisible()
+    await expect(
+      this.page
+        .getByRole('region', { name: 'Termindokumente' })
+        .getByText('terminhinweis-v3.pdf')
+        .first(),
+    ).toBeVisible()
   }
 
   async rescheduleAppointment(reason: string): Promise<void> {
@@ -148,7 +283,11 @@ export class AppointmentDetailPageObject {
     await this.page
       .getByRole('button', { name: 'Termin verschieben' })
       .click()
-    await expect(this.page.getByText('Termin verschoben')).toBeVisible()
+    await expect(
+      this.page
+        .getByRole('region', { name: 'Benachrichtigungen' })
+        .getByText('Termin verschoben'),
+    ).toBeVisible()
     await expect(
       this.page.getByRole('dialog', { name: 'Termin verschieben' }),
     ).toBeHidden()

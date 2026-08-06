@@ -445,20 +445,22 @@ function ScheduleComparison({
           <dt className="text-on-surface-variant text-sm font-medium">
             Neuer Termin
           </dt>
-          <dd className="mt-1" aria-live="polite">
-            {selectedSlot ? (
-              <>
-                <time dateTime={selectedSlot.startsAt}>
-                  {formatDisplayDateTime(selectedSlot.startsAt)}
-                </time>{' '}
-                bis{' '}
-                <time dateTime={selectedSlot.endsAt}>
-                  {formatDisplayDateTime(selectedSlot.endsAt)} Uhr
-                </time>
-              </>
-            ) : (
-              'Noch nicht ausgewählt'
-            )}
+          <dd className="mt-1">
+            <span aria-atomic="true" aria-live="polite" role="status">
+              {selectedSlot ? (
+                <>
+                  <time dateTime={selectedSlot.startsAt}>
+                    {formatDisplayDateTime(selectedSlot.startsAt)}
+                  </time>{' '}
+                  bis{' '}
+                  <time dateTime={selectedSlot.endsAt}>
+                    {formatDisplayDateTime(selectedSlot.endsAt)} Uhr
+                  </time>
+                </>
+              ) : (
+                'Noch nicht ausgewählt'
+              )}
+            </span>
           </dd>
         </div>
       </dl>
