@@ -1,13 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { apiFetch } from '@/api/client/api-fetch'
+import {
+  appendFileToFormData,
+  getUploadFilename,
+} from '@/api/client/multipart-form-data'
 import { createMappedQueryOptions } from '@/api/contract/query-options'
-import type { BodyUploadAppointmentDocumentApiV1AppointmentsAppointmentIdDocumentsPost } from '@/api/generated/models'
+import type {
+  AppointmentDocumentResponse,
+  BodyUploadAppointmentDocumentApiV1AppointmentsAppointmentIdDocumentsPost,
+} from '@/api/generated/models'
 import {
   getDownloadAppointmentDocumentApiV1AppointmentsAppointmentIdDocumentsDocumentVersionIdContentGetUrl,
+  getUploadAppointmentDocumentApiV1AppointmentsAppointmentIdDocumentsPostUrl,
   listAppointmentDocumentsApiV1AppointmentsAppointmentIdDocumentsGet,
   listAppointmentDocumentVersionsApiV1AppointmentsAppointmentIdDocumentsDocumentGroupIdVersionsGet,
-  uploadAppointmentDocumentApiV1AppointmentsAppointmentIdDocumentsPost,
 } from '@/api/generated/appointment-documents/appointment-documents'
 import {
   getAppointmentDocumentErrorPresentation,
@@ -86,13 +93,8 @@ export function useUploadAppointmentDocumentMutation() {
         appointmentFeatureQueryKeys.lists(),
       ],
     }),
-    mutationFn: async ({ appointmentId, request }) =>
-      mapAppointmentDocumentResponse(
-        await uploadAppointmentDocumentApiV1AppointmentsAppointmentIdDocumentsPost(
-          appointmentId,
-          request,
-        ),
-      ),
+    mutationFn: ({ appointmentId, request }) =>
+      uploadAppointmentDocument(appointmentId, request),
     mutationKey: ['appointments', 'documents', 'upload'],
     successFeedback: (document) => ({
       description: document.visibleToCitizen
@@ -104,6 +106,41 @@ export function useUploadAppointmentDocumentMutation() {
           : 'Neue Dokumentversion hochgeladen',
     }),
   })
+}
+
+async function uploadAppointmentDocument(
+  appointmentId: string,
+  request: BodyUploadAppointmentDocumentApiV1AppointmentsAppointmentIdDocumentsPost,
+): Promise<AppointmentDocumentRecord> {
+  const formData = new FormData()
+  await appendFileToFormData(
+    formData,
+    'file',
+    request.file,
+    getUploadFilename(request.file, 'termindokument.pdf'),
+  )
+  formData.append('document_type', request.document_type)
+  if (request.visible_to_citizen !== undefined) {
+    formData.append(
+      'visible_to_citizen',
+      request.visible_to_citizen.toString(),
+    )
+  }
+  if (request.replace_document_group_id) {
+    formData.append(
+      'replace_document_group_id',
+      request.replace_document_group_id,
+    )
+  }
+
+  return mapAppointmentDocumentResponse(
+    await apiFetch<AppointmentDocumentResponse>(
+      getUploadAppointmentDocumentApiV1AppointmentsAppointmentIdDocumentsPostUrl(
+        appointmentId,
+      ),
+      { body: formData, method: 'POST' },
+    ),
+  )
 }
 
 export type DownloadAppointmentDocumentVariables = Readonly<{

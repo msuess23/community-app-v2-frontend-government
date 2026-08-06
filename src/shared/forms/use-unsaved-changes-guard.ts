@@ -60,6 +60,7 @@ export function useUnsavedChangesGuard({
       }
 
       if (allowNextNavigationRef.current) {
+        allowNextNavigationRef.current = false
         return false
       }
 
@@ -78,10 +79,9 @@ export function useUnsavedChangesGuard({
     blocker.state === 'blocked' ? serializeLocation(blocker.location) : null
 
   const allowNextNavigation = useCallback(() => {
+    // Consume the allowance inside the blocker itself. Router navigation may be
+    // scheduled after the current microtask, especially after async mutations.
     allowNextNavigationRef.current = true
-    queueMicrotask(() => {
-      allowNextNavigationRef.current = false
-    })
   }, [])
 
   const confirmDiscardChanges = useCallback(

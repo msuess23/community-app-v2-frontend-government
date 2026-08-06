@@ -17,6 +17,19 @@ const INVALID_DOCUMENT_FILES: ReadonlyArray<readonly [File, string]> = [
 ]
 
 describe('appointment document upload form', () => {
+  it('accepts a valid PDF from the configured multipart upload realm', () => {
+    const file = new File(['%PDF-1.4\n%%EOF'], 'notice.pdf', {
+      type: 'application/pdf',
+    })
+
+    expect(
+      appointmentDocumentUploadSchema.safeParse({
+        ...createAppointmentDocumentUploadDefaults(),
+        files: [file],
+      }).success,
+    ).toBe(true)
+  })
+
   it('accepts a valid PDF created by the browser realm', () => {
     const file = new window.File(['%PDF-1.4\n%%EOF'], 'notice.pdf', {
       type: 'application/pdf',

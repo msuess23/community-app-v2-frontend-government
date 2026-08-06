@@ -57,6 +57,27 @@ function SuccessfullySavedForm() {
   )
 }
 
+function DeferredSuccessfullySavedForm() {
+  const navigate = useNavigate()
+  const { allowNextNavigation } = useUnsavedChangesGuard({
+    hasUnsavedChanges: true,
+  })
+
+  return (
+    <main>
+      <button
+        onClick={() => {
+          allowNextNavigation()
+          window.setTimeout(() => navigate('/target'), 0)
+        }}
+        type="button"
+      >
+        Verzögert speichern und verlassen
+      </button>
+    </main>
+  )
+}
+
 describe('useUnsavedChangesGuard', () => {
   it('keeps the user on the form when navigation is cancelled', async () => {
     const user = userEvent.setup()
@@ -118,6 +139,33 @@ describe('useUnsavedChangesGuard', () => {
       }),
     ).not.toBeInTheDocument()
   })
+
+  it(
+    'keeps the one-shot navigation allowance until a deferred router transition starts',
+    async () => {
+      const user = userEvent.setup()
+      const rendered = renderRouter([
+        { path: '/', Component: DeferredSuccessfullySavedForm },
+        { path: '/target', element: <h1>Zielseite</h1> },
+      ])
+
+      await user.click(
+        screen.getByRole('button', {
+          name: 'Verzögert speichern und verlassen',
+        }),
+      )
+
+      expect(
+        await screen.findByRole('heading', { name: 'Zielseite' }),
+      ).toBeVisible()
+      expect(rendered.router.state.location.pathname).toBe('/target')
+      expect(
+        screen.queryByRole('dialog', {
+          name: 'Ungespeicherte Änderungen verwerfen?',
+        }),
+      ).not.toBeInTheDocument()
+    },
+  )
 
   it('prevents browser-level exits while the form is dirty', async () => {
     const user = userEvent.setup()

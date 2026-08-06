@@ -256,11 +256,12 @@ export class AppointmentDetailPageObject {
       mimeType: 'application/pdf',
       name: 'terminhinweis-v3.pdf',
     })
-    await dialog
-      .getByRole('checkbox', {
-        name: /Aktuelle Version für den Bürger freigeben/,
-      })
-      .check()
+    const citizenVisibility = dialog.getByRole('checkbox', {
+      name: /Aktuelle Version für den Bürger freigeben/,
+    })
+    await citizenVisibility.focus()
+    await citizenVisibility.press('Space')
+    await expect(citizenVisibility).toBeChecked()
     await dialog
       .getByRole('button', { name: 'Neue Version hochladen' })
       .click()

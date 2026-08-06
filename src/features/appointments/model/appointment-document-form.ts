@@ -30,23 +30,32 @@ function isFileLike(value: unknown): value is File {
   const candidate = value as Partial<File>
   return (
     typeof candidate.name === 'string' &&
-    typeof candidate.lastModified === 'number' &&
     typeof candidate.size === 'number' &&
-    typeof candidate.type === 'string' &&
-    typeof candidate.slice === 'function'
+    typeof candidate.type === 'string'
   )
 }
 
 const documentFileSchema = z
-  .array(
-    z.custom<File>(isFileLike, {
-      message: 'Wähle eine gültige Datei aus.',
-    }),
-  )
-  .length(1, 'Wähle genau eine PDF-Datei aus.')
+  .custom<File[]>(Array.isArray, {
+    message: 'Wähle genau eine PDF-Datei aus.',
+  })
   .superRefine((files, context) => {
+    if (files.length !== 1) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Wähle genau eine PDF-Datei aus.',
+      })
+      return
+    }
+
     const file = files[0]
-    if (!file) return
+    if (!isFileLike(file)) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Wähle eine gültige Datei aus.',
+      })
+      return
+    }
 
     if (file.size === 0) {
       context.addIssue({
