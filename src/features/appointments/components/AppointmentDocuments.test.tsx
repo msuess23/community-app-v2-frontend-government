@@ -104,7 +104,7 @@ describe('AppointmentDocuments', () => {
       within(dialog).getByRole('combobox', { name: 'Dokumenttyp' }),
     ).toBeDisabled()
     await user.upload(
-      within(dialog).getByLabelText('PDF-Datei'),
+      within(dialog).getByLabelText(/^PDF-Datei/),
       new File(['%PDF-1.4\n%%EOF'], 'antrag-v3.pdf', {
         type: 'application/pdf',
       }),
@@ -187,7 +187,7 @@ describe('AppointmentDocuments', () => {
       'PROTOCOL',
     )
     await user.upload(
-      within(dialog).getByLabelText('PDF-Datei'),
+      within(dialog).getByLabelText(/^PDF-Datei/),
       new File(['%PDF-1.4\n%%EOF'], 'protokoll.pdf', {
         type: 'application/pdf',
       }),
@@ -232,7 +232,7 @@ describe('AppointmentDocuments', () => {
       name: 'Termindokument hochladen',
     })
     await user.upload(
-      within(uploadDialog).getByLabelText('PDF-Datei'),
+      within(uploadDialog).getByLabelText(/^PDF-Datei/),
       new File(['%PDF-1.4\n%%EOF'], 'notice.pdf', {
         type: 'application/pdf',
       }),

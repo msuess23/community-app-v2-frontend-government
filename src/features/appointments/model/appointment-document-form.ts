@@ -23,8 +23,26 @@ export type AppointmentDocumentUploadFormValues = {
   visibleToCitizen: boolean
 }
 
+/** Accepts browser File objects independently of the JavaScript realm that created them. */
+function isFileLike(value: unknown): value is File {
+  if (typeof value !== 'object' || value === null) return false
+
+  const candidate = value as Partial<File>
+  return (
+    typeof candidate.name === 'string' &&
+    typeof candidate.lastModified === 'number' &&
+    typeof candidate.size === 'number' &&
+    typeof candidate.type === 'string' &&
+    typeof candidate.slice === 'function'
+  )
+}
+
 const documentFileSchema = z
-  .array(z.custom<File>((value) => value instanceof File))
+  .array(
+    z.custom<File>(isFileLike, {
+      message: 'Wähle eine gültige Datei aus.',
+    }),
+  )
   .length(1, 'Wähle genau eine PDF-Datei aus.')
   .superRefine((files, context) => {
     const file = files[0]

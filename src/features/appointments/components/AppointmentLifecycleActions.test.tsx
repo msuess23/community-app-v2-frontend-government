@@ -37,7 +37,7 @@ describe('AppointmentLifecycleActions', () => {
     const trigger = screen.getByRole('button', { name: 'Stornieren' })
     await user.click(trigger)
     await user.type(
-      screen.getByLabelText('Stornierungsbegründung'),
+      screen.getByRole('textbox', { name: 'Stornierungsbegründung' }),
       'Bürger sagt ab',
     )
     await user.click(
@@ -51,9 +51,9 @@ describe('AppointmentLifecycleActions', () => {
     expect(
       screen.getByRole('dialog', { name: 'Termin stornieren' }),
     ).toBeInTheDocument()
-    expect(screen.getByLabelText('Stornierungsbegründung')).toHaveValue(
-      'Bürger sagt ab',
-    )
+    expect(
+      screen.getByRole('textbox', { name: 'Stornierungsbegründung' }),
+    ).toHaveValue('Bürger sagt ab')
 
     await user.click(
       screen.getByRole('button', { name: 'Aktionsdialog schließen' }),

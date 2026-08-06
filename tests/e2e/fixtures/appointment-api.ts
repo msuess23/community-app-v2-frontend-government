@@ -12,7 +12,6 @@ import {
   appointmentSlotResponse,
   type AppointmentFixture,
   expiredAppointmentSlotResponse,
-  RESCHEDULE_APPOINTMENT_SLOT_ID,
   rescheduleAppointmentSlotResponse,
   secondAppointmentResponse,
 } from './appointment-api-data.js'
@@ -471,7 +470,9 @@ export async function installAppointmentSlotApi(
   ]
 
   await page.route(
-    `**/api/v1/offices/${APPOINTMENT_OFFICE_ID}/appointment-slots`,
+    new RegExp(
+      `/api/v1/offices/${APPOINTMENT_OFFICE_ID}/appointment-slots(?:\\?.*)?$`,
+    ),
     async (route) => {
       const request = route.request()
 

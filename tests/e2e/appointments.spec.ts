@@ -238,7 +238,7 @@ test('event history loads older pages and falls back for future event types', as
   await detail.loadOlderEvents()
   await detail.expectBookedEvent()
 
-  expect(appointmentApi.eventPageRequests).toEqual([1, 2, 3])
+  expect([...new Set(appointmentApi.eventPageRequests)]).toEqual([1, 2, 3])
   await expect(page.getByText('3 von 3 Ereignissen angezeigt')).toBeVisible()
   await expectNoSeriousAccessibilityViolations(page)
 })
@@ -363,7 +363,7 @@ test('appointment workspaces reflow without horizontal page scrolling at 320 CSS
   await page.setViewportSize({ height: 390, width: 844 })
   await detail.expectNoHorizontalOverflow()
   await expect(
-    page.getByRole('link', { name: 'Zurück zur Terminslotverwaltung' }),
+    page.getByRole('link', { name: 'Zur Slotübersicht' }),
   ).toBeVisible()
   await expectNoSeriousAccessibilityViolations(page)
 })

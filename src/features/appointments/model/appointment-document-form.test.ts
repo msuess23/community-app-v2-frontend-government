@@ -17,6 +17,19 @@ const INVALID_DOCUMENT_FILES: ReadonlyArray<readonly [File, string]> = [
 ]
 
 describe('appointment document upload form', () => {
+  it('accepts a valid PDF created by the browser realm', () => {
+    const file = new window.File(['%PDF-1.4\n%%EOF'], 'notice.pdf', {
+      type: 'application/pdf',
+    })
+
+    expect(
+      appointmentDocumentUploadSchema.safeParse({
+        ...createAppointmentDocumentUploadDefaults(),
+        files: [file],
+      }).success,
+    ).toBe(true)
+  })
+
   it('accepts one bounded PDF and maps a new document group request', () => {
     const file = pdfFile('notice.pdf', 1024)
     const values = appointmentDocumentUploadSchema.parse({

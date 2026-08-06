@@ -59,19 +59,19 @@ describe('AppointmentSlotCreatePage', () => {
       level: 1,
       name: 'Terminslots anlegen',
     })
-    fireEvent.change(screen.getByLabelText('Beginn von Terminslot 1'), {
+    fireEvent.change(screen.getByLabelText(/^Beginn von Terminslot 1/), {
       target: { value: '2099-08-12T12:00' },
     })
-    fireEvent.change(screen.getByLabelText('Ende von Terminslot 1'), {
+    fireEvent.change(screen.getByLabelText(/^Ende von Terminslot 1/), {
       target: { value: '2099-08-12T12:30' },
     })
     await user.click(
       screen.getByRole('button', { name: 'Terminslot hinzufügen' }),
     )
-    fireEvent.change(screen.getByLabelText('Beginn von Terminslot 2'), {
+    fireEvent.change(screen.getByLabelText(/^Beginn von Terminslot 2/), {
       target: { value: '2099-08-12T09:30' },
     })
-    fireEvent.change(screen.getByLabelText('Ende von Terminslot 2'), {
+    fireEvent.change(screen.getByLabelText(/^Ende von Terminslot 2/), {
       target: { value: '2099-08-12T10:00' },
     })
 

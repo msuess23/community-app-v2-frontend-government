@@ -2,7 +2,8 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HttpResponse, http } from 'msw'
-import { MemoryRouter, Route, Routes } from 'react-router'
+import { createMemoryRouter } from 'react-router'
+import { RouterProvider } from 'react-router/dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { createQueryClient } from '@/app/query-client'
@@ -139,7 +140,10 @@ describe('AppointmentDetailPage', () => {
       await screen.findByRole('combobox', { name: 'Neuer Terminslot' }),
       'slot-2',
     )
-    await user.type(screen.getByLabelText('Begründung'), 'Wunsch des Bürgers')
+    await user.type(
+      screen.getByRole('textbox', { name: 'Begründung' }),
+      'Wunsch des Bürgers',
+    )
     await user.click(screen.getByRole('button', { name: 'Termin verschieben' }))
 
     expect(await screen.findByText('Termin verschoben')).toBeVisible()
@@ -157,28 +161,31 @@ describe('AppointmentDetailPage', () => {
 })
 
 function renderDetail() {
+  const router = createMemoryRouter(
+    [
+      {
+        element: <AppointmentDetailPage />,
+        path: '/appointments/:appointmentId',
+      },
+    ],
+    {
+      initialEntries: [
+        {
+          pathname: `/appointments/${APPOINTMENT_ID}`,
+          state: {
+            from:
+              '/appointments?status=SCHEDULED&sortBy=startsAt&sortDirection=asc',
+          },
+        },
+      ],
+    },
+  )
+
   return render(
     <QueryClientProvider client={createQueryClient()}>
       <FeedbackProvider>
         <ConfirmationProvider>
-          <MemoryRouter
-            initialEntries={[
-              {
-                pathname: `/appointments/${APPOINTMENT_ID}`,
-                state: {
-                  from:
-                    '/appointments?status=SCHEDULED&sortBy=startsAt&sortDirection=asc',
-                },
-              },
-            ]}
-          >
-            <Routes>
-              <Route
-                element={<AppointmentDetailPage />}
-                path="/appointments/:appointmentId"
-              />
-            </Routes>
-          </MemoryRouter>
+          <RouterProvider router={router} />
         </ConfirmationProvider>
       </FeedbackProvider>
     </QueryClientProvider>,

@@ -27,7 +27,9 @@ export class AppointmentDirectoryPageObject {
     if (await mobileFilterTrigger.isVisible()) {
       await mobileFilterTrigger.click()
     }
-    await this.page.getByLabel('Status').selectOption(value)
+    await this.page
+      .getByRole('combobox', { exact: true, name: 'Status' })
+      .selectOption(value)
   }
 
   async openFirstAppointment(): Promise<void> {
@@ -326,7 +328,9 @@ export class AppointmentSlotDirectoryPageObject {
     if (await mobileFilterTrigger.isVisible()) {
       await mobileFilterTrigger.click()
     }
-    await this.page.getByLabel('Status').selectOption(value)
+    await this.page
+      .getByRole('combobox', { exact: true, name: 'Status' })
+      .selectOption(value)
   }
 
   async openCreate(): Promise<void> {

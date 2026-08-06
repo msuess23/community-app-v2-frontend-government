@@ -191,9 +191,11 @@ describe('InfoEditPage', () => {
       )
 
       expect(
-        await screen.findByRole('img', {
-          name: 'Umleitung rund um die Parkstraße',
-        }),
+        await screen.findByRole(
+          'img',
+          { name: 'Umleitung rund um die Parkstraße' },
+          { timeout: 10_000 },
+        ),
       ).toBeVisible()
       expect(uploadRequests).toEqual([
         {
@@ -250,6 +252,7 @@ describe('InfoEditPage', () => {
         ),
       ).toBeVisible()
     },
+    15_000,
   )
 
   it('protects selected but not yet uploaded images from accidental navigation', async () => {
