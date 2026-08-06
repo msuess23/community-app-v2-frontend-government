@@ -39,8 +39,8 @@ const dispatcher = {
 test('officer reads and filters the device-adapted appointment workspace', async ({
   page,
 }, testInfo) => {
-  const { lifecycleRequests, listRequests } =
-    await installAppointmentReadApi(page)
+  const appointmentApi = await installAppointmentReadApi(page)
+  const { lifecycleRequests, listRequests } = appointmentApi
   await installAppointmentSlotApi(page)
   const directory = new AppointmentDirectoryPageObject(page)
   const detail = new AppointmentDetailPageObject(page)
@@ -72,6 +72,20 @@ test('officer reads and filters the device-adapted appointment workspace', async
   await expect(
     page.getByRole('link', { name: 'Anliegen zur Ummeldung' }),
   ).toHaveAttribute('href', `/tickets/${APPOINTMENT_TICKET_ID}`)
+  await expectNoSeriousAccessibilityViolations(page)
+
+  await detail.expectDocumentsLoaded()
+  await detail.expandDocumentHistory()
+  expect(await detail.downloadCurrentDocument()).toBe('terminhinweis-v2.pdf')
+  await expect.poll(() => appointmentApi.documentDownloads.length).toBe(1)
+  await detail.uploadDocumentReplacement()
+  await expect.poll(() => appointmentApi.documentUploads.length).toBe(1)
+  expect(appointmentApi.documentUploads[0]).toEqual({
+    documentType: 'NOTICE',
+    filename: 'terminhinweis-v3.pdf',
+    groupId: '00000000-0000-4000-8000-000000000600',
+    visible: 'true',
+  })
   await expectNoSeriousAccessibilityViolations(page)
 
   await detail.rescheduleAppointment('Wunsch des Bürgers')

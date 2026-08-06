@@ -7,6 +7,9 @@ import {
   type AppointmentEventRecord,
 } from '@/features/appointments/model/appointment-event'
 import {
+  getAppointmentDocumentTypeLabel,
+} from '@/features/appointments/model/appointment-document'
+import {
   formatDisplayDateTime,
   formatDisplayFileSize,
 } from '@/shared/format/display-values'
@@ -24,14 +27,6 @@ const EVENT_LABELS: Readonly<Record<AppointmentEventPayloadType, string>> = {
   APPOINTMENT_RESCHEDULED: 'Termin verschoben',
   DOCUMENT_VERSION_ADDED: 'Dokumentversion hinzugefügt',
 }
-
-const DOCUMENT_TYPE_LABELS = {
-  CONFIRMATION: 'Bestätigung',
-  FORM: 'Formular',
-  NOTICE: 'Mitteilung',
-  OTHER: 'Sonstiges',
-  PROTOCOL: 'Protokoll',
-} as const
 
 /** Owns the complete known presentation of the appointment event stream. */
 export const appointmentEventRendererRegistry =
@@ -96,7 +91,10 @@ export const appointmentEventRendererRegistry =
       details: (
         <EventDetails
           items={[
-            ['Dokumenttyp', DOCUMENT_TYPE_LABELS[payload.document_type]],
+            [
+              'Dokumenttyp',
+              getAppointmentDocumentTypeLabel(payload.document_type),
+            ],
             ['Dateiname', payload.original_filename],
             ['Version', String(payload.version_number)],
             ['Dateigröße', formatDisplayFileSize(payload.size_bytes)],

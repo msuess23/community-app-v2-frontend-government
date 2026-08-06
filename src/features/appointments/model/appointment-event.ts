@@ -5,6 +5,9 @@ import type {
   PaginatedResponseAppointmentEventResponse,
 } from '@/api/generated/models'
 import { mapApiPage, type PageModel } from '@/api/contract/pagination'
+import {
+  APPOINTMENT_DOCUMENT_TYPES,
+} from '@/features/appointments/model/appointment-document'
 import type { ResourceEvent } from '@/shared/resource-detail/event-renderer-registry'
 
 /** One immutable appointment event after crossing the generated API boundary. */
@@ -42,13 +45,7 @@ export const appointmentEventPayloadSchemas = {
   }),
   DOCUMENT_VERSION_ADDED: z.object({
     document_group_id: z.string(),
-    document_type: z.enum([
-      'CONFIRMATION',
-      'FORM',
-      'NOTICE',
-      'PROTOCOL',
-      'OTHER',
-    ]),
+    document_type: z.enum(APPOINTMENT_DOCUMENT_TYPES),
     document_version_id: z.string(),
     mime_type: z.string(),
     original_filename: z.string(),

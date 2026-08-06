@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useParams } from 'react-router'
 
 import { AppointmentDetailSummary } from '@/features/appointments/components/AppointmentDetailSummary'
+import { AppointmentDocuments } from '@/features/appointments/components/AppointmentDocuments'
 import { AppointmentEventTimeline } from '@/features/appointments/components/AppointmentEventTimeline'
 import { AppointmentStatusBadge } from '@/features/appointments/components/AppointmentStatusBadge'
 import { APPOINTMENT_READ_ERROR_MESSAGES } from '@/features/appointments/model/appointment-error-messages'
@@ -20,6 +21,7 @@ const DETAIL_NAVIGATION = [
   { id: 'appointment', label: 'Termin' },
   { id: 'concern', label: 'Anliegen' },
   { id: 'linked-ticket', label: 'Ticket' },
+  { id: 'documents', label: 'Dokumente' },
   { id: 'event-history', label: 'Ereignishistorie' },
   { id: 'responsibility', label: 'Beteiligte' },
   { id: 'metadata', label: 'Metadaten' },
@@ -137,6 +139,14 @@ export function AppointmentDetailPage() {
                 Dieser Termin ist mit keinem Ticket verknüpft.
               </p>
             )}
+          </ResourceDetailSection>
+
+          <ResourceDetailSection
+            description="Aktuelle PDF-Dokumentgruppen und ihre unveränderlichen Versionen. Ältere Versionen bleiben für die Behörde abrufbar."
+            id="documents"
+            title="Termindokumente"
+          >
+            <AppointmentDocuments appointmentId={appointment.id} />
           </ResourceDetailSection>
 
           <ResourceDetailSection

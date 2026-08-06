@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HttpResponse, http } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { createQueryClient } from '@/app/query-client'
 import { AppointmentDetailPage } from '@/features/appointments/pages/AppointmentDetailPage'
@@ -13,6 +13,15 @@ import { mockApiServer } from '@/test/server'
 
 const APPOINTMENT_ID = '00000000-0000-4000-8000-000000000100'
 const TICKET_ID = '00000000-0000-4000-8000-000000000030'
+
+beforeEach(() => {
+  mockApiServer.use(
+    http.get(
+      `http://localhost/api/v1/appointments/${APPOINTMENT_ID}/documents`,
+      () => HttpResponse.json([]),
+    ),
+  )
+})
 
 describe('AppointmentDetailPage', () => {
   it('renders the current projection and preserves a list return target', async () => {

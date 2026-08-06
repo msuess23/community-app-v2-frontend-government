@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page } from '@playwright/test'
 
 import {
+  APPOINTMENT_DOCUMENT_GROUP_ID,
   APPOINTMENT_ID,
   RESCHEDULE_APPOINTMENT_SLOT_ID,
 } from '../fixtures/appointment-api.js'
@@ -72,6 +73,67 @@ export class AppointmentDetailPageObject {
     await expect(
       this.page.getByRole('region', { name: 'Ereignishistorie' }),
     ).toContainText('Termin gebucht')
+  }
+
+  async expectDocumentsLoaded(): Promise<void> {
+    const documents = this.page.getByRole('region', { name: 'Termindokumente' })
+    await expect(documents).toContainText('terminhinweis-v2.pdf')
+    await expect(documents).toContainText('Nur intern')
+  }
+
+  async expandDocumentHistory(): Promise<void> {
+    await this.page
+      .getByRole('button', {
+        name: 'Versionshistorie von terminhinweis-v2.pdf',
+      })
+      .click()
+    await expect(
+      this.page.getByRole('region', {
+        name: 'Versionshistorie von terminhinweis-v2.pdf',
+      }),
+    ).toContainText('terminhinweis-v1.pdf')
+  }
+
+  async downloadCurrentDocument(): Promise<string> {
+    const downloadPromise = this.page.waitForEvent('download')
+    await this.page
+      .getByRole('button', {
+        name: /terminhinweis-v2\.pdf, Version 2 herunterladen/,
+      })
+      .first()
+      .click()
+    return (await downloadPromise).suggestedFilename()
+  }
+
+  async uploadDocumentReplacement(): Promise<void> {
+    await this.page.getByRole('button', { name: 'PDF hochladen' }).click()
+    const dialog = this.page.getByRole('dialog', {
+      name: 'Termindokument hochladen',
+    })
+    await dialog
+      .getByRole('radio', { name: /Bestehendes Dokument ersetzen/ })
+      .click()
+    await dialog
+      .getByRole('combobox', { name: 'Dokumentgruppe' })
+      .selectOption(APPOINTMENT_DOCUMENT_GROUP_ID)
+    await expect(
+      dialog.getByRole('combobox', { name: 'Dokumenttyp' }),
+    ).toBeDisabled()
+    await dialog.getByLabel('PDF-Datei').setInputFiles({
+      buffer: Buffer.from('%PDF-1.4\n%%EOF'),
+      mimeType: 'application/pdf',
+      name: 'terminhinweis-v3.pdf',
+    })
+    await dialog
+      .getByRole('checkbox', {
+        name: /Aktuelle Version für den Bürger freigeben/,
+      })
+      .check()
+    await dialog
+      .getByRole('button', { name: 'Neue Version hochladen' })
+      .click()
+    await expect(dialog).toBeHidden()
+    await expect(this.page.getByText('terminhinweis-v3.pdf')).toBeVisible()
   }
 
   async rescheduleAppointment(reason: string): Promise<void> {

@@ -12,6 +12,14 @@ const baseAppointmentQueryKeys = createResourceQueryKeys<
 /** Owns authority appointment projections and their separately scoped options. */
 export const appointmentFeatureQueryKeys = {
   ...baseAppointmentQueryKeys,
+  documents: (appointmentId: string) =>
+    baseAppointmentQueryKeys.related(appointmentId, 'documents'),
+  documentVersionLists: (appointmentId: string) =>
+    baseAppointmentQueryKeys.related(appointmentId, 'document-versions'),
+  documentVersions: (appointmentId: string, documentGroupId: string) =>
+    baseAppointmentQueryKeys.related(appointmentId, 'document-versions', {
+      documentGroupId,
+    }),
   events: (appointmentId: string) =>
     baseAppointmentQueryKeys.related(appointmentId, 'events'),
   filterOptions: () =>

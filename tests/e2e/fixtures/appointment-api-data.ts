@@ -129,3 +129,45 @@ export function expiredAppointmentSlotResponse(): AppointmentSlotFixture {
     status: 'AVAILABLE',
   }
 }
+
+export type AppointmentDocumentFixture = Readonly<{
+  appointment_id: string
+  document_group_id: string
+  document_type: string
+  id: string
+  is_current: boolean
+  mime_type: string
+  original_filename: string
+  replaced_version_id: string | null
+  size_bytes: number
+  uploaded_at: string
+  url: string
+  version_number: number
+  visible_to_citizen: boolean
+}>
+
+export const APPOINTMENT_DOCUMENT_GROUP_ID =
+  '00000000-0000-4000-8000-000000000600'
+export const APPOINTMENT_DOCUMENT_VERSION_ID =
+  '00000000-0000-4000-8000-000000000601'
+
+export function appointmentDocumentResponse(
+  overrides: Partial<AppointmentDocumentFixture> = {},
+): AppointmentDocumentFixture {
+  return {
+    appointment_id: APPOINTMENT_ID,
+    document_group_id: APPOINTMENT_DOCUMENT_GROUP_ID,
+    document_type: 'NOTICE',
+    id: APPOINTMENT_DOCUMENT_VERSION_ID,
+    is_current: true,
+    mime_type: 'application/pdf',
+    original_filename: 'terminhinweis-v2.pdf',
+    replaced_version_id: '00000000-0000-4000-8000-000000000602',
+    size_bytes: 2048,
+    uploaded_at: '2026-08-05T10:00:00Z',
+    url: `/api/v1/appointments/${APPOINTMENT_ID}/documents/${APPOINTMENT_DOCUMENT_VERSION_ID}/content`,
+    version_number: 2,
+    visible_to_citizen: false,
+    ...overrides,
+  }
+}

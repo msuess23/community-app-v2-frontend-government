@@ -2,9 +2,12 @@ import type { Page } from '@playwright/test'
 
 import {
   APPOINTMENT_CITIZEN_ID,
+  APPOINTMENT_DOCUMENT_GROUP_ID,
+  APPOINTMENT_DOCUMENT_VERSION_ID,
   APPOINTMENT_ID,
   APPOINTMENT_OFFICE_ID,
   APPOINTMENT_TICKET_ID,
+  appointmentDocumentResponse,
   appointmentResponse,
   appointmentSlotResponse,
   expiredAppointmentSlotResponse,
@@ -14,6 +17,8 @@ import {
 } from './appointment-api-data.js'
 
 export type AppointmentReadApi = Readonly<{
+  documentDownloads: string[]
+  documentUploads: Array<Readonly<Record<string, string>>>
   lifecycleRequests: Array<Readonly<{ action: string; body: unknown }>>
   listRequests: string[]
 }>
@@ -22,11 +27,25 @@ export type AppointmentReadApi = Readonly<{
 export async function installAppointmentReadApi(
   page: Page,
 ): Promise<AppointmentReadApi> {
+  const documentDownloads: string[] = []
+  const documentUploads: Array<Readonly<Record<string, string>>> = []
   const lifecycleRequests: Array<
     Readonly<{ action: string; body: unknown }>
   > = []
   const listRequests: string[] = []
   let currentAppointment = appointmentResponse()
+  let currentDocument = appointmentDocumentResponse()
+  let documentVersions = [
+    currentDocument,
+    appointmentDocumentResponse({
+      id: '00000000-0000-4000-8000-000000000602',
+      is_current: false,
+      original_filename: 'terminhinweis-v1.pdf',
+      replaced_version_id: null,
+      uploaded_at: '2026-08-01T09:00:00Z',
+      version_number: 1,
+    }),
+  ]
   let events = appointmentEventsResponse()
 
   await page.route(
@@ -70,6 +89,100 @@ export async function installAppointmentReadApi(
       await route.fulfill({
         contentType: 'application/json',
         json: currentAppointment,
+        status: 200,
+      })
+    },
+  )
+
+  await page.route(
+    `**/api/v1/appointments/${APPOINTMENT_ID}/documents/${APPOINTMENT_DOCUMENT_GROUP_ID}/versions`,
+    async (route) => {
+      await route.fulfill({
+        contentType: 'application/json',
+        json: documentVersions,
+        status: 200,
+      })
+    },
+  )
+  await page.route(
+    `**/api/v1/appointments/${APPOINTMENT_ID}/documents/*/content`,
+    async (route) => {
+      const versionId = route.request().url().split('/').at(-2) ?? ''
+      documentDownloads.push(versionId)
+      await route.fulfill({
+        body: '%PDF-1.4\n%%EOF',
+        contentType: 'application/pdf',
+        headers: {
+          'Content-Disposition': `attachment; filename="${
+            versionId === APPOINTMENT_DOCUMENT_VERSION_ID
+              ? currentDocument.original_filename
+              : 'terminhinweis-v1.pdf'
+          }"`,
+        },
+        status: 200,
+      })
+    },
+  )
+  await page.route(
+    `**/api/v1/appointments/${APPOINTMENT_ID}/documents`,
+    async (route) => {
+      const request = route.request()
+      if (request.method() === 'POST') {
+        const formData = await request.postDataBuffer()
+        const text = formData?.toString('utf8') ?? ''
+        const values = {
+          documentType: readMultipartValue(text, 'document_type'),
+          filename: readMultipartFilename(text, 'file'),
+          groupId: readMultipartValue(text, 'replace_document_group_id'),
+          visible: readMultipartValue(text, 'visible_to_citizen'),
+        }
+        documentUploads.push(values)
+        const previous = currentDocument
+        currentDocument = appointmentDocumentResponse({
+          id: '00000000-0000-4000-8000-000000000603',
+          original_filename: values.filename || 'terminhinweis-v3.pdf',
+          replaced_version_id: previous.id,
+          uploaded_at: '2026-08-06T14:00:00Z',
+          version_number: previous.version_number + 1,
+          visible_to_citizen: values.visible === 'true',
+        })
+        documentVersions = [
+          currentDocument,
+          { ...previous, is_current: false },
+          ...documentVersions.slice(1),
+        ]
+        currentAppointment = {
+          ...currentAppointment,
+          updated_at: '2026-08-06T14:00:00Z',
+          version: currentAppointment.version + 1,
+        }
+        events = appointmentEventsResponse({
+          event_type: 'DOCUMENT_VERSION_ADDED',
+          id: '00000000-0000-4000-8000-000000000503',
+          occurred_at: '2026-08-06T14:00:00Z',
+          payload: {
+            document_group_id: currentDocument.document_group_id,
+            document_type: currentDocument.document_type,
+            document_version_id: currentDocument.id,
+            mime_type: currentDocument.mime_type,
+            original_filename: currentDocument.original_filename,
+            replaced_version_id: currentDocument.replaced_version_id,
+            size_bytes: currentDocument.size_bytes,
+            version_number: currentDocument.version_number,
+            visible_to_citizen: currentDocument.visible_to_citizen,
+          },
+          sequence_number: 2,
+        })
+        await route.fulfill({
+          contentType: 'application/json',
+          json: currentDocument,
+          status: 201,
+        })
+        return
+      }
+      await route.fulfill({
+        contentType: 'application/json',
+        json: [currentDocument],
         status: 200,
       })
     },
@@ -125,7 +238,7 @@ export async function installAppointmentReadApi(
     },
   )
 
-  return { lifecycleRequests, listRequests }
+  return { documentDownloads, documentUploads, lifecycleRequests, listRequests }
 }
 
 function appointmentEventsResponse(additionalEvent?: Record<string, unknown>) {
@@ -171,6 +284,8 @@ function appointmentEventsResponse(additionalEvent?: Record<string, unknown>) {
 
 export {
   APPOINTMENT_CITIZEN_ID,
+  APPOINTMENT_DOCUMENT_GROUP_ID,
+  APPOINTMENT_DOCUMENT_VERSION_ID,
   APPOINTMENT_ID,
   APPOINTMENT_OFFICE_ID,
   APPOINTMENT_TICKET_ID,
@@ -259,4 +374,16 @@ export async function installAppointmentSlotApi(
   )
 
   return { createRequests, deactivatedSlotIds, listRequests }
+}
+
+function readMultipartValue(body: string, fieldName: string): string {
+  const pattern = new RegExp(
+    String.raw`name="${fieldName}"\r?\n(?:Content-Type:[^\r\n]+\r?\n)?\r?\n([^\r\n]*)`,
+  )
+  return pattern.exec(body)?.[1] ?? ''
+}
+
+function readMultipartFilename(body: string, fieldName: string): string {
+  const pattern = new RegExp(`name="${fieldName}"; filename="([^"]+)"`)
+  return pattern.exec(body)?.[1] ?? ''
 }
