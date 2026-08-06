@@ -59,7 +59,7 @@ describe('InfoDirectoryPage', () => {
     expect(screen.getByLabelText('Status')).toHaveValue('ACTIVE')
     expect(screen.getByLabelText('Sortierung')).toHaveValue('updatedAt:desc')
     expect(
-      screen.getByRole('combobox', { name: 'Einträge pro Seite' }),
+      await screen.findByRole('combobox', { name: 'Einträge pro Seite' }),
     ).toHaveValue('20')
 
     const card = await screen.findByRole('listitem')

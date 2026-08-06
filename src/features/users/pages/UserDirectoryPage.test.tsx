@@ -80,7 +80,7 @@ describe('UserDirectoryPage', () => {
     expect(screen.getByLabelText('Kontostatus')).toHaveValue('all')
     expect(screen.getByLabelText('Sortierung')).toHaveValue('email:desc')
     expect(
-      screen.getByRole('combobox', { name: 'Einträge pro Seite' }),
+      await screen.findByRole('combobox', { name: 'Einträge pro Seite' }),
     ).toHaveValue('20')
     await waitFor(() => expect(screen.getByLabelText('Behörde')).toBeEnabled())
 

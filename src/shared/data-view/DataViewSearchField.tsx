@@ -175,7 +175,12 @@ export function DataViewSearchField({
             </Button>
           ) : null}
         </div>
-        <Button className="shrink-0" type="submit" variant="outline">
+        <Button
+          aria-label="Suchen"
+          className="shrink-0"
+          type="submit"
+          variant="outline"
+        >
           <Search aria-hidden="true" size={18} />
           <span className="hidden sm:inline">Suchen</span>
         </Button>

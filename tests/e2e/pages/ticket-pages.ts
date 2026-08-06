@@ -1,25 +1,23 @@
 import { expect, type Locator, type Page } from '@playwright/test'
 
-import { TICKET_ID } from '../fixtures/ticket-api'
+import { TICKET_ID } from '../fixtures/ticket-api.js'
 
 export class TicketDirectoryPageObject {
-  constructor(private readonly page: Page) {}
+  private readonly page: Page
+
+  constructor(page: Page) {
+    this.page = page
+  }
 
   async expectLoaded(): Promise<void> {
     await expect(
       this.page.getByRole('heading', { level: 1, name: 'Tickets' }),
     ).toBeVisible()
-    const links = this.getTicketLinks()
-    await expect(links.table.or(links.compact)).toBeVisible()
+    await expect(await this.getVisibleTicketLink()).toBeVisible()
   }
 
   async openFirstTicket(): Promise<void> {
-    const links = this.getTicketLinks()
-    const visibleLink = (await links.table.isVisible())
-      ? links.table
-      : links.compact
-
-    await visibleLink.click()
+    await (await this.getVisibleTicketLink()).click()
     await expect(this.page).toHaveURL(new RegExp(`/tickets/${TICKET_ID}$`))
   }
 
@@ -35,22 +33,40 @@ export class TicketDirectoryPageObject {
     await this.page.getByLabel('Workflowzustand').selectOption(value)
   }
 
-  private getTicketLinks(): Readonly<{ compact: Locator; table: Locator }> {
-    const linkOptions = { name: 'Schlagloch in der Parkstraße' } as const
+  private async getVisibleTicketLink(): Promise<Locator> {
+    const links = this.page.getByRole('link', {
+      exact: true,
+      name: 'Schlagloch in der Parkstraße',
+    })
+    let visibleIndex = -1
 
-    return {
-      compact: this.page
-        .getByRole('list', { name: 'Ticketverzeichnis' })
-        .getByRole('link', linkOptions),
-      table: this.page
-        .getByRole('table', { name: 'Ticketverzeichnis' })
-        .getByRole('link', linkOptions),
-    }
+    await expect
+      .poll(async () => {
+        visibleIndex = await findVisibleLocatorIndex(links)
+        return visibleIndex
+      })
+      .toBeGreaterThanOrEqual(0)
+
+    return links.nth(visibleIndex)
   }
 }
 
+async function findVisibleLocatorIndex(candidates: Locator): Promise<number> {
+  for (let index = 0; index < (await candidates.count()); index += 1) {
+    if (await candidates.nth(index).isVisible()) {
+      return index
+    }
+  }
+
+  return -1
+}
+
 export class TicketDetailPageObject {
-  constructor(private readonly page: Page) {}
+  private readonly page: Page
+
+  constructor(page: Page) {
+    this.page = page
+  }
 
   async expectLoaded(title = 'Schlagloch in der Parkstraße'): Promise<void> {
     await expect(
@@ -94,12 +110,13 @@ export class TicketDetailPageObject {
     await this.page.getByRole('button', { name: 'Weiterleiten' }).click()
     const dialog = this.page.getByRole('dialog', { name: 'Ticket weiterleiten' })
     await expect(dialog).toBeVisible()
-    await dialog.getByLabel('Weiterleiten an').selectOption(targetUserId)
+    await dialog
+      .getByRole('combobox', { name: /Weiterleiten an/ })
+      .selectOption(targetUserId)
     await dialog.getByLabel('Optionaler Kommentar').fill(comment)
     await dialog.getByRole('button', { name: 'Ticket weiterleiten' }).click()
     await expect(dialog).toBeHidden()
   }
-
 
   async openWorkflowAction(
     actionLabel: string,
@@ -116,11 +133,17 @@ export class TicketDetailPageObject {
   async expectNoHorizontalOverflow(): Promise<void> {
     await expect
       .poll(() =>
-        this.page.evaluate(
-          () =>
-            document.documentElement.scrollWidth -
-            document.documentElement.clientWidth,
-        ),
+        this.page.evaluate(() => {
+          const browser = globalThis as unknown as {
+            document: {
+              documentElement: { clientWidth: number; scrollWidth: number }
+            }
+          }
+          return (
+            browser.document.documentElement.scrollWidth -
+            browser.document.documentElement.clientWidth
+          )
+        }),
       )
       .toBeLessThanOrEqual(1)
   }

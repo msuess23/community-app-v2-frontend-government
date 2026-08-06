@@ -1,19 +1,137 @@
-import type {
-  OfficeResponse,
-  TicketCommentResponse,
-  TicketEventResponse,
-  TicketImageResponse,
-  TicketInternalDetailResponse,
-  TicketWorkflowOptionsResponse,
-} from '../../../src/api/generated/models'
+export type TicketUserReference = Readonly<{
+  display_name: string
+  id: string
+}>
+
+export type TicketOfficeReference = Readonly<{
+  id: string
+  name: string
+}>
+
+export type TicketWorkflowTarget = Readonly<{
+  display_name: string
+  id: string
+  office: TicketOfficeReference | null
+  role: string
+}>
+
+export type TicketStatusFixture = Readonly<{
+  created_at: string
+  id: string
+  message: string | null
+  status: string
+}>
+
+export type TicketInternalDetailFixture = {
+  address: Readonly<{
+    city: string
+    house_number: string
+    id: string
+    latitude: number | null
+    longitude: number | null
+    street: string
+    zip_code: string
+  }> | null
+  allowed_actions: string[]
+  can_manage_images: boolean
+  category: string
+  created_at: string
+  creator: TicketUserReference
+  creator_user_id: string
+  current_assignee: TicketUserReference | null
+  current_assignee_id: string | null
+  current_status: TicketStatusFixture | null
+  description: string | null
+  id: string
+  image_url: string | null
+  office: TicketOfficeReference | null
+  office_id: string | null
+  primary_officer: TicketUserReference | null
+  primary_officer_id: string | null
+  return_to_user: TicketUserReference | null
+  return_to_user_id: string | null
+  title: string
+  updated_at: string
+  version: number
+  visibility: string
+  workflow_state: string
+}
+
+export type TicketWorkflowOptionsFixture = {
+  completion_outcomes: string[]
+  cosignature_targets: TicketWorkflowTarget[]
+  escalation_targets: TicketWorkflowTarget[]
+  forward_targets: TicketWorkflowTarget[]
+  offices: TicketOfficeReference[]
+  primary_officers: TicketWorkflowTarget[]
+  ticket_id: string
+  version: number
+}
+
+export type TicketCommentFixture = Readonly<{
+  author: Readonly<{
+    author_type: string
+    display_name: string
+    id: string | null
+  }>
+  created_at: string
+  id: string
+  is_internal: boolean
+  text: string
+  ticket_id: string
+}>
+
+export type TicketImageFixture = Readonly<{
+  height: number | null
+  id: string
+  is_active: boolean
+  is_cover: boolean
+  mime_type: string
+  original_filename: string
+  removed_at: string | null
+  size_bytes: number
+  ticket_id: string
+  uploaded_at: string
+  url: string
+  width: number | null
+}>
+
+export type TicketEventFixture = Readonly<{
+  actor: TicketUserReference
+  actor_user_id: string
+  event_type: string
+  id: string
+  occurred_at: string
+  payload: Record<string, unknown>
+  references: Readonly<{
+    offices: TicketOfficeReference[]
+    users: TicketUserReference[]
+  }>
+  sequence_number: number
+  ticket_id: string
+}>
+
+export type OfficeFixture = Readonly<{
+  address: null
+  contact_email: string
+  description: string | null
+  id: string
+  metadata: Readonly<{
+    created_at: string
+    deactivated_at: string | null
+    is_active: boolean
+  }>
+  name: string
+  opening_hours: string | null
+  phone: string | null
+  services: string[]
+}>
 
 export const TICKET_ID = '00000000-0000-4000-8000-000000000100'
 export const SECOND_TICKET_ID = '00000000-0000-4000-8000-000000000101'
 export const TICKET_OFFICE_ID = '00000000-0000-4000-8000-000000000010'
 
-export type TicketEventFixture = TicketEventResponse
-
-export function ticketWorkflowOptionsResponse(): TicketWorkflowOptionsResponse {
+export function ticketWorkflowOptionsResponse(): TicketWorkflowOptionsFixture {
   return {
     completion_outcomes: ['RESOLVED'],
     cosignature_targets: [],
@@ -33,7 +151,7 @@ export function ticketWorkflowOptionsResponse(): TicketWorkflowOptionsResponse {
   }
 }
 
-export function ticketResponse(): TicketInternalDetailResponse {
+export function ticketResponse(): TicketInternalDetailFixture {
   return {
     allowed_actions: ['FORWARD', 'COMPLETE'],
     address: {
@@ -75,7 +193,7 @@ export function ticketResponse(): TicketInternalDetailResponse {
   }
 }
 
-export function secondTicketResponse(): TicketInternalDetailResponse {
+export function secondTicketResponse(): TicketInternalDetailFixture {
   return {
     ...ticketResponse(),
     address: null,
@@ -104,7 +222,7 @@ export function secondTicketResponse(): TicketInternalDetailResponse {
   }
 }
 
-export function officeResponse(): OfficeResponse {
+export function officeResponse(): OfficeFixture {
   return {
     address: null,
     contact_email: 'tiefbau@example.test',
@@ -122,7 +240,7 @@ export function officeResponse(): OfficeResponse {
   }
 }
 
-export function initialTicketEvents(): TicketEventResponse[] {
+export function initialTicketEvents(): TicketEventFixture[] {
   return [
     {
       actor: { display_name: 'Clara Bürgerin', id: 'citizen-1' },
@@ -162,7 +280,7 @@ export function initialTicketEvents(): TicketEventResponse[] {
   ]
 }
 
-export function ticketCommentsResponse(): TicketCommentResponse[] {
+export function ticketCommentsResponse(): TicketCommentFixture[] {
   return [
     {
       author: {
@@ -191,7 +309,7 @@ export function ticketCommentsResponse(): TicketCommentResponse[] {
   ]
 }
 
-export function ticketImagesResponse(): TicketImageResponse[] {
+export function ticketImagesResponse(): TicketImageFixture[] {
   return [
     {
       height: 360,

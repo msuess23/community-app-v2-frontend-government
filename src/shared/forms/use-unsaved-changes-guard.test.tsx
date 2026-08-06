@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
-import { Link, type RouteObject } from 'react-router'
+import { Link, useNavigate, type RouteObject } from 'react-router'
 import { describe, expect, it } from 'vitest'
 
 import { useUnsavedChangesGuard } from '@/shared/forms/use-unsaved-changes-guard'
@@ -32,6 +32,27 @@ function DirtyForm() {
         />
       </label>
       <Link to="/target">Zur Zielseite</Link>
+    </main>
+  )
+}
+
+function SuccessfullySavedForm() {
+  const navigate = useNavigate()
+  const { allowNextNavigation } = useUnsavedChangesGuard({
+    hasUnsavedChanges: true,
+  })
+
+  return (
+    <main>
+      <button
+        onClick={() => {
+          allowNextNavigation()
+          navigate('/target')
+        }}
+        type="button"
+      >
+        Speichern und verlassen
+      </button>
     </main>
   )
 }
@@ -74,6 +95,28 @@ describe('useUnsavedChangesGuard', () => {
       await screen.findByRole('heading', { name: 'Zielseite' }),
     ).toBeVisible()
     expect(rendered.router.state.location.pathname).toBe('/target')
+  })
+
+  it('allows the immediate navigation after a confirmed successful save', async () => {
+    const user = userEvent.setup()
+    const rendered = renderRouter([
+      { path: '/', Component: SuccessfullySavedForm },
+      { path: '/target', element: <h1>Zielseite</h1> },
+    ])
+
+    await user.click(
+      screen.getByRole('button', { name: 'Speichern und verlassen' }),
+    )
+
+    expect(
+      await screen.findByRole('heading', { name: 'Zielseite' }),
+    ).toBeVisible()
+    expect(rendered.router.state.location.pathname).toBe('/target')
+    expect(
+      screen.queryByRole('dialog', {
+        name: 'Ungespeicherte Änderungen verwerfen?',
+      }),
+    ).not.toBeInTheDocument()
   })
 
   it('prevents browser-level exits while the form is dirty', async () => {

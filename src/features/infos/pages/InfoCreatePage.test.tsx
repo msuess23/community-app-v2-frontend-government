@@ -96,10 +96,10 @@ describe('InfoCreatePage', () => {
       screen.getByRole('combobox', { name: /Kategorie/ }),
       'CONSTRUCTION',
     )
-    fireEvent.change(screen.getByLabelText('Beginn'), {
+    fireEvent.change(await screen.findByLabelText(/Beginn/), {
       target: { value: '2026-08-12T17:00' },
     })
-    fireEvent.change(screen.getByLabelText('Ende'), {
+    fireEvent.change(await screen.findByLabelText(/Ende/), {
       target: { value: '2026-08-12T20:00' },
     })
     const firstImage = new File(['first'], 'umleitung.png', {

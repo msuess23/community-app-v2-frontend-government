@@ -78,7 +78,7 @@ export function EscalateTicketForm({
         label="Begründung"
         maxLength={1000}
         name="reason"
-        required
+        isRequired
         rows={5}
       />
     </WorkflowForm>

@@ -48,7 +48,7 @@ describe('OfficeDirectoryPage', () => {
     expect(screen.getByLabelText('Behördenstatus')).toHaveValue('all')
     expect(screen.getByLabelText('Sortierung')).toHaveValue('createdAt:desc')
     expect(
-      screen.getByRole('combobox', { name: 'Einträge pro Seite' }),
+      await screen.findByRole('combobox', { name: 'Einträge pro Seite' }),
     ).toHaveValue('20')
     expect(
       screen.getByRole('link', { name: 'Behörde anlegen' }),

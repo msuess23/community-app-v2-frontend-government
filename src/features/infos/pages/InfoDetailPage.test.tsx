@@ -92,9 +92,10 @@ describe('InfoDetailPage', () => {
       screen.queryByRole('heading', { name: 'Bilder hochladen' }),
     ).not.toBeInTheDocument()
 
-    const gallery = await screen.findByRole('list', {
+    const gallery = await screen.findByRole('region', {
       name: 'Bilder der Mitteilung',
     })
+    expect(gallery).toHaveAttribute('aria-roledescription', 'Karussell')
     expect(
       within(gallery).getByRole('img', {
         name: 'Bühne und Informationsstände auf dem Leipziger Markt',

@@ -144,7 +144,7 @@ export const getGetInternalTicketEventsApiV1TicketsTicketIdEventsGetUrl = (
 }
 
 /**
- * Return a chronological page of the append-only event stream.
+ * Return the append-only event stream with the newest events first.
  * @summary Get Internal Ticket Events
  */
 export const getInternalTicketEventsApiV1TicketsTicketIdEventsGet = async (

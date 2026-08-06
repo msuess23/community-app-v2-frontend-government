@@ -71,7 +71,7 @@ export function RequestCitizenResponseForm({
         label="Öffentliche Rückfrage"
         maxLength={1000}
         name="question"
-        required
+        isRequired
         rows={5}
       />
     </WorkflowForm>
@@ -130,7 +130,7 @@ export function ReturnToDispatchForm({
         label="Rückgabebegründung"
         maxLength={1000}
         name="reason"
-        required
+        isRequired
         rows={5}
       />
     </WorkflowForm>
@@ -226,7 +226,7 @@ export function CompleteTicketForm({
         label="Öffentliche Abschlussnachricht"
         maxLength={1000}
         name="message"
-        required
+        isRequired
         rows={5}
       />
     </WorkflowForm>

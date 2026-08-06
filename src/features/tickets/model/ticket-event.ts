@@ -145,7 +145,7 @@ export function mapTicketEventResponse(
   }
 }
 
-/** Maps one chronological backend event page for incremental timeline loading. */
+/** Maps one newest-first backend event page for incremental history loading. */
 export function mapTicketEventPage(
   response: PaginatedResponseTicketEventResponse,
 ): PageModel<TicketEventRecord> {

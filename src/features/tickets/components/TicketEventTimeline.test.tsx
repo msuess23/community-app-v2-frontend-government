@@ -11,7 +11,7 @@ import { mockApiServer } from '@/test/server'
 const TICKET_ID = '00000000-0000-4000-8000-000000000100'
 
 describe('TicketEventTimeline', () => {
-  it('loads chronological event pages without deriving the current projection', async () => {
+  it('loads newest-first event pages without deriving the current projection', async () => {
     const requestedPages: string[] = []
     mockApiServer.use(
       http.get(
@@ -22,16 +22,16 @@ describe('TicketEventTimeline', () => {
           return HttpResponse.json({
             data: [
               page === '1'
-                ? eventResponse(1, 'TICKET_SUBMITTED', {
+                ? eventResponse(2, 'TICKET_DISPATCHED', {
+                    comment: null,
+                    office_id: 'office-1',
+                  })
+                : eventResponse(1, 'TICKET_SUBMITTED', {
                     category: 'INFRASTRUCTURE',
                     creator_user_id: 'citizen-1',
                     description: 'Schlagloch am Fahrbahnrand.',
                     title: 'Schlagloch',
                     visibility: 'PUBLIC',
-                  })
-                : eventResponse(2, 'TICKET_DISPATCHED', {
-                    comment: null,
-                    office_id: 'office-1',
                   }),
             ],
             page: Number(page),
@@ -50,14 +50,17 @@ describe('TicketEventTimeline', () => {
       </QueryClientProvider>,
     )
 
-    expect(await screen.findByText('Ticket eingereicht')).toBeVisible()
-    expect(screen.queryByText('Ticket disponiert')).not.toBeInTheDocument()
+    expect(await screen.findByText('Ticket disponiert')).toBeVisible()
+    expect(screen.queryByText('Ticket eingereicht')).not.toBeInTheDocument()
 
     await user.click(
-      screen.getByRole('button', { name: 'Weitere Ereignisse laden' }),
+      screen.getByRole('button', { name: 'Ältere Ereignisse laden' }),
     )
 
-    expect(await screen.findByText('Ticket disponiert')).toBeVisible()
+    expect(await screen.findByText('Ticket eingereicht')).toBeVisible()
+    const events = screen.getAllByRole('listitem')
+    expect(events[0]).toHaveTextContent('Ticket disponiert')
+    expect(events[1]).toHaveTextContent('Ticket eingereicht')
     expect(requestedPages).toEqual(['1', '2'])
     expect(screen.getByText('2 von 2 Ereignissen angezeigt')).toBeVisible()
   })

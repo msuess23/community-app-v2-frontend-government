@@ -54,6 +54,10 @@ export function useUploadInfoImageMutation(infoId: string) {
       await Promise.all([
         queryClient.invalidateQueries({
           exact: true,
+          queryKey: imagesKey,
+        }),
+        queryClient.invalidateQueries({
+          exact: true,
           queryKey: infoFeatureQueryKeys.detail(infoId),
         }),
         queryClient.invalidateQueries({

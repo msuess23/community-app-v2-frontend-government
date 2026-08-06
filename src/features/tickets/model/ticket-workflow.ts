@@ -287,8 +287,12 @@ export function applyTicketWorkflowSubmissionError<TValues extends FieldValues>(
 
     for (const detail of error.details) {
       const rawField = detail.field?.replace(/^body\./, '')
-      const field = rawField ? aliases[rawField] : undefined
+      if (!rawField) {
+        unmapped = true
+        continue
+      }
 
+      const field = aliases[rawField]
       if (!field) {
         unmapped = true
         continue

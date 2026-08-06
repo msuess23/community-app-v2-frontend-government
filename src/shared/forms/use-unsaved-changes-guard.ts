@@ -20,6 +20,7 @@ export type UnsavedChangesGuardOptions = Readonly<{
 }>
 
 export type UnsavedChangesGuard = Readonly<{
+  allowNextNavigation: () => void
   confirmDiscardChanges: (
     message?: Partial<UnsavedChangesMessage>,
   ) => Promise<boolean>
@@ -43,6 +44,7 @@ export function useUnsavedChangesGuard({
   const shouldProtect = isEnabled && hasUnsavedChanges
   const handledNavigationRef = useRef<string | null>(null)
   const pendingConfirmationRef = useRef(false)
+  const allowNextNavigationRef = useRef(false)
   const messageRef = useRef(message)
 
   useEffect(() => {
@@ -50,9 +52,19 @@ export function useUnsavedChangesGuard({
   }, [message])
 
   const shouldBlock = useCallback<BlockerFunction>(
-    ({ currentLocation, nextLocation }) =>
-      shouldProtect &&
-      serializeLocation(currentLocation) !== serializeLocation(nextLocation),
+    ({ currentLocation, nextLocation }) => {
+      if (
+        serializeLocation(currentLocation) === serializeLocation(nextLocation)
+      ) {
+        return false
+      }
+
+      if (allowNextNavigationRef.current) {
+        return false
+      }
+
+      return shouldProtect
+    },
     [shouldProtect],
   )
   const blocker = useBlocker(shouldBlock)
@@ -64,6 +76,13 @@ export function useUnsavedChangesGuard({
 
   const blockedLocationKey =
     blocker.state === 'blocked' ? serializeLocation(blocker.location) : null
+
+  const allowNextNavigation = useCallback(() => {
+    allowNextNavigationRef.current = true
+    queueMicrotask(() => {
+      allowNextNavigationRef.current = false
+    })
+  }, [])
 
   const confirmDiscardChanges = useCallback(
     (overrideMessage: Partial<UnsavedChangesMessage> = {}) => {
@@ -131,7 +150,7 @@ export function useUnsavedChangesGuard({
     })
   }, [blockedLocationKey, blocker.state, confirmDiscardChanges])
 
-  return { confirmDiscardChanges }
+  return { allowNextNavigation, confirmDiscardChanges }
 }
 
 /** Creates a stable comparison key for router locations, including query and hash state. */

@@ -76,7 +76,12 @@ export function TicketDetailPage() {
                 />
                 <TicketVisibilityBadge visibility={ticket.visibility} />
               </div>
-              <p aria-live="polite" className="sr-only" role="status">
+              <p
+                aria-label="Aktueller Ticketstand"
+                aria-live="polite"
+                className="sr-only"
+                role="status"
+              >
                 Ticketstand Version {ticket.version}, zuletzt geändert{' '}
                 {formatDisplayDateTime(ticket.updatedAt)}.
               </p>
@@ -143,7 +148,7 @@ export function TicketDetailPage() {
           </ResourceDetailSection>
 
           <ResourceDetailSection
-            description="Chronologische, unveränderliche Ereignisse des Tickets. Der aktuelle Zustand oben wird weiterhin direkt aus der Backend-Projektion gelesen."
+            description="Unveränderliche Ereignisse mit dem neuesten Eintrag zuerst. Der aktuelle Zustand oben wird weiterhin direkt aus der Backend-Projektion gelesen."
             id="event-history"
             title="Ereignishistorie"
           >

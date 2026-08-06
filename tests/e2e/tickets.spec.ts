@@ -1,24 +1,23 @@
 import { expect, test } from '@playwright/test'
 
-import { expectNoSeriousAccessibilityViolations } from './fixtures/accessibility'
+import { expectNoSeriousAccessibilityViolations } from './fixtures/accessibility.js'
 import {
   signInAsAuthorityUser,
   type AuthorityUserFixture,
-} from './fixtures/auth'
+} from './fixtures/auth.js'
 import {
   installTicketReadApi,
-  TICKET_ID,
   TICKET_OFFICE_ID,
-} from './fixtures/ticket-api'
+} from './fixtures/ticket-api.js'
 import {
   TicketDetailPageObject,
   TicketDirectoryPageObject,
-} from './pages/ticket-pages'
+} from './pages/ticket-pages.js'
 
 const officer = {
   email: 'officer@example.test',
   first_name: 'Olaf',
-  id: 'officer-1',
+  id: '00000000-0000-4000-8000-000000000201',
   last_name: 'Ordnung',
   office_id: TICKET_OFFICE_ID,
   role: 'OFFICER',
@@ -27,7 +26,7 @@ const officer = {
 const dispatcher = {
   email: 'dispatcher@example.test',
   first_name: 'Diana',
-  id: 'dispatcher-1',
+  id: '00000000-0000-4000-8000-000000000202',
   last_name: 'Disposition',
   office_id: null,
   role: 'DISPATCHER',
@@ -36,7 +35,7 @@ const dispatcher = {
 const manager = {
   email: 'manager@example.test',
   first_name: 'Mara',
-  id: 'manager-1',
+  id: '00000000-0000-4000-8000-000000000203',
   last_name: 'Management',
   office_id: TICKET_OFFICE_ID,
   role: 'MANAGER',
@@ -45,7 +44,7 @@ const manager = {
 const administrator = {
   email: 'admin@example.test',
   first_name: 'Ada',
-  id: 'admin-1',
+  id: '00000000-0000-4000-8000-000000000204',
   last_name: 'Administration',
   office_id: null,
   role: 'ADMIN',
@@ -103,15 +102,16 @@ test('authority users read and filter the device-adapted ticket workspace', asyn
     'href',
     `/offices/${TICKET_OFFICE_ID}`,
   )
-  await expect(page.getByText('Ticket weitergeleitet')).toBeVisible()
-  await expect(page.getByText('Erika Einsatz')).toBeVisible()
+  const eventHistory = page.getByRole('region', { name: 'Ereignishistorie' })
+  await expect(eventHistory.getByText('Ticket weitergeleitet')).toBeVisible()
+  await expect(eventHistory.getByText('Erika Einsatz')).toBeVisible()
   await expect(
     page.getByRole('radio', { name: 'Interne Notiz' }),
   ).toBeVisible()
   await expect(
     page
       .getByRole('region', { name: 'Kommentare und interne Notizen' })
-      .getByText('Öffentlich'),
+      .getByText('Öffentlich', { exact: true }),
   ).toBeVisible()
   await expect(page.getByText('Historisch entfernte Bilder')).toBeVisible()
   await expect(page.getByText('schlagloch-alt.jpg')).toBeVisible()
@@ -136,7 +136,11 @@ test('officer executes one server-driven forwarding action', async ({ page }) =>
     'Bitte die Straßensperrung koordinieren.',
   )
 
-  await expect(page.getByText('Ticket weitergeleitet')).toBeVisible()
+  await expect(
+    page
+      .getByRole('region', { name: 'Benachrichtigungen' })
+      .getByText('Ticket weitergeleitet', { exact: true }),
+  ).toBeVisible()
   await expect(
     page.getByRole('region', { name: 'Aktuelle Zuständigkeit' }),
   ).toContainText('Erika Einsatz')
@@ -193,29 +197,32 @@ test('officer appends comments and reads revisioned ticket images', async ({
 test('dispatcher receives only dispatch actions and no removed image history', async ({
   page,
 }) => {
-  const { imageListRequests } = await installTicketReadApi(page, {
-    ticket: {
-      allowed_actions: ['DISPATCH'],
-      current_assignee: null,
-      current_assignee_id: null,
-      current_status: {
-        created_at: '2026-08-05T08:00:00Z',
-        id: 'status-dispatch',
-        message: null,
-        status: 'OPEN',
+  const { dispatchRequests, imageListRequests } = await installTicketReadApi(
+    page,
+    {
+      ticket: {
+        allowed_actions: ['DISPATCH'],
+        current_assignee: null,
+        current_assignee_id: null,
+        current_status: {
+          created_at: '2026-08-05T08:00:00Z',
+          id: 'status-dispatch',
+          message: null,
+          status: 'OPEN',
+        },
+        office: null,
+        office_id: null,
+        primary_officer: null,
+        primary_officer_id: null,
+        workflow_state: 'NEW',
       },
-      office: null,
-      office_id: null,
-      primary_officer: null,
-      primary_officer_id: null,
-      workflow_state: 'NEW',
+      workflowOptions: {
+        completion_outcomes: [],
+        forward_targets: [],
+        offices: [{ id: TICKET_OFFICE_ID, name: 'Tiefbauamt' }],
+      },
     },
-    workflowOptions: {
-      completion_outcomes: [],
-      forward_targets: [],
-      offices: [{ id: TICKET_OFFICE_ID, name: 'Tiefbauamt' }],
-    },
-  })
+  )
   const directory = new TicketDirectoryPageObject(page)
   const detail = new TicketDetailPageObject(page)
 
@@ -243,9 +250,19 @@ test('dispatcher receives only dispatch actions and no removed image history', a
     'Behörde zuordnen',
     'Ticket einer Behörde zuordnen',
   )
-  await expect(dialog.getByLabel('Zuständige Behörde')).toContainText(
-    'Tiefbauamt',
-  )
+  const officeSelect = dialog.getByRole('combobox', {
+    name: /Zuständige Behörde/,
+  })
+  await expect(officeSelect).toContainText('Tiefbauamt')
+  await officeSelect.selectOption(TICKET_OFFICE_ID)
+  await dialog.getByRole('button', { name: 'Ticket zuordnen' }).click()
+
+  await expect(dialog).toBeHidden()
+  await expect(actions.getByRole('button')).toHaveCount(0)
+  await expect(actions).toContainText('keine Workflowaktionen verfügbar')
+  expect(dispatchRequests).toEqual([
+    { comment: null, office_id: TICKET_OFFICE_ID },
+  ])
   await expectNoSeriousAccessibilityViolations(page)
 })
 
@@ -299,7 +316,9 @@ test('workflow dialogs guard dirty input and restore focus to their trigger', as
     dialog.getByRole('button', { name: 'Aktionsdialog schließen' }),
   ).toBeFocused()
 
-  await dialog.getByLabel('Weiterleiten an').selectOption('officer-3')
+  await dialog
+    .getByRole('combobox', { name: /Weiterleiten an/ })
+    .selectOption('officer-3')
   await dialog.getByLabel('Optionaler Kommentar').fill('Noch nicht speichern.')
   await page.keyboard.press('Escape')
 

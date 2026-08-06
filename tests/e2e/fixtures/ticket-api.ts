@@ -1,11 +1,11 @@
 import type { Page } from '@playwright/test'
 
 import type {
-  TicketCommentResponse,
-  TicketEventType,
-  TicketInternalDetailResponse,
-  TicketWorkflowOptionsResponse,
-} from '../../../src/api/generated/models'
+  TicketCommentFixture,
+  TicketImageFixture,
+  TicketInternalDetailFixture,
+  TicketWorkflowOptionsFixture,
+} from './ticket-api-data.js'
 
 import {
   initialTicketEvents,
@@ -18,12 +18,17 @@ import {
   ticketResponse,
   ticketWorkflowOptionsResponse,
   type TicketEventFixture,
-} from './ticket-api-data'
+} from './ticket-api-data.js'
 
-export { SECOND_TICKET_ID, TICKET_ID, TICKET_OFFICE_ID } from './ticket-api-data'
+export {
+  SECOND_TICKET_ID,
+  TICKET_ID,
+  TICKET_OFFICE_ID,
+} from './ticket-api-data.js'
 
 export type TicketApiRequestLog = Readonly<{
   commentRequests: unknown[]
+  dispatchRequests: unknown[]
   imageListRequests: string[]
   listRequests: string[]
   workflowRequests: unknown[]
@@ -31,8 +36,8 @@ export type TicketApiRequestLog = Readonly<{
 
 export type TicketApiScenario = Readonly<{
   events?: readonly TicketEventFixture[]
-  ticket?: Partial<TicketInternalDetailResponse>
-  workflowOptions?: Partial<TicketWorkflowOptionsResponse>
+  ticket?: Partial<TicketInternalDetailFixture>
+  workflowOptions?: Partial<TicketWorkflowOptionsFixture>
 }>
 
 /** Installs stateful ticket read, workflow and collaboration endpoints for E2E tests. */
@@ -41,24 +46,26 @@ export async function installTicketReadApi(
   scenario: TicketApiScenario = {},
 ): Promise<TicketApiRequestLog> {
   const commentRequests: unknown[] = []
+  const dispatchRequests: unknown[] = []
   const imageListRequests: string[] = []
   const listRequests: string[] = []
   const workflowRequests: unknown[] = []
-  let currentTicket: TicketInternalDetailResponse = {
+  let currentTicket: TicketInternalDetailFixture = {
     ...ticketResponse(),
     ...scenario.ticket,
   }
   let comments = ticketCommentsResponse()
   const images = ticketImagesResponse()
-  let events = [...(scenario.events ?? initialTicketEvents())]
+  let events = [...(scenario.events ?? initialTicketEvents())].sort(
+    (left, right) => right.sequence_number - left.sequence_number,
+  )
 
   function appendEvent(
-    eventType: TicketEventType,
+    eventType: string,
     payload: Record<string, unknown>,
   ) {
     const sequenceNumber = events.length + 1
     events = [
-      ...events,
       {
         actor: { display_name: 'Olaf Ordnung', id: 'officer-1' },
         actor_user_id: 'officer-1',
@@ -70,6 +77,7 @@ export async function installTicketReadApi(
         sequence_number: sequenceNumber,
         ticket_id: TICKET_ID,
       },
+      ...events,
     ]
     currentTicket = {
       ...currentTicket,
@@ -141,6 +149,40 @@ export async function installTicketReadApi(
     }
 
     if (
+      path === `/api/v1/tickets/${TICKET_ID}/dispatch` &&
+      request.method() === 'POST'
+    ) {
+      const body = request.postDataJSON() as {
+        comment?: string | null
+        office_id: string
+      }
+      dispatchRequests.push(body)
+      appendEvent('TICKET_DISPATCHED', {
+        comment: body.comment ?? null,
+        office_id: body.office_id,
+      })
+      currentTicket = {
+        ...currentTicket,
+        allowed_actions: [],
+        current_status: {
+          created_at: '2026-08-05T07:00:00Z',
+          id: 'status-dispatched',
+          message: 'An die zuständige Behörde weitergeleitet.',
+          status: 'IN_PROGRESS',
+        },
+        office: { id: body.office_id, name: 'Tiefbauamt' },
+        office_id: body.office_id,
+        workflow_state: 'AWAITING_PRIMARY_ASSIGNMENT',
+      }
+      await route.fulfill({
+        contentType: 'application/json',
+        json: currentTicket,
+        status: 200,
+      })
+      return
+    }
+
+    if (
       path === `/api/v1/tickets/${TICKET_ID}/workflow` &&
       request.method() === 'POST'
     ) {
@@ -196,7 +238,7 @@ export async function installTicketReadApi(
           text: string
         }
         commentRequests.push(body)
-        const comment: TicketCommentResponse = {
+        const comment: TicketCommentFixture = {
           author: {
             author_type: 'AUTHORITY',
             display_name: 'Olaf Ordnung',
@@ -233,7 +275,7 @@ export async function installTicketReadApi(
         contentType: 'application/json',
         json: includeRemoved
           ? images
-          : images.filter((image) => image.is_active),
+          : images.filter((image: TicketImageFixture) => image.is_active),
         status: 200,
       })
       return
@@ -275,6 +317,7 @@ export async function installTicketReadApi(
 
   return {
     commentRequests,
+    dispatchRequests,
     imageListRequests,
     listRequests,
     workflowRequests,

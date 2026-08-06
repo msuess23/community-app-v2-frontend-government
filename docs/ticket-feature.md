@@ -48,7 +48,7 @@ The current ticket detail is the authoritative projection. The frontend never re
 
 The immutable timeline supports all nineteen current ticket event types. Feature-owned Zod parsers validate the payload shape before a renderer uses it. Known events with malformed payloads and unknown future events remain visible through safe fallbacks. Actor, user, and office references enrich presentation without changing the stored event payload. Raw payload is exposed only in development.
 
-Events retain their server sequence and pagination order. Workflow and comment mutations invalidate the event query rather than inserting assumed local events. Image events created by the separate citizen client remain visible in the authority timeline.
+The timeline shows the newest server event first and loads progressively older pages. Workflow and comment mutations invalidate the event query rather than inserting assumed local events. Image events created by the separate citizen client remain visible in the authority timeline.
 
 ## Append-only collaboration and read-only revisioned images
 

@@ -95,7 +95,19 @@ export function mapOfficeHistoryResponse(
 export function mapOfficeHistoryPage(
   response: PaginatedResponseOfficeHistoryResponse,
 ): PageModel<OfficeHistoryRecord> {
-  return mapApiPage(response, mapOfficeHistoryResponse)
+  const page = mapApiPage(response, mapOfficeHistoryResponse)
+  return {
+    ...page,
+    items: [...page.items].sort(compareOfficeHistoryNewestFirst),
+  }
+}
+
+/** Keeps the most recent immutable office snapshots at the top of each page. */
+function compareOfficeHistoryNewestFirst(
+  left: OfficeHistoryRecord,
+  right: OfficeHistoryRecord,
+): number {
+  return Date.parse(right.changedAt) - Date.parse(left.changedAt)
 }
 
 /** Reads and validates the inclusive calendar-day range owned by the history URL. */

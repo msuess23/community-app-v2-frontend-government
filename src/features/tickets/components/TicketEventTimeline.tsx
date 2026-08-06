@@ -24,7 +24,9 @@ export function TicketEventTimeline({ ticketId }: Readonly<{ ticketId: string }>
       query={query}
     >
       {(data) => {
-        const events = data.pages.flatMap((page) => page.items)
+        const events = data.pages
+          .flatMap((page) => page.items)
+          .sort((left, right) => right.sequenceNumber - left.sequenceNumber)
         const total = data.pages[0]?.totalItems ?? events.length
 
         return (
@@ -33,7 +35,7 @@ export function TicketEventTimeline({ ticketId }: Readonly<{ ticketId: string }>
             events={events}
             hasOlderEvents={query.hasNextPage}
             isLoadingOlder={query.isFetchingNextPage}
-            loadOlderLabel="Weitere Ereignisse laden"
+            loadOlderLabel="Ältere Ereignisse laden"
             onLoadOlder={() => void query.fetchNextPage()}
             registry={ticketEventRendererRegistry}
             total={total}

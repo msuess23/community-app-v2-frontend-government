@@ -3654,7 +3654,7 @@
           "Tickets"
         ],
         "summary": "Get Internal Ticket Events",
-        "description": "Return a chronological page of the append-only event stream.",
+        "description": "Return the append-only event stream with the newest events first.",
         "operationId": "get_internal_ticket_events_api_v1_tickets__ticket_id__events_get",
         "security": [
           {

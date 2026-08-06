@@ -54,7 +54,7 @@ describe('TicketDetailPage', () => {
       }),
     ).toBeInTheDocument()
     expect(screen.getAllByText('In Bearbeitung').length).toBeGreaterThan(0)
-    expect(screen.getByText('Öffentlich')).toBeVisible()
+    expect(screen.getAllByText('Öffentlich').length).toBeGreaterThan(0)
     expect(
       screen.getByText(
         'Ein tiefes Schlagloch befindet sich am rechten Fahrbahnrand.',
@@ -79,9 +79,9 @@ describe('TicketDetailPage', () => {
     expect(screen.getByText('Interne fachliche Prüfung läuft.')).toBeVisible()
     expect(screen.getByText('schlagloch.jpg')).toBeVisible()
     expect(screen.getByText('Historisch entfernte Bilder')).toBeVisible()
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Ticketstand Version 4',
-    )
+    expect(
+      screen.getByRole('status', { name: 'Aktueller Ticketstand' }),
+    ).toHaveTextContent('Ticketstand Version 4')
     const metadata = screen.getByRole('region', { name: 'Metadaten' })
     expect(within(metadata).getByText('4')).toBeVisible()
     expect(screen.queryByText(TICKET_ID)).not.toBeInTheDocument()
@@ -167,7 +167,7 @@ describe('TicketDetailPage', () => {
     ).toBeVisible()
 
     await user.selectOptions(
-      await screen.findByLabelText('Weiterleiten an'),
+      await screen.findByRole('combobox', { name: /Weiterleiten an/ }),
       'officer-3',
     )
     await user.type(

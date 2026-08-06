@@ -55,7 +55,10 @@ export function createTicketDetailQueryOptions(ticketId: string) {
   })
 }
 
-/** Creates incremental chronological pages for the immutable ticket stream. */
+/**
+ * Creates newest-first pages for the immutable ticket stream and loads older
+ * events incrementally.
+ */
 export function createTicketEventsInfiniteQueryOptions(ticketId: string) {
   return infiniteQueryOptions({
     getNextPageParam: (lastPage: PageModel<TicketEventRecord>) =>
