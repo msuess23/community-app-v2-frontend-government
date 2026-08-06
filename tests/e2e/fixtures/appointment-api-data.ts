@@ -94,6 +94,8 @@ export type AppointmentSlotFixture = Readonly<{
 export const APPOINTMENT_SLOT_ID = '00000000-0000-4000-8000-000000000040'
 export const EXPIRED_APPOINTMENT_SLOT_ID =
   '00000000-0000-4000-8000-000000000041'
+export const RESCHEDULE_APPOINTMENT_SLOT_ID =
+  '00000000-0000-4000-8000-000000000042'
 
 export function appointmentSlotResponse(): AppointmentSlotFixture {
   return {
@@ -102,6 +104,17 @@ export function appointmentSlotResponse(): AppointmentSlotFixture {
     id: APPOINTMENT_SLOT_ID,
     office_id: APPOINTMENT_OFFICE_ID,
     starts_at: '2099-08-20T09:00:00Z',
+    status: 'AVAILABLE',
+  }
+}
+
+export function rescheduleAppointmentSlotResponse(): AppointmentSlotFixture {
+  return {
+    created_at: '2026-08-01T08:00:00Z',
+    ends_at: '2099-08-21T10:30:00Z',
+    id: RESCHEDULE_APPOINTMENT_SLOT_ID,
+    office_id: APPOINTMENT_OFFICE_ID,
+    starts_at: '2099-08-21T10:00:00Z',
     status: 'AVAILABLE',
   }
 }

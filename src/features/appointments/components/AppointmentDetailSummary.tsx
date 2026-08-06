@@ -1,6 +1,7 @@
 import { Building2, CalendarClock, UserRound } from 'lucide-react'
 import { Link } from 'react-router'
 
+import { AppointmentLifecycleActions } from '@/features/appointments/components/AppointmentLifecycleActions'
 import { AppointmentStatusBadge } from '@/features/appointments/components/AppointmentStatusBadge'
 import {
   getAppointmentDurationLabel,
@@ -17,7 +18,7 @@ import {
   type ResourceMetadataItem,
 } from '@/shared/resource-detail/ResourceDetailLayout'
 
-/** Groups the current schedule, responsibility and projection metadata in the detail aside. */
+/** Groups server-driven actions, schedule, responsibility and metadata in the detail aside. */
 export function AppointmentDetailSummary({
   appointment,
 }: Readonly<{ appointment: AppointmentRecord }>) {
@@ -64,6 +65,15 @@ export function AppointmentDetailSummary({
 
   return (
     <>
+      <ResourceDetailSection
+        description="Das Backend berechnet die verfügbaren Aktionen aus Rolle, Behörde, Terminzeit und aktuellem Terminstatus."
+        id="lifecycle-actions"
+        title="Terminaktionen"
+        variant="outlined"
+      >
+        <AppointmentLifecycleActions appointment={appointment} />
+      </ResourceDetailSection>
+
       <ResourceDetailSection
         id="schedule-summary"
         title="Terminübersicht"

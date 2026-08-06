@@ -1,6 +1,9 @@
 import { expect, type Locator, type Page } from '@playwright/test'
 
-import { APPOINTMENT_ID } from '../fixtures/appointment-api.js'
+import {
+  APPOINTMENT_ID,
+  RESCHEDULE_APPOINTMENT_SLOT_ID,
+} from '../fixtures/appointment-api.js'
 
 export class AppointmentDirectoryPageObject {
   private readonly page: Page
@@ -66,6 +69,27 @@ export class AppointmentDetailPageObject {
     await expect(
       this.page.getByRole('region', { name: 'Beteiligte' }),
     ).toContainText('Bürgeramt Mitte')
+    await expect(
+      this.page.getByRole('region', { name: 'Ereignishistorie' }),
+    ).toContainText('Termin gebucht')
+  }
+
+  async rescheduleAppointment(reason: string): Promise<void> {
+    await this.page.getByRole('button', { name: 'Verschieben' }).click()
+    await expect(
+      this.page.getByRole('heading', { name: 'Termin verschieben' }),
+    ).toBeVisible()
+    await this.page
+      .getByRole('combobox', { name: 'Neuer Terminslot' })
+      .selectOption(RESCHEDULE_APPOINTMENT_SLOT_ID)
+    await this.page.getByLabel('Begründung').fill(reason)
+    await this.page
+      .getByRole('button', { name: 'Termin verschieben' })
+      .click()
+    await expect(this.page.getByText('Termin verschoben')).toBeVisible()
+    await expect(
+      this.page.getByRole('dialog', { name: 'Termin verschieben' }),
+    ).toBeHidden()
   }
 }
 

@@ -12,6 +12,8 @@ const baseAppointmentQueryKeys = createResourceQueryKeys<
 /** Owns authority appointment projections and their separately scoped options. */
 export const appointmentFeatureQueryKeys = {
   ...baseAppointmentQueryKeys,
+  events: (appointmentId: string) =>
+    baseAppointmentQueryKeys.related(appointmentId, 'events'),
   filterOptions: () =>
     baseAppointmentQueryKeys.related('directory', 'filter-options'),
 }
@@ -28,4 +30,8 @@ const baseAppointmentSlotQueryKeys =
 /** Owns office-scoped appointment-slot capacity projections. */
 export const appointmentSlotQueryKeys = {
   ...baseAppointmentSlotQueryKeys,
+  availableForReschedule: (officeId: string, startsFrom: string) =>
+    baseAppointmentSlotQueryKeys.related(officeId, 'reschedule-options', {
+      startsFrom,
+    }),
 }

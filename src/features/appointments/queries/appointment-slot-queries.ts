@@ -1,22 +1,68 @@
-import { keepPreviousData, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  infiniteQueryOptions,
+  keepPreviousData,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 
 import { isApiError } from '@/api/client/api-error'
-import type { ListAppointmentSlotsApiV1OfficesOfficeIdAppointmentSlotsGetParams } from '@/api/generated/models'
+import type {
+  ListAppointmentSlotsApiV1OfficesOfficeIdAppointmentSlotsGetParams,
+} from '@/api/generated/models'
 import {
   createAppointmentSlotsApiV1OfficesOfficeIdAppointmentSlotsPost,
   deactivateAppointmentSlotApiV1OfficesOfficeIdAppointmentSlotsSlotIdDelete,
   listAppointmentSlotsApiV1OfficesOfficeIdAppointmentSlotsGet,
 } from '@/api/generated/appointment-slots/appointment-slots'
+import type { PageModel } from '@/api/contract/pagination'
 import { createMappedQueryOptions } from '@/api/contract/query-options'
 import {
   mapAppointmentSlotPage,
   mapAppointmentSlotResponse,
 } from '@/features/appointments/model/appointment-slot-mapper'
-import type { AppointmentSlotBatchFormValues } from '@/features/appointments/model/appointment-slot-form'
+import type {
+  AppointmentSlotBatchFormValues,
+} from '@/features/appointments/model/appointment-slot-form'
 import { toAppointmentSlotBatchCreate } from '@/features/appointments/model/appointment-slot-form'
 import type { AppointmentSlotRecord } from '@/features/appointments/model/appointment-slot-model'
 import { appointmentSlotQueryKeys } from '@/features/appointments/queries/appointment-query-keys'
 import { refreshQueryKeys } from '@/shared/remote-data/mutation-cache'
+
+const APPOINTMENT_RESCHEDULE_SLOT_PAGE_SIZE = 100
+
+/** Creates incrementally loaded future availability for one reschedule dialog. */
+export function createAvailableAppointmentSlotsInfiniteQueryOptions(
+  officeId: string,
+  startsFrom: string,
+) {
+  return infiniteQueryOptions({
+    getNextPageParam: (lastPage: PageModel<AppointmentSlotRecord>) =>
+      lastPage.page < lastPage.pageCount ? lastPage.page + 1 : undefined,
+    initialPageParam: 1,
+    queryFn: async ({
+      pageParam,
+      signal,
+    }: Readonly<{ pageParam: number; signal: AbortSignal }>) =>
+      mapAppointmentSlotPage(
+        await listAppointmentSlotsApiV1OfficesOfficeIdAppointmentSlotsGet(
+          officeId,
+          {
+            order: 'asc',
+            page: pageParam,
+            size: APPOINTMENT_RESCHEDULE_SLOT_PAGE_SIZE,
+            sort_by: 'starts_at',
+            starts_from: startsFrom,
+            status: 'AVAILABLE',
+          },
+          { signal },
+        ),
+      ),
+    queryKey: appointmentSlotQueryKeys.availableForReschedule(
+      officeId,
+      startsFrom,
+    ),
+  })
+}
 
 /** Creates the paginated, office-scoped authority slot-directory query. */
 export function createAppointmentSlotDirectoryQueryOptions(

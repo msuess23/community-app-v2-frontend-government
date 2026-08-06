@@ -39,7 +39,9 @@ const dispatcher = {
 test('officer reads and filters the device-adapted appointment workspace', async ({
   page,
 }, testInfo) => {
-  const { listRequests } = await installAppointmentReadApi(page)
+  const { lifecycleRequests, listRequests } =
+    await installAppointmentReadApi(page)
+  await installAppointmentSlotApi(page)
   const directory = new AppointmentDirectoryPageObject(page)
   const detail = new AppointmentDetailPageObject(page)
 
@@ -70,6 +72,20 @@ test('officer reads and filters the device-adapted appointment workspace', async
   await expect(
     page.getByRole('link', { name: 'Anliegen zur Ummeldung' }),
   ).toHaveAttribute('href', `/tickets/${APPOINTMENT_TICKET_ID}`)
+  await expectNoSeriousAccessibilityViolations(page)
+
+  await detail.rescheduleAppointment('Wunsch des Bürgers')
+  await expect.poll(() => lifecycleRequests.length).toBe(1)
+  expect(lifecycleRequests[0]).toEqual({
+    action: 'RESCHEDULE',
+    body: {
+      reason: 'Wunsch des Bürgers',
+      target_slot_id: '00000000-0000-4000-8000-000000000042',
+    },
+  })
+  await expect(
+    page.getByRole('region', { name: 'Ereignishistorie' }),
+  ).toContainText('Termin verschoben')
   await expectNoSeriousAccessibilityViolations(page)
 })
 

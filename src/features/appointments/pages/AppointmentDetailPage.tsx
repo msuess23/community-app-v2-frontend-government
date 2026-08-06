@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useParams } from 'react-router'
 
 import { AppointmentDetailSummary } from '@/features/appointments/components/AppointmentDetailSummary'
+import { AppointmentEventTimeline } from '@/features/appointments/components/AppointmentEventTimeline'
 import { AppointmentStatusBadge } from '@/features/appointments/components/AppointmentStatusBadge'
 import { APPOINTMENT_READ_ERROR_MESSAGES } from '@/features/appointments/model/appointment-error-messages'
 import { createAppointmentDetailQueryOptions } from '@/features/appointments/queries/appointment-queries'
@@ -15,9 +16,11 @@ import {
 import { resolveResourceDetailReturnTo } from '@/shared/resource-detail/detail-navigation'
 
 const DETAIL_NAVIGATION = [
+  { id: 'lifecycle-actions', label: 'Aktionen' },
   { id: 'appointment', label: 'Termin' },
   { id: 'concern', label: 'Anliegen' },
   { id: 'linked-ticket', label: 'Ticket' },
+  { id: 'event-history', label: 'Ereignishistorie' },
   { id: 'responsibility', label: 'Beteiligte' },
   { id: 'metadata', label: 'Metadaten' },
 ] as const
@@ -134,6 +137,14 @@ export function AppointmentDetailPage() {
                 Dieser Termin ist mit keinem Ticket verknüpft.
               </p>
             )}
+          </ResourceDetailSection>
+
+          <ResourceDetailSection
+            description="Unveränderliche Ereignisse mit dem neuesten Eintrag zuerst. Der aktuelle Terminstand oben wird weiterhin direkt aus der Backend-Projektion gelesen."
+            id="event-history"
+            title="Ereignishistorie"
+          >
+            <AppointmentEventTimeline appointmentId={appointment.id} />
           </ResourceDetailSection>
         </ResourceDetailLayout>
       )}
