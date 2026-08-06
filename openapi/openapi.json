@@ -697,6 +697,33 @@
         }
       }
     },
+    "/api/v1/appointments/internal/filter-options": {
+      "get": {
+        "tags": [
+          "Appointments"
+        ],
+        "summary": "Get Internal Appointment Filter Options",
+        "description": "Return readable filters from the caller's complete office scope.",
+        "operationId": "get_internal_appointment_filter_options_api_v1_appointments_internal_filter_options_get",
+        "response": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentFilterOptionsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/appointments/{appointment_id}/reschedule": {
       "post": {
         "tags": [
@@ -939,7 +966,7 @@
           "Appointments"
         ],
         "summary": "List Appointment Events",
-        "description": "Return a chronological appointment event page to an authorized reader.",
+        "description": "Return a newest-first appointment event page to an authorized reader.",
         "operationId": "list_appointment_events_api_v1_appointments__appointment_id__events_get",
         "security": [
           {
@@ -1264,10 +1291,13 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "The authorized immutable PDF document version.",
             "content": {
-              "application/json": {
-                "schema": {}
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
               }
             }
           },
@@ -5495,7 +5525,7 @@
         "additionalProperties": false,
         "type": "object",
         "title": "AppointmentCompleteRequest",
-        "description": "Record an optional authority note for a completed appointment."
+        "description": "Record an optional internal authority note for a completed appointment."
       },
       "AppointmentDocumentResponse": {
         "properties": {
@@ -5619,6 +5649,16 @@
             ],
             "title": "Actor User Id"
           },
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AppointmentUserReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "occurred_at": {
             "type": "string",
             "format": "date-time",
@@ -5654,6 +5694,27 @@
         "title": "AppointmentEventType",
         "description": "Append-only changes supported by the appointment aggregate."
       },
+      "AppointmentFilterOptionsResponse": {
+        "properties": {
+          "citizens": {
+            "items": {
+              "$ref": "#/components/schemas/AppointmentUserReference"
+            },
+            "type": "array",
+            "title": "Citizens"
+          },
+          "tickets": {
+            "items": {
+              "$ref": "#/components/schemas/AppointmentTicketReference"
+            },
+            "type": "array",
+            "title": "Tickets"
+          }
+        },
+        "type": "object",
+        "title": "AppointmentFilterOptionsResponse",
+        "description": "Readable filters derived only from the caller's appointment scope."
+      },
       "AppointmentNoShowRequest": {
         "properties": {
           "comment": {
@@ -5672,7 +5733,27 @@
         "additionalProperties": false,
         "type": "object",
         "title": "AppointmentNoShowRequest",
-        "description": "Record an optional authority note for a citizen no-show."
+        "description": "Record an optional internal authority note for a citizen no-show."
+      },
+      "AppointmentOfficeReference": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "AppointmentOfficeReference",
+        "description": "Small office label embedded in an appointment response."
       },
       "AppointmentRescheduleRequest": {
         "properties": {
@@ -5721,10 +5802,16 @@
             "format": "uuid",
             "title": "Office Id"
           },
+          "office": {
+            "$ref": "#/components/schemas/AppointmentOfficeReference"
+          },
           "citizen_id": {
             "type": "string",
             "format": "uuid",
             "title": "Citizen Id"
+          },
+          "citizen": {
+            "$ref": "#/components/schemas/AppointmentUserReference"
           },
           "ticket_id": {
             "anyOf": [
@@ -5737,6 +5824,16 @@
               }
             ],
             "title": "Ticket Id"
+          },
+          "ticket": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AppointmentTicketReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "reason": {
             "anyOf": [
@@ -5813,7 +5910,9 @@
           "id",
           "current_slot_id",
           "office_id",
+          "office",
           "citizen_id",
+          "citizen",
           "status",
           "starts_at",
           "ends_at",
@@ -5950,6 +6049,51 @@
         ],
         "title": "AppointmentStatus",
         "description": "Citizen-visible lifecycle of a booked appointment."
+      },
+      "AppointmentTicketReference": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "can_view": {
+            "type": "boolean",
+            "title": "Can View"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "can_view"
+        ],
+        "title": "AppointmentTicketReference",
+        "description": "Small linked-ticket label and current caller access indication."
+      },
+      "AppointmentUserReference": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "display_name"
+        ],
+        "title": "AppointmentUserReference",
+        "description": "Data-minimizing user label without account or contact information."
       },
       "Body_login_api_v1_auth_login_post": {
         "properties": {

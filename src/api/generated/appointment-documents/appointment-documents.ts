@@ -134,8 +134,8 @@ export const downloadAppointmentDocumentApiV1AppointmentsAppointmentIdDocumentsD
     appointmentId: string,
     documentVersionId: string,
     options?: RequestInit,
-  ): Promise<unknown> => {
-    return apiFetch<unknown>(
+  ): Promise<Blob> => {
+    return apiFetch<Blob>(
       getDownloadAppointmentDocumentApiV1AppointmentsAppointmentIdDocumentsDocumentVersionIdContentGetUrl(
         appointmentId,
         documentVersionId,

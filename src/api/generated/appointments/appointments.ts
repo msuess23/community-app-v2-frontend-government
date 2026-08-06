@@ -8,6 +8,7 @@ import type {
   AppointmentBookRequest,
   AppointmentCancelRequest,
   AppointmentCompleteRequest,
+  AppointmentFilterOptionsResponse,
   AppointmentNoShowRequest,
   AppointmentRescheduleRequest,
   AppointmentResponse,
@@ -115,6 +116,26 @@ export const listInternalAppointmentsApiV1AppointmentsInternalGet = async (
     },
   )
 }
+
+export const getGetInternalAppointmentFilterOptionsApiV1AppointmentsInternalFilterOptionsGetUrl =
+  () => {
+    return `/api/v1/appointments/internal/filter-options`
+  }
+
+/**
+ * Return readable filters from the caller's complete office scope.
+ * @summary Get Internal Appointment Filter Options
+ */
+export const getInternalAppointmentFilterOptionsApiV1AppointmentsInternalFilterOptionsGet =
+  async (options?: RequestInit): Promise<AppointmentFilterOptionsResponse> => {
+    return apiFetch<AppointmentFilterOptionsResponse>(
+      getGetInternalAppointmentFilterOptionsApiV1AppointmentsInternalFilterOptionsGetUrl(),
+      {
+        ...options,
+        method: 'GET',
+      },
+    )
+  }
 
 export const getRescheduleAppointmentApiV1AppointmentsAppointmentIdReschedulePostUrl =
   (appointmentId: string) => {
@@ -249,7 +270,7 @@ export const getListAppointmentEventsApiV1AppointmentsAppointmentIdEventsGetUrl 
   }
 
 /**
- * Return a chronological appointment event page to an authorized reader.
+ * Return a newest-first appointment event page to an authorized reader.
  * @summary List Appointment Events
  */
 export const listAppointmentEventsApiV1AppointmentsAppointmentIdEventsGet =
