@@ -1,4 +1,7 @@
-import type { ListInternalAppointmentsApiV1AppointmentsInternalGetParams } from '@/api/generated/models'
+import type {
+  ListAppointmentSlotsApiV1OfficesOfficeIdAppointmentSlotsGetParams,
+  ListInternalAppointmentsApiV1AppointmentsInternalGetParams,
+} from '@/api/generated/models'
 import { createResourceQueryKeys } from '@/shared/remote-data/query-keys'
 
 const baseAppointmentQueryKeys = createResourceQueryKeys<
@@ -11,4 +14,18 @@ export const appointmentFeatureQueryKeys = {
   ...baseAppointmentQueryKeys,
   filterOptions: () =>
     baseAppointmentQueryKeys.related('directory', 'filter-options'),
+}
+
+type AppointmentSlotListQueryParameters =
+  ListAppointmentSlotsApiV1OfficesOfficeIdAppointmentSlotsGetParams &
+    Readonly<{ officeId: string }>
+
+const baseAppointmentSlotQueryKeys =
+  createResourceQueryKeys<AppointmentSlotListQueryParameters, string>(
+    'appointment-slot-feature',
+  )
+
+/** Owns office-scoped appointment-slot capacity projections. */
+export const appointmentSlotQueryKeys = {
+  ...baseAppointmentSlotQueryKeys,
 }

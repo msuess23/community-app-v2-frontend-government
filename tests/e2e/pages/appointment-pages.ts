@@ -77,3 +77,94 @@ async function findVisibleLocatorIndex(candidates: Locator): Promise<number> {
   }
   return -1
 }
+
+export class AppointmentSlotDirectoryPageObject {
+  private readonly page: Page
+
+  constructor(page: Page) {
+    this.page = page
+  }
+
+  async expectLoaded(): Promise<void> {
+    await expect(
+      this.page.getByRole('heading', { level: 1, name: 'Terminslots' }),
+    ).toBeVisible()
+    await expect(
+      this.page.getByRole('link', { name: 'Terminslots anlegen' }),
+    ).toBeVisible()
+  }
+
+  async selectStatus(value: string): Promise<void> {
+    const mobileFilterTrigger = this.page.getByRole('button', {
+      name: /Terminslots filtern und sortieren/,
+    })
+    if (await mobileFilterTrigger.isVisible()) {
+      await mobileFilterTrigger.click()
+    }
+    await this.page.getByLabel('Status').selectOption(value)
+  }
+
+  async openCreate(): Promise<void> {
+    await this.page.getByRole('link', { name: 'Terminslots anlegen' }).click()
+    await expect(this.page).toHaveURL(/\/appointments\/slots\/new$/)
+  }
+
+  async deactivateFirstAvailableSlot(): Promise<void> {
+    const buttons = this.page.getByRole('button', {
+      name: /Terminslot am .* deaktivieren/,
+    })
+    const visibleButton = await getVisibleLocator(buttons)
+    await visibleButton.click()
+    await this.page
+      .getByRole('button', { name: 'Terminslot deaktivieren', exact: true })
+      .click()
+  }
+}
+
+export class AppointmentSlotCreatePageObject {
+  private readonly page: Page
+
+  constructor(page: Page) {
+    this.page = page
+  }
+
+  async expectLoaded(): Promise<void> {
+    await expect(
+      this.page.getByRole('heading', {
+        level: 1,
+        name: 'Terminslots anlegen',
+      }),
+    ).toBeVisible()
+  }
+
+  async fillTwoUnsortedSlots(): Promise<void> {
+    await this.page
+      .getByLabel('Beginn von Terminslot 1')
+      .fill('2099-08-22T12:00')
+    await this.page
+      .getByLabel('Ende von Terminslot 1')
+      .fill('2099-08-22T12:30')
+    await this.page
+      .getByRole('button', { name: 'Terminslot hinzufügen' })
+      .click()
+    await this.page
+      .getByLabel('Beginn von Terminslot 2')
+      .fill('2099-08-22T09:00')
+    await this.page
+      .getByLabel('Ende von Terminslot 2')
+      .fill('2099-08-22T09:30')
+  }
+
+  async submit(): Promise<void> {
+    await this.page
+      .getByRole('button', { name: '2 Terminslots anlegen' })
+      .click()
+    await expect(this.page).toHaveURL(/\/appointments\/slots$/)
+  }
+}
+
+async function getVisibleLocator(candidates: Locator): Promise<Locator> {
+  const index = await findVisibleLocatorIndex(candidates)
+  expect(index).toBeGreaterThanOrEqual(0)
+  return candidates.nth(index)
+}

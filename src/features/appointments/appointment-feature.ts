@@ -1,8 +1,10 @@
+import { createElement } from 'react'
 import { CalendarDays } from 'lucide-react'
 
 import { defineFeatureModule } from '@/app/feature-module'
+import { RequireCapability } from '@/auth/RequireCapability'
 
-/** Registers the role-scoped read-only appointment workspace for authority staff. */
+/** Registers the role-scoped appointment workspace for authority staff. */
 export const appointmentFeature = defineFeatureModule({
   capability: 'viewAppointmentWorkspace',
   id: 'appointments',
@@ -23,6 +25,33 @@ export const appointmentFeature = defineFeatureModule({
         return { Component: AppointmentDirectoryPage }
       },
       path: 'appointments',
+    },
+    {
+      children: [
+        {
+          handle: { pageTitle: 'Terminslots' },
+          lazy: async () => {
+            const { AppointmentSlotDirectoryPage } = await import(
+              '@/features/appointments/pages/AppointmentSlotDirectoryPage'
+            )
+            return { Component: AppointmentSlotDirectoryPage }
+          },
+          path: 'appointments/slots',
+        },
+        {
+          handle: { pageTitle: 'Terminslots anlegen' },
+          lazy: async () => {
+            const { AppointmentSlotCreatePage } = await import(
+              '@/features/appointments/pages/AppointmentSlotCreatePage'
+            )
+            return { Component: AppointmentSlotCreatePage }
+          },
+          path: 'appointments/slots/new',
+        },
+      ],
+      element: createElement(RequireCapability, {
+        capability: 'manageAppointmentSlots',
+      }),
     },
     {
       handle: { pageTitle: 'Termindetails' },

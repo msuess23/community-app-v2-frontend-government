@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { AppointmentDirectoryFilters } from '@/features/appointments/components/AppointmentDirectoryFilters'
 import { AppointmentDirectoryView } from '@/features/appointments/components/AppointmentDirectoryView'
+import { AppointmentWorkspaceNavigation } from '@/features/appointments/components/AppointmentWorkspaceNavigation'
 import {
   createAppointmentDirectoryUrlConfig,
   toAppointmentDirectoryApiParams,
@@ -60,6 +61,8 @@ export function AppointmentDirectoryPage() {
         eyebrow="Terminverwaltung"
         title="Termine"
       />
+
+      <AppointmentWorkspaceNavigation />
 
       <DataViewSearchField
         description="Durchsucht Bürgername, E-Mail-Adresse, Anliegen und den Titel eines verknüpften Tickets. Die Suche ist auf 200 Zeichen begrenzt."

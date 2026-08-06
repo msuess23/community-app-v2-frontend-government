@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test'
 import { expectNoSeriousAccessibilityViolations } from './fixtures/accessibility.js'
 import {
   installAppointmentReadApi,
+  installAppointmentSlotApi,
   APPOINTMENT_OFFICE_ID,
   APPOINTMENT_TICKET_ID,
 } from './fixtures/appointment-api.js'
@@ -13,6 +14,8 @@ import {
 import {
   AppointmentDetailPageObject,
   AppointmentDirectoryPageObject,
+  AppointmentSlotCreatePageObject,
+  AppointmentSlotDirectoryPageObject,
 } from './pages/appointment-pages.js'
 
 const officer = {
@@ -77,4 +80,59 @@ test('dispatcher cannot enter the appointment workspace', async ({ page }) => {
   await expect(
     page.getByRole('heading', { level: 1, name: 'Zugriff nicht erlaubt' }),
   ).toBeVisible()
+})
+
+test('officer manages responsive appointment-slot capacity without optimistic states', async ({
+  page,
+}, testInfo) => {
+  const slotApi = await installAppointmentSlotApi(page)
+  const directory = new AppointmentSlotDirectoryPageObject(page)
+  const createPage = new AppointmentSlotCreatePageObject(page)
+
+  await signInAsAuthorityUser(page, '/appointments/slots', officer)
+  await directory.expectLoaded()
+
+  const table = page.getByRole('table', { name: 'Terminslotverzeichnis' })
+  const compactList = page.getByRole('list', {
+    name: 'Terminslotverzeichnis',
+  })
+  if (testInfo.project.name === 'desktop-chromium') {
+    await expect(table).toBeVisible()
+    await expect(compactList).toBeHidden()
+  } else {
+    await expect(table).toBeHidden()
+    await expect(compactList).toBeVisible()
+  }
+  await expect(page.getByText('Verstrichen').first()).toBeAttached()
+  await expectNoSeriousAccessibilityViolations(page)
+
+  await directory.selectStatus('AVAILABLE')
+  await expect(page).toHaveURL(/status=AVAILABLE/)
+  await expect
+    .poll(() =>
+      slotApi.listRequests.some((request) =>
+        request.includes('status=AVAILABLE'),
+      ),
+    )
+    .toBe(true)
+
+  await directory.openCreate()
+  await createPage.expectLoaded()
+  await createPage.fillTwoUnsortedSlots()
+  await expectNoSeriousAccessibilityViolations(page)
+  await createPage.submit()
+
+  await expect.poll(() => slotApi.createRequests.length).toBe(1)
+  const request = slotApi.createRequests[0] as {
+    slots: Array<{ starts_at: string }>
+  }
+  expect(request.slots.map((slot) => slot.starts_at)).toEqual([
+    '2099-08-22T07:00:00.000Z',
+    '2099-08-22T10:00:00.000Z',
+  ])
+
+  await directory.expectLoaded()
+  await directory.deactivateFirstAvailableSlot()
+  await expect.poll(() => slotApi.deactivatedSlotIds.length).toBe(1)
+  await expectNoSeriousAccessibilityViolations(page)
 })

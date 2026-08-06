@@ -81,3 +81,38 @@ export function secondAppointmentResponse(): AppointmentFixture {
     version: 2,
   }
 }
+
+export type AppointmentSlotFixture = Readonly<{
+  created_at: string
+  ends_at: string
+  id: string
+  office_id: string
+  starts_at: string
+  status: string
+}>
+
+export const APPOINTMENT_SLOT_ID = '00000000-0000-4000-8000-000000000040'
+export const EXPIRED_APPOINTMENT_SLOT_ID =
+  '00000000-0000-4000-8000-000000000041'
+
+export function appointmentSlotResponse(): AppointmentSlotFixture {
+  return {
+    created_at: '2026-08-01T08:00:00Z',
+    ends_at: '2099-08-20T09:30:00Z',
+    id: APPOINTMENT_SLOT_ID,
+    office_id: APPOINTMENT_OFFICE_ID,
+    starts_at: '2099-08-20T09:00:00Z',
+    status: 'AVAILABLE',
+  }
+}
+
+export function expiredAppointmentSlotResponse(): AppointmentSlotFixture {
+  return {
+    created_at: '2020-01-01T08:00:00Z',
+    ends_at: '2020-01-02T09:30:00Z',
+    id: EXPIRED_APPOINTMENT_SLOT_ID,
+    office_id: APPOINTMENT_OFFICE_ID,
+    starts_at: '2020-01-02T09:00:00Z',
+    status: 'AVAILABLE',
+  }
+}
