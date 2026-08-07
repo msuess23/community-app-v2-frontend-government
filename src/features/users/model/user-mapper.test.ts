@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { mapUserPage, mapUserResponse } from '@/features/users/model/user-mapper'
 
 const USER_DTO = {
-  email: 'ada@example.com',
+  email: 'ada@example.test',
   first_name: 'Ada',
   id: '00000000-0000-4000-8000-000000000001',
   last_name: 'Lovelace',
@@ -21,7 +21,7 @@ describe('user DTO mapping', () => {
     expect(mapUserResponse(USER_DTO)).toEqual({
       createdAt: '2026-08-01T10:00:00Z',
       deactivatedAt: null,
-      email: 'ada@example.com',
+      email: 'ada@example.test',
       firstName: 'Ada',
       id: '00000000-0000-4000-8000-000000000001',
       isActive: true,

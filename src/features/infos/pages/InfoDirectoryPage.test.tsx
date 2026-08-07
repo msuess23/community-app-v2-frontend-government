@@ -11,7 +11,7 @@ import { InfoDirectoryPage } from '@/features/infos/pages/InfoDirectoryPage'
 import { mockApiServer } from '@/test/server'
 
 const ADMIN_USER: AuthUser = {
-  email: 'admin@example.com',
+  email: 'admin@example.test',
   firstName: 'Ada',
   id: '00000000-0000-4000-8000-000000000001',
   lastName: 'Admin',
@@ -59,7 +59,7 @@ describe('InfoDirectoryPage', () => {
     expect(screen.getByLabelText('Status')).toHaveValue('ACTIVE')
     expect(screen.getByLabelText('Sortierung')).toHaveValue('updatedAt:desc')
     expect(
-      await screen.findByRole('combobox', { name: 'Einträge pro Seite' }),
+      screen.getByRole('combobox', { name: 'Einträge pro Seite' }),
     ).toHaveValue('20')
 
     const card = await screen.findByRole('listitem')
@@ -146,7 +146,7 @@ function infoResponse() {
 function officeResponse() {
   return {
     address: null,
-    contact_email: 'ordnung@example.com',
+    contact_email: 'ordnung@example.test',
     description: null,
     id: OFFICE_ID,
     metadata: {

@@ -139,7 +139,7 @@ function FeedbackNotice({ dismiss, message }: FeedbackNoticeProps) {
     <section
       aria-atomic="true"
       className={cn(
-        'pointer-events-none w-full rounded-xl border p-4 shadow-lg',
+        'pointer-events-auto w-full rounded-xl border p-4 shadow-lg',
         noticeStyles[message.tone],
       )}
       role={
@@ -158,7 +158,7 @@ function FeedbackNotice({ dismiss, message }: FeedbackNoticeProps) {
         </div>
         <Button
           aria-label={`Benachrichtigung „${message.title}“ schließen`}
-          className="pointer-events-auto -m-2 shrink-0 text-current hover:bg-black/5 focus-visible:outline-current active:bg-black/10"
+          className="-m-2 shrink-0 text-current hover:bg-black/5 focus-visible:outline-current active:bg-black/10"
           onPress={() => dismiss(message.id)}
           size="sm"
           variant="ghost"

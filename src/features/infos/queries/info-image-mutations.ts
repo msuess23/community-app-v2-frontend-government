@@ -1,12 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import { apiFetch } from '@/api/client/api-fetch'
-import { appendFileToFormData } from '@/api/client/multipart-form-data'
-import type { InfoImageResponse } from '@/api/generated/models'
 import {
   deleteInfoImageApiV1InfosInfoIdImagesImageIdDelete,
   setInfoCoverImageApiV1InfosInfoIdImagesImageIdCoverPut,
-  getUploadInfoImageApiV1InfosInfoIdImagesPostUrl,
+  uploadInfoImageApiV1InfosInfoIdImagesPost,
 } from '@/api/generated/infos/infos'
 import { mapInfoImageResponse } from '@/features/infos/model/info-mapper'
 import { infoFeatureQueryKeys } from '@/features/infos/queries/info-query-keys'
@@ -26,15 +23,11 @@ export async function uploadInfoImage(
   infoId: string,
   { altText, file }: UploadInfoImageVariables,
 ): Promise<MediaAsset> {
-  const formData = new FormData()
-  await appendFileToFormData(formData, 'file', file, file.name)
-  formData.append('alt_text', altText)
-
   return mapInfoImageResponse(
-    await apiFetch<InfoImageResponse>(
-      getUploadInfoImageApiV1InfosInfoIdImagesPostUrl(infoId),
-      { body: formData, method: 'POST' },
-    ),
+    await uploadInfoImageApiV1InfosInfoIdImagesPost(infoId, {
+      alt_text: altText,
+      file,
+    }),
   )
 }
 
@@ -59,10 +52,6 @@ export function useUploadInfoImageMutation(infoId: string) {
       })
 
       await Promise.all([
-        queryClient.invalidateQueries({
-          exact: true,
-          queryKey: imagesKey,
-        }),
         queryClient.invalidateQueries({
           exact: true,
           queryKey: infoFeatureQueryKeys.detail(infoId),

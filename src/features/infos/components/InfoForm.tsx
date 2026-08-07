@@ -102,17 +102,16 @@ export function InfoForm({
     ? hasInfoChanges(currentValues, info, currentUser)
     : isDirty
   const hasUnsavedChanges = isDirty || hasExternalUnsavedChanges
-  const { allowNextNavigation, confirmDiscardChanges } =
-    useUnsavedChangesGuard({
-      hasUnsavedChanges,
-      isEnabled: !hasCompletedSubmit,
-      message: hasExternalUnsavedChanges
-        ? {
-            description:
-              'Deine Stammdaten oder ausgewählten Bilder wurden noch nicht vollständig gespeichert. Wenn du die Seite verlässt, gehen die lokalen Änderungen verloren.',
-          }
-        : undefined,
-    })
+  const { confirmDiscardChanges } = useUnsavedChangesGuard({
+    hasUnsavedChanges,
+    isEnabled: !hasCompletedSubmit,
+    message: hasExternalUnsavedChanges
+      ? {
+          description:
+            'Deine Stammdaten oder ausgewählten Bilder wurden noch nicht vollständig gespeichert. Wenn du die Seite verlässt, gehen die lokalen Änderungen verloren.',
+        }
+      : undefined,
+  })
   const formErrors = [...submissionErrors, ...getFormErrorSummary(errors)]
 
   async function cancel(): Promise<void> {
@@ -135,13 +134,10 @@ export function InfoForm({
 
         try {
           const savedInfo = await save(values)
-          const hasSavedAllChanges =
-            saveHandlesExternalChanges || !hasExternalUnsavedChanges
-          setHasCompletedSubmit(hasSavedAllChanges)
+          setHasCompletedSubmit(
+            saveHandlesExternalChanges || !hasExternalUnsavedChanges,
+          )
           reset(toInfoFormValues(savedInfo))
-          if (hasSavedAllChanges) {
-            allowNextNavigation()
-          }
           onSaved(savedInfo)
         } catch (error) {
           setSubmissionErrors(applyInfoSubmissionError(error, setError))

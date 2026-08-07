@@ -10,7 +10,7 @@ export type AuthorityUserFixture = Readonly<{
 }>
 
 const authorityUser: AuthorityUserFixture = {
-  email: 'admin@example.com',
+  email: 'admin@example.test',
   first_name: 'Ada',
   id: '00000000-0000-4000-8000-000000000001',
   last_name: 'Admin',

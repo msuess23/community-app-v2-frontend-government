@@ -15,7 +15,7 @@ import { FeedbackProvider } from '@/shared/feedback/FeedbackProvider'
 import { mockApiServer } from '@/test/server'
 
 const ADMIN_USER: AuthUser = {
-  email: 'admin@example.com',
+  email: 'admin@example.test',
   firstName: 'Ada',
   id: '00000000-0000-4000-8000-000000000001',
   lastName: 'Admin',
@@ -187,7 +187,7 @@ function renderEditPage() {
 /** Creates one backend-compatible user response with focused overrides. */
 function userResponse(overrides: Record<string, unknown> = {}) {
   return {
-    email: 'citizen@example.com',
+    email: 'citizen@example.test',
     first_name: 'Clara',
     id: TARGET_ID,
     last_name: 'Citizen',

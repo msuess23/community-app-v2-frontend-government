@@ -20,7 +20,6 @@ export type UnsavedChangesGuardOptions = Readonly<{
 }>
 
 export type UnsavedChangesGuard = Readonly<{
-  allowNextNavigation: () => void
   confirmDiscardChanges: (
     message?: Partial<UnsavedChangesMessage>,
   ) => Promise<boolean>
@@ -44,7 +43,6 @@ export function useUnsavedChangesGuard({
   const shouldProtect = isEnabled && hasUnsavedChanges
   const handledNavigationRef = useRef<string | null>(null)
   const pendingConfirmationRef = useRef(false)
-  const allowNextNavigationRef = useRef(false)
   const messageRef = useRef(message)
 
   useEffect(() => {
@@ -52,20 +50,9 @@ export function useUnsavedChangesGuard({
   }, [message])
 
   const shouldBlock = useCallback<BlockerFunction>(
-    ({ currentLocation, nextLocation }) => {
-      if (
-        serializeLocation(currentLocation) === serializeLocation(nextLocation)
-      ) {
-        return false
-      }
-
-      if (allowNextNavigationRef.current) {
-        allowNextNavigationRef.current = false
-        return false
-      }
-
-      return shouldProtect
-    },
+    ({ currentLocation, nextLocation }) =>
+      shouldProtect &&
+      serializeLocation(currentLocation) !== serializeLocation(nextLocation),
     [shouldProtect],
   )
   const blocker = useBlocker(shouldBlock)
@@ -77,12 +64,6 @@ export function useUnsavedChangesGuard({
 
   const blockedLocationKey =
     blocker.state === 'blocked' ? serializeLocation(blocker.location) : null
-
-  const allowNextNavigation = useCallback(() => {
-    // Consume the allowance inside the blocker itself. Router navigation may be
-    // scheduled after the current microtask, especially after async mutations.
-    allowNextNavigationRef.current = true
-  }, [])
 
   const confirmDiscardChanges = useCallback(
     (overrideMessage: Partial<UnsavedChangesMessage> = {}) => {
@@ -150,7 +131,7 @@ export function useUnsavedChangesGuard({
     })
   }, [blockedLocationKey, blocker.state, confirmDiscardChanges])
 
-  return { allowNextNavigation, confirmDiscardChanges }
+  return { confirmDiscardChanges }
 }
 
 /** Creates a stable comparison key for router locations, including query and hash state. */

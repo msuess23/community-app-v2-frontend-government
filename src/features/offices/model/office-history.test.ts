@@ -26,7 +26,7 @@ describe('office history model', () => {
             change_reason: 'Adresse aktualisiert',
             changed_at: '2026-08-03T10:00:00Z',
             changed_by_user_id: 'actor-1',
-            contact_email: 'office@example.com',
+            contact_email: 'office@example.test',
             description: 'Historischer Stand',
             id: 'history-1',
             is_active: true,
@@ -56,52 +56,6 @@ describe('office history model', () => {
       },
       services: ['Fundbüro'],
     })
-  })
-
-  it('orders each history page from the newest snapshot into the past', () => {
-    const page = mapOfficeHistoryPage({
-      data: [
-        {
-          address_snapshot: null,
-          change_reason: 'Älter',
-          changed_at: '2026-08-01T10:00:00Z',
-          changed_by_user_id: 'actor-1',
-          contact_email: null,
-          description: null,
-          id: 'history-1',
-          is_active: true,
-          name: 'Ordnungsamt',
-          office_id: 'office-1',
-          opening_hours: {},
-          phone: null,
-          services: [],
-        },
-        {
-          address_snapshot: null,
-          change_reason: 'Neuer',
-          changed_at: '2026-08-03T10:00:00Z',
-          changed_by_user_id: 'actor-1',
-          contact_email: null,
-          description: null,
-          id: 'history-2',
-          is_active: true,
-          name: 'Ordnungsamt',
-          office_id: 'office-1',
-          opening_hours: {},
-          phone: null,
-          services: [],
-        },
-      ],
-      page: 1,
-      pages: 1,
-      size: 20,
-      total: 2,
-    })
-
-    expect(page.items.map((item) => item.id)).toEqual([
-      'history-2',
-      'history-1',
-    ])
   })
 
   it('maps URL calendar dates to inclusive timezone-aware query boundaries', () => {

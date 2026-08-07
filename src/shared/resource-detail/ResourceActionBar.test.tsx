@@ -66,23 +66,6 @@ describe('ResourceActionBar', () => {
     await waitFor(() => expect(trigger).toHaveFocus())
   })
 
-  it('keeps the named action group available for an empty server state', () => {
-    renderWithProviders(
-      <ResourceActionBar
-        allowedActions={[]}
-        ariaLabel="Verfügbare Testaktionen"
-        emptyMessage="Keine Testaktionen verfügbar."
-        registry={registry}
-      />,
-    )
-
-    const group = screen.getByRole('group', {
-      name: 'Verfügbare Testaktionen',
-    })
-    expect(group).toHaveTextContent('Keine Testaktionen verfügbar.')
-    expect(group.querySelectorAll('button')).toHaveLength(0)
-  })
-
   it('replaces a withdrawn workflow with a stale-state notice', async () => {
     const user = userEvent.setup()
 

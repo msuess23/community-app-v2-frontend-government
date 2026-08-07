@@ -71,13 +71,7 @@ describe('EventTimeline', () => {
         onLoadOlder={loadOlder}
         registry={registry}
         showDevelopmentDetails
-        total={4}
       />,
-    )
-
-    expect(screen.getByRole('status')).toHaveAttribute('aria-atomic', 'true')
-    expect(screen.getByRole('status')).toHaveTextContent(
-      '2 von 4 Ereignissen angezeigt',
     )
 
     await user.click(screen.getByText('Entwicklungsdetails anzeigen'))

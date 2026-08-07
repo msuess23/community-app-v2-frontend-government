@@ -35,7 +35,6 @@ import type {
   TicketResponse,
   TicketStatusResponse,
   TicketUpdateRequest,
-  TicketWorkflowOptionsResponse,
 } from '../models'
 
 import { apiFetch } from '../../client/api-fetch'
@@ -98,32 +97,6 @@ export const getInternalTicketApiV1TicketsTicketIdInternalGet = async (
   )
 }
 
-export const getGetTicketWorkflowOptionsApiV1TicketsTicketIdWorkflowOptionsGetUrl = (
-  ticketId: string,
-) => {
-  return `/api/v1/tickets/${ticketId}/workflow-options`
-}
-
-/**
- * Return targets selectable for the caller's current workflow actions.
- * @summary Get Ticket Workflow Options
- */
-export const getTicketWorkflowOptionsApiV1TicketsTicketIdWorkflowOptionsGet =
-  async (
-    ticketId: string,
-    options?: RequestInit,
-  ): Promise<TicketWorkflowOptionsResponse> => {
-    return apiFetch<TicketWorkflowOptionsResponse>(
-      getGetTicketWorkflowOptionsApiV1TicketsTicketIdWorkflowOptionsGetUrl(
-        ticketId,
-      ),
-      {
-        ...options,
-        method: 'GET',
-      },
-    )
-  }
-
 export const getGetInternalTicketEventsApiV1TicketsTicketIdEventsGetUrl = (
   ticketId: string,
   params?: GetInternalTicketEventsApiV1TicketsTicketIdEventsGetParams,
@@ -144,7 +117,7 @@ export const getGetInternalTicketEventsApiV1TicketsTicketIdEventsGetUrl = (
 }
 
 /**
- * Return the append-only event stream with the newest events first.
+ * Return a chronological page of the append-only event stream.
  * @summary Get Internal Ticket Events
  */
 export const getInternalTicketEventsApiV1TicketsTicketIdEventsGet = async (

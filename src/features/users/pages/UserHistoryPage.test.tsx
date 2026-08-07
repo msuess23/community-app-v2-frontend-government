@@ -11,7 +11,7 @@ import { UserHistoryPage } from '@/features/users/pages/UserHistoryPage'
 import { mockApiServer } from '@/test/server'
 
 const ADMIN_USER: AuthUser = {
-  email: 'admin@example.com',
+  email: 'admin@example.test',
   firstName: 'Ada',
   id: '00000000-0000-4000-8000-000000000001',
   lastName: 'Admin',
@@ -58,7 +58,7 @@ describe('UserHistoryPage', () => {
                 change_reason: 'Rolle angepasst',
                 changed_at: '2026-08-03T10:00:00Z',
                 changed_by_user_id: ADMIN_USER.id,
-                email: 'officer@example.com',
+                email: 'officer@example.test',
                 first_name: 'Otto',
                 id: 'history-1',
                 is_active: true,
@@ -165,7 +165,7 @@ function userResponse(
   overrides: Record<string, unknown> = {},
 ) {
   return {
-    email: `${firstName.toLowerCase()}@example.com`,
+    email: `${firstName.toLowerCase()}@example.test`,
     first_name: firstName,
     id,
     last_name: lastName,

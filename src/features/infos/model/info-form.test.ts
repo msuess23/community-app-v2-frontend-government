@@ -14,7 +14,7 @@ import {
 import type { InfoRecord } from '@/features/infos/model/info-model'
 
 const officer: AuthUser = {
-  email: 'officer@example.com',
+  email: 'officer@example.test',
   firstName: 'Olivia',
   id: 'user-1',
   lastName: 'Officer',

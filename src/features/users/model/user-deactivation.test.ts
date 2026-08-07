@@ -9,7 +9,7 @@ import type { UserRecord } from '@/features/users/model/user-model'
 const USER: UserRecord = {
   createdAt: '2026-01-01T00:00:00Z',
   deactivatedAt: null,
-  email: 'citizen@example.com',
+  email: 'citizen@example.test',
   firstName: 'Clara',
   id: 'user-1',
   isActive: true,
