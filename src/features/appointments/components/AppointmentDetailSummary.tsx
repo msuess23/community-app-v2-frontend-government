@@ -66,7 +66,7 @@ export function AppointmentDetailSummary({
   return (
     <>
       <ResourceDetailSection
-        description="Das Backend berechnet die verfügbaren Aktionen aus Rolle, Behörde, Terminzeit und aktuellem Terminstatus."
+        description="Die verfügbaren Aktionen werden aus Rolle, Behörde, Terminzeit und aktuellem Terminstatus berechnet."
         id="lifecycle-actions"
         title="Terminaktionen"
         variant="outlined"

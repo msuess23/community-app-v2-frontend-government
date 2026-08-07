@@ -57,7 +57,7 @@ export function AppointmentDetailPage() {
         <ResourceDetailLayout
           aside={<AppointmentDetailSummary appointment={appointment} />}
           backLink={{ label: 'Zurück zum Terminverzeichnis', to: returnTo }}
-          description="Aktueller, vom Backend berechneter Planungsstand des Termins."
+          description="Aktueller Planungsstand des Termins."
           eyebrow="Termin der eigenen Behörde"
           navigationClassName="xl:hidden"
           navigationItems={DETAIL_NAVIGATION}
@@ -151,7 +151,7 @@ export function AppointmentDetailPage() {
           </ResourceDetailSection>
 
           <ResourceDetailSection
-            description="Unveränderliche Ereignisse mit dem neuesten Eintrag zuerst. Der aktuelle Terminstand oben wird weiterhin direkt aus der Backend-Projektion gelesen."
+            description="Unveränderliche Ereignisse mit dem neuesten Eintrag zuerst. Der aktuelle Terminstand oben wird direkt aus der Backend-Projektion gelesen."
             id="event-history"
             title="Ereignishistorie"
           >

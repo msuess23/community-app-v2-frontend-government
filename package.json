@@ -21,7 +21,9 @@
     "api:sync": "npm run api:pull && npm run api:generate",
     "preview": "vite preview",
     "verify": "npm run verify:fast && npm run test:e2e",
-    "verify:fast": "npm run api:validate && npm run lint && npm run format:check && npm run test && npm run build"
+    "verify:fast": "npm run api:validate && npm run lint && npm run format:check && npm run test && npm run build",
+    "test:fullstack": "playwright test --config=playwright.fullstack.config.ts",
+    "test:fullstack:ui": "playwright test --config=playwright.fullstack.config.ts --ui"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
