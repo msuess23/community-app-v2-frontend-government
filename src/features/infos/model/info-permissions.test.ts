@@ -8,7 +8,7 @@ import {
 } from '@/features/infos/model/info-permissions'
 
 const baseUser: AuthUser = {
-  email: 'user@example.test',
+  email: 'user@example.com',
   firstName: 'Ute',
   id: 'user-id',
   lastName: 'User',

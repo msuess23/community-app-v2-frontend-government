@@ -16,7 +16,7 @@ import { mockApiServer } from '@/test/server'
 const TICKET_ID = '00000000-0000-4000-8000-000000000100'
 const OFFICE_ID = '00000000-0000-4000-8000-000000000010'
 const MANAGER: AuthUser = {
-  email: 'manager@example.test',
+  email: 'manager@example.com',
   firstName: 'Mara',
   id: 'manager-1',
   lastName: 'Management',

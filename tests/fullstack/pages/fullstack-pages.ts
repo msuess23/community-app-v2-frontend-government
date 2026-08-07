@@ -15,7 +15,7 @@ export class AdminPageObject {
     await this.page.getByRole('textbox', { name: 'Name der Behörde' }).fill(name)
     await this.page
       .getByRole('textbox', { name: 'Kontakt-E-Mail-Adresse' })
-      .fill(`kontakt-${slug(name)}@example.test`)
+      .fill(`kontakt-${slug(name)}@example.com`)
     await this.page.getByRole('button', { name: 'Behörde anlegen' }).click()
     await expect(this.page.getByText('Behörde angelegt')).toBeVisible()
     await expect(
@@ -113,42 +113,58 @@ export class TicketPageObject {
     await expect(dialog).toBeHidden()
   }
 
-  async assignPrimaryOfficer(displayName: string): Promise<void> {
+  async assignPrimaryOfficer(userId: string): Promise<void> {
     await this.page.getByRole('button', { name: 'Primär zuweisen' }).click()
+
     const dialog = this.page.getByRole('dialog', {
       name: 'Primären Bearbeiter zuweisen',
     })
+
     await dialog
       .getByRole('combobox', { name: 'Primärer Bearbeiter' })
-      .selectOption({ label: displayName })
+      .selectOption(userId)
+
     await dialog.getByLabel('Optionaler Kommentar').fill(
       'Full-Stack-E2E: primäre Sachbearbeitung festgelegt',
     )
     await dialog
       .getByRole('button', { name: 'Primären Bearbeiter zuweisen' })
       .click()
+
     await expect(dialog).toBeHidden()
   }
 
-  async forwardTo(displayName: string): Promise<void> {
+  async forwardTo(
+    userId: string,
+    displayName: string,
+  ): Promise<void> {
     await this.page.getByRole('button', { name: 'Weiterleiten' }).click()
-    const dialog = this.page.getByRole('dialog', { name: 'Ticket weiterleiten' })
+
+    const dialog = this.page.getByRole('dialog', {
+      name: 'Ticket weiterleiten',
+    })
+
     await dialog
       .getByRole('combobox', { name: 'Weiterleiten an' })
-      .selectOption({ label: displayName })
+      .selectOption(userId)
+
+    await dialog.getByLabel('Optionaler Kommentar').fill(
+      `Full-Stack-E2E: aktuelle Bearbeitung an ${displayName} übergeben.`,
+    )
+
     await dialog
-      .getByLabel('Optionaler Kommentar')
-      .fill(`Full-Stack-E2E: aktuelle Bearbeitung an ${displayName} übergeben.`)
-    await dialog.getByRole('button', { name: 'Ticket weiterleiten' }).click()
+      .getByRole('button', { name: 'Ticket weiterleiten' })
+      .click()
+
     await expect(dialog).toBeHidden()
   }
 
-  async requestCosignature(displayName: string): Promise<void> {
+  async requestCosignature(userId: string): Promise<void> {
     await this.page.getByRole('button', { name: 'Mitzeichnung' }).click()
     const dialog = this.page.getByRole('dialog', { name: 'Mitzeichnung anfordern' })
     await dialog
       .getByRole('combobox', { name: 'Mitzeichnung durch' })
-      .selectOption({ label: displayName })
+      .selectOption(userId)
     await dialog.getByLabel('Optionaler Kommentar').fill(
       'Bitte fachliche Zweitprüfung im Full-Stack-Szenario durchführen.',
     )
@@ -166,12 +182,12 @@ export class TicketPageObject {
     await expect(dialog).toBeHidden()
   }
 
-  async escalate(managerDisplayName: string): Promise<void> {
+  async escalate(managerUserId: string): Promise<void> {
     await this.page.getByRole('button', { name: 'Eskalieren' }).click()
     const dialog = this.page.getByRole('dialog', { name: 'Ticket eskalieren' })
     await dialog
       .getByRole('combobox', { name: 'Entscheidender Manager' })
-      .selectOption({ label: managerDisplayName })
+      .selectOption(managerUserId)
     await dialog
       .getByRole('textbox', { name: 'Begründung' })
       .fill('Full-Stack-E2E: Managemententscheidung vor Abschluss erforderlich.')
@@ -359,6 +375,7 @@ export class AppointmentPageObject {
   async rescheduleToNextAvailableSlot(): Promise<void> {
     await this.page.getByRole('button', { name: 'Verschieben' }).click()
     const dialog = this.page.getByRole('dialog', { name: 'Termin verschieben' })
+    
     const select = dialog.getByRole('combobox', { name: 'Neuer Terminslot' })
     await expect
       .poll(async () => select.locator('option').count())
@@ -376,10 +393,17 @@ export class AppointmentPageObject {
       .fill('Full-Stack-E2E: Termin auf einen real freien Slot verschieben.')
     await dialog.getByRole('button', { name: 'Termin verschieben' }).click()
     await expect(dialog).toBeHidden()
-    await expect(this.page.getByText('Termin verschoben')).toBeVisible()
+    
+    const eventHistory = this.page.getByRole('region', {
+      name: 'Ereignishistorie',
+    })
+
     await expect(
-      this.page.getByRole('region', { name: 'Ereignishistorie' }),
-    ).toContainText('Termin verschoben')
+      eventHistory.getByRole('heading', {
+        name: 'Termin verschoben',
+        exact: true,
+      }),
+    ).toBeVisible()
   }
 
   async uploadNewPdf(filename: string, buffer: Buffer): Promise<void> {

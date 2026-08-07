@@ -26,7 +26,7 @@ describe('office history model', () => {
             change_reason: 'Adresse aktualisiert',
             changed_at: '2026-08-03T10:00:00Z',
             changed_by_user_id: 'actor-1',
-            contact_email: 'office@example.test',
+            contact_email: 'office@example.com',
             description: 'Historischer Stand',
             id: 'history-1',
             is_active: true,

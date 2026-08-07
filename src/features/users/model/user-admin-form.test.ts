@@ -12,7 +12,7 @@ import {
 import type { UserRecord } from '@/features/users/model/user-model'
 
 const ADMIN: AuthUser = {
-  email: 'admin@example.test',
+  email: 'admin@example.com',
   firstName: 'Ada',
   id: 'admin-id',
   lastName: 'Admin',
@@ -23,7 +23,7 @@ const ADMIN: AuthUser = {
 const CITIZEN: UserRecord = {
   createdAt: '2026-01-01T00:00:00Z',
   deactivatedAt: null,
-  email: 'citizen@example.test',
+  email: 'citizen@example.com',
   firstName: 'Clara',
   id: 'citizen-id',
   isActive: true,

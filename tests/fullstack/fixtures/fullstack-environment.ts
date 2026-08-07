@@ -56,19 +56,19 @@ export function createScenarioIdentity(): Readonly<{
 
   return {
     manager: {
-      email: 'fullstack-manager@example.test',
+      email: 'fullstack-manager@example.com',
       firstName: 'Mara',
       lastName: 'Integration',
       password,
     },
     officerA: {
-      email: 'fullstack-officer-a@example.test',
+      email: 'fullstack-officer-a@example.com',
       firstName: 'Oskar',
       lastName: 'Integration',
       password,
     },
     officerB: {
-      email: 'fullstack-officer-b@example.test',
+      email: 'fullstack-officer-b@example.com',
       firstName: 'Olivia',
       lastName: 'Integration',
       password,

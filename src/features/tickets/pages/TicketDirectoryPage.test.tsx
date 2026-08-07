@@ -13,7 +13,7 @@ import { mockApiServer } from '@/test/server'
 const TICKET_ID = '00000000-0000-4000-8000-000000000100'
 const OFFICE_ID = '00000000-0000-4000-8000-000000000010'
 const OFFICER: AuthUser = {
-  email: 'officer@example.test',
+  email: 'officer@example.com',
   firstName: 'Olaf',
   id: 'officer-1',
   lastName: 'Ordnung',
@@ -180,7 +180,7 @@ function ticketResponse() {
 function officeResponse() {
   return {
     address: null,
-    contact_email: 'tiefbau@example.test',
+    contact_email: 'tiefbau@example.com',
     description: null,
     id: OFFICE_ID,
     metadata: {

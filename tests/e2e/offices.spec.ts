@@ -13,7 +13,7 @@ import {
 } from './fixtures/office-api.js'
 
 const officerUser: AuthorityUserFixture = {
-  email: 'officer@example.test',
+  email: 'officer@example.com',
   first_name: 'Olivia',
   id: '00000000-0000-4000-8000-000000000002',
   last_name: 'Officer',
@@ -67,8 +67,8 @@ test(
     ).toBeVisible()
     await expect(page.getByText('04109 Leipzig', { exact: true })).toBeVisible()
     await expect(
-      page.getByRole('link', { name: 'ordnung@example.test' }),
-    ).toHaveAttribute('href', 'mailto:ordnung@example.test')
+      page.getByRole('link', { name: 'ordnung@example.com' }),
+    ).toHaveAttribute('href', 'mailto:ordnung@example.com')
     await expect(
       page.getByRole('link', { name: 'Behörde bearbeiten' }),
     ).toHaveCount(0)
@@ -107,7 +107,7 @@ test(
       .fill('Bürgerbüro Süd')
     await page
       .getByRole('textbox', { name: 'Kontakt-E-Mail-Adresse' })
-      .fill('sued@example.test')
+      .fill('sued@example.com')
     await page.getByRole('button', { name: 'Leistung hinzufügen' }).click()
     await page
       .getByRole('textbox', { name: 'Leistung 1' })
@@ -144,7 +144,7 @@ test(
           street: 'Südstraße',
           zip_code: '04275',
         },
-        contact_email: 'sued@example.test',
+        contact_email: 'sued@example.com',
         name: 'Bürgerbüro Süd',
         opening_hours: { monday: '08:00-12:00' },
         services: ['Meldebescheinigungen'],
@@ -184,7 +184,7 @@ test(
       await route.fulfill({
         contentType: 'application/json',
         json: {
-          email: 'admin@example.test',
+          email: 'admin@example.com',
           first_name: 'Ada',
           id: ADMIN_ID,
           last_name: 'Admin',

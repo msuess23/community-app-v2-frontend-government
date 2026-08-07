@@ -15,7 +15,7 @@ import {
 } from './pages/ticket-pages.js'
 
 const officer = {
-  email: 'officer@example.test',
+  email: 'officer@example.com',
   first_name: 'Olaf',
   id: '00000000-0000-4000-8000-000000000201',
   last_name: 'Ordnung',
@@ -24,7 +24,7 @@ const officer = {
 } satisfies AuthorityUserFixture
 
 const dispatcher = {
-  email: 'dispatcher@example.test',
+  email: 'dispatcher@example.com',
   first_name: 'Diana',
   id: '00000000-0000-4000-8000-000000000202',
   last_name: 'Disposition',
@@ -33,7 +33,7 @@ const dispatcher = {
 } satisfies AuthorityUserFixture
 
 const manager = {
-  email: 'manager@example.test',
+  email: 'manager@example.com',
   first_name: 'Mara',
   id: '00000000-0000-4000-8000-000000000203',
   last_name: 'Management',
@@ -42,7 +42,7 @@ const manager = {
 } satisfies AuthorityUserFixture
 
 const administrator = {
-  email: 'admin@example.test',
+  email: 'admin@example.com',
   first_name: 'Ada',
   id: '00000000-0000-4000-8000-000000000204',
   last_name: 'Administration',

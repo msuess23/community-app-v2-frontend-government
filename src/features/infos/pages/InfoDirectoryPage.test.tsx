@@ -11,7 +11,7 @@ import { InfoDirectoryPage } from '@/features/infos/pages/InfoDirectoryPage'
 import { mockApiServer } from '@/test/server'
 
 const ADMIN_USER: AuthUser = {
-  email: 'admin@example.test',
+  email: 'admin@example.com',
   firstName: 'Ada',
   id: '00000000-0000-4000-8000-000000000001',
   lastName: 'Admin',
@@ -146,7 +146,7 @@ function infoResponse() {
 function officeResponse() {
   return {
     address: null,
-    contact_email: 'ordnung@example.test',
+    contact_email: 'ordnung@example.com',
     description: null,
     id: OFFICE_ID,
     metadata: {

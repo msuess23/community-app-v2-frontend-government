@@ -41,10 +41,10 @@ export async function registerCitizenThroughUi(
       .getByRole('textbox', { name: 'E-Mail-Adresse' })
       .fill(account.email)
     await page
-      .getByLabel('Passwort', { exact: true })
+      .getByLabel(/^Passwort(?! bestätigen)/)
       .fill(account.password)
     await page
-      .getByLabel('Passwort bestätigen')
+      .getByLabel(/^Passwort bestätigen/)
       .fill(account.password)
 
     const registrationResponsePromise = page.waitForResponse(

@@ -23,7 +23,6 @@ import {
 test('master workflow crosses real users, roles, events, uploads and object permissions', async ({
   browser,
 }) => {
-  test.setTimeout(180_000)
   const scenario = createScenarioIdentity()
   const sessions: AuthenticatedBrowser[] = []
 
@@ -106,9 +105,7 @@ test('master workflow crosses real users, roles, events, uploads and object perm
     // case worker. A same-office officer remains hidden until explicitly involved.
     const managerTickets = new TicketPageObject(manager.page)
     await managerTickets.openByTitle(SEED_NEW_TICKET_TITLE)
-    await managerTickets.assignPrimaryOfficer(
-      `${scenario.officerA.firstName} ${scenario.officerA.lastName}`,
-    )
+    await managerTickets.assignPrimaryOfficer(officerAId)
     await new TicketPageObject(officerB.page).expectDirectAccessDenied(ticketId)
 
     const officerATickets = new TicketPageObject(officerA.page)
@@ -121,13 +118,13 @@ test('master workflow crosses real users, roles, events, uploads and object perm
     // Current responsibility can move between officers without changing the
     // permanent primary officer. After B forwards back, B loses object access.
     await officerATickets.openByTitle(SEED_NEW_TICKET_TITLE)
-    await officerATickets.forwardTo(officerBDisplayName)
+    await officerATickets.forwardTo(officerBId, officerBDisplayName)
     await officerBTickets.openByTitle(SEED_NEW_TICKET_TITLE)
-    await officerBTickets.forwardTo(officerADisplayName)
+    await officerBTickets.forwardTo(officerAId, officerADisplayName)
     await officerBTickets.expectDirectAccessDenied(ticketId)
 
     await officerATickets.openByTitle(SEED_NEW_TICKET_TITLE)
-    await officerATickets.requestCosignature(officerBDisplayName)
+    await officerATickets.requestCosignature(officerBId)
 
     // The requested officer becomes a temporary participant, can cosign, and
     // loses workflow authority again after responsibility returns to Officer A.
@@ -137,9 +134,7 @@ test('master workflow crosses real users, roles, events, uploads and object perm
     await officerBTickets.expectDirectAccessDenied(ticketId)
 
     await officerATickets.openByTitle(SEED_NEW_TICKET_TITLE)
-    await officerATickets.escalate(
-      `${scenario.manager.firstName} ${scenario.manager.lastName}`,
-    )
+    await officerATickets.escalate(managerId)
     await expect(
       officerA.page.getByRole('group', { name: 'Verfügbare Ticketaktionen' }),
     ).toContainText('keine Workflowaktionen')
@@ -161,7 +156,8 @@ test('master workflow crosses real users, roles, events, uploads and object perm
       'Mitzeichnung angefordert',
       'Ticket mitgezeichnet',
       'Ticket eskaliert',
-      'Eskalation entschieden',
+      'Eskalation genehmigt',
+      'Full-Stack-E2E: Vorgehen genehmigt.',
       'Ticket abgeschlossen',
     )
 

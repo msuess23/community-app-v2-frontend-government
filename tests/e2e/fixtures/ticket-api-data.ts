@@ -225,7 +225,7 @@ export function secondTicketResponse(): TicketInternalDetailFixture {
 export function officeResponse(): OfficeFixture {
   return {
     address: null,
-    contact_email: 'tiefbau@example.test',
+    contact_email: 'tiefbau@example.com',
     description: null,
     id: TICKET_OFFICE_ID,
     metadata: {

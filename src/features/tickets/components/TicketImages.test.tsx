@@ -103,7 +103,7 @@ function renderImages(user: AuthUser) {
 
 function officer(): AuthUser {
   return {
-    email: 'officer@example.test',
+    email: 'officer@example.com',
     firstName: 'Olaf',
     id: 'officer-1',
     lastName: 'Ordnung',
@@ -114,7 +114,7 @@ function officer(): AuthUser {
 
 function dispatcher(): AuthUser {
   return {
-    email: 'dispatcher@example.test',
+    email: 'dispatcher@example.com',
     firstName: 'Dora',
     id: 'dispatcher-1',
     lastName: 'Disposition',

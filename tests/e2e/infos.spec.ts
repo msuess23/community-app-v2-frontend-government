@@ -20,7 +20,7 @@ import {
 } from './pages/info-pages.js'
 
 const dispatcherUser: AuthorityUserFixture = {
-  email: 'dispatcher@example.test',
+  email: 'dispatcher@example.com',
   first_name: 'Dora',
   id: '00000000-0000-4000-8000-000000000002',
   last_name: 'Dispatcher',
@@ -28,7 +28,7 @@ const dispatcherUser: AuthorityUserFixture = {
   role: 'DISPATCHER',
 }
 const adminUser: AuthorityUserFixture = {
-  email: 'admin@example.test',
+  email: 'admin@example.com',
   first_name: 'Ada',
   id: '00000000-0000-4000-8000-000000000001',
   last_name: 'Admin',
