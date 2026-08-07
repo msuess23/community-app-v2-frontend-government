@@ -13,6 +13,7 @@ import {
   formatDisplayDateTime,
   formatDisplayFileSize,
 } from '@/shared/format/display-values'
+import { EventDetails } from '@/shared/resource-detail/EventDetails'
 import {
   createResourceEventRendererRegistry,
   type ResourceEventPresentation,
@@ -143,19 +144,4 @@ function optionalText(
   value: string | null | undefined,
 ): ReactNode | undefined {
   return value ? <EventDetails items={[[label, value]]} /> : undefined
-}
-
-function EventDetails({
-  items,
-}: Readonly<{ items: ReadonlyArray<readonly [string, ReactNode]> }>) {
-  return (
-    <dl className="grid gap-3 sm:grid-cols-2">
-      {items.map(([label, value]) => (
-        <div className="min-w-0" key={label}>
-          <dt className="text-on-surface-variant text-sm font-medium">{label}</dt>
-          <dd className="mt-1 whitespace-pre-wrap break-words">{value}</dd>
-        </div>
-      ))}
-    </dl>
-  )
 }

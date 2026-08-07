@@ -1,8 +1,8 @@
 import {
   EmptyOptionsNotice,
   WorkflowForm,
-  useWorkflowDialogForm,
 } from '@/features/tickets/components/TicketWorkflowFormShared'
+import { useWorkflowDialogForm } from '@/features/tickets/components/use-ticket-workflow-dialog-form'
 import {
   applyTicketWorkflowSubmissionError,
   completeTicketSchema,

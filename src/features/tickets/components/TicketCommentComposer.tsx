@@ -1,6 +1,6 @@
 import { AlertTriangle, MessageSquarePlus } from 'lucide-react'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 
 import {
   applyTicketCommentSubmissionError,
@@ -39,7 +39,6 @@ export function TicketCommentComposer({
     handleSubmit,
     reset,
     setError,
-    watch,
   } = useForm<TicketCommentFormValues>({
     defaultValues: createTicketCommentFormValues(),
     mode: 'onSubmit',
@@ -47,7 +46,7 @@ export function TicketCommentComposer({
     resolver: createZodResolver(ticketCommentFormSchema),
     shouldFocusError: false,
   })
-  const visibility = watch('visibility')
+  const visibility = useWatch({ control, name: 'visibility' })
   const formErrors = [...submissionErrors, ...getFormErrorSummary(errors)]
 
   return (

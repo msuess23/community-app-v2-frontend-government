@@ -1,20 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
+import { type FormEventHandler, type ReactNode } from 'react'
 import {
-  useCallback,
-  useState,
-  type FormEventHandler,
-  type ReactNode,
-} from 'react'
-import {
-  useForm,
   type Control,
-  type DefaultValues,
   type FieldPath,
   type FieldValues,
   type UseFormReturn,
 } from 'react-hook-form'
-import type { ZodType } from 'zod'
-
 import {
   getStaffOptionDescription,
   type TicketWorkflowOptions,
@@ -22,17 +13,11 @@ import {
 } from '@/features/tickets/model/ticket-workflow'
 import type { TicketRecord } from '@/features/tickets/model/ticket-model'
 import { createTicketWorkflowOptionsQueryOptions } from '@/features/tickets/queries/ticket-queries'
-import { useConfirmation } from '@/shared/confirmation/confirmation-context'
 import { ControlledSearchableSelectField } from '@/shared/forms/ControlledSearchableSelectField'
 import { ControlledTextAreaField } from '@/shared/forms/ControlledTextAreaField'
 import { FormFieldScope } from '@/shared/forms/FormFieldScope'
 import { getFormErrorSummary } from '@/shared/forms/form-errors'
-import { createZodResolver } from '@/shared/forms/zod-resolver'
 import { RemoteDataBoundary } from '@/shared/remote-data/RemoteDataBoundary'
-import {
-  useResourceActionCloseGuard,
-  useResourceActionDialog,
-} from '@/shared/resource-detail/resource-action-dialog-context'
 import { FormActions } from '@/shared/ui/FormActions'
 import {
   FormErrorSummary,
@@ -199,40 +184,4 @@ export function WorkflowForm<TValues extends FieldValues>({
       </FormFieldScope>
     </form>
   )
-}
-
-/** Creates one guarded dialog form with the feature's common validation behavior. */
-export function useWorkflowDialogForm<TValues extends FieldValues>({
-  defaultValues,
-  discardDescription,
-  schema,
-}: Readonly<{
-  defaultValues: DefaultValues<TValues>
-  discardDescription: string
-  schema: ZodType<TValues>
-}>) {
-  const { confirm } = useConfirmation()
-  const { close } = useResourceActionDialog()
-  const [submissionErrors, setSubmissionErrors] = useState<
-    FormErrorSummaryItem[]
-  >([])
-  const form = useForm<TValues>({
-    defaultValues,
-    mode: 'onSubmit',
-    reValidateMode: 'onChange',
-    resolver: createZodResolver(schema),
-    shouldFocusError: false,
-  })
-  const requestClose = useCallback(async () => {
-    if (!form.formState.isDirty) return true
-
-    return confirm({
-      confirmLabel: 'Eingaben verwerfen',
-      description: discardDescription,
-      title: 'Ticketaktion abbrechen?',
-    })
-  }, [confirm, discardDescription, form.formState.isDirty])
-  useResourceActionCloseGuard(requestClose)
-
-  return { close, form, setSubmissionErrors, submissionErrors }
 }

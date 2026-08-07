@@ -13,6 +13,8 @@ import {
   getTicketVisibilityLabel,
 } from '@/features/tickets/model/ticket-model'
 import { formatDisplayFileSize } from '@/shared/format/display-values'
+import { TicketEventChangedFields } from '@/features/tickets/model/TicketEventChangedFields'
+import { EventDetails } from '@/shared/resource-detail/EventDetails'
 import {
   createResourceEventRendererRegistry,
   type ResourceEventPresentation,
@@ -66,7 +68,7 @@ export const ticketEventRendererRegistry =
     renderer('TICKET_DETAILS_UPDATED', (_event, payload) => ({
       description: 'Die vom Bürger bearbeitbaren Ticketdaten wurden geändert.',
       details: (
-        <ChangedFields
+        <TicketEventChangedFields
           fields={[
             ['Titel', payload.title !== undefined],
             ['Beschreibung', payload.description !== undefined],
@@ -286,33 +288,4 @@ function officeLabel(event: TicketEventRecord, officeId: string): string {
 
 function optionalText(label: string, value: string | null | undefined): ReactNode {
   return value ? <EventDetails items={[[label, value]]} /> : undefined
-}
-
-function ChangedFields({
-  fields,
-}: Readonly<{ fields: ReadonlyArray<readonly [string, boolean]> }>) {
-  const changed = fields.filter(([, isChanged]) => isChanged)
-  if (changed.length === 0) {
-    return <p>Die geänderten Felder konnten nicht bestimmt werden.</p>
-  }
-  return (
-    <p>
-      Geänderte Felder: {changed.map(([label]) => label).join(', ')}
-    </p>
-  )
-}
-
-function EventDetails({
-  items,
-}: Readonly<{ items: ReadonlyArray<readonly [string, ReactNode]> }>) {
-  return (
-    <dl className="grid gap-3 sm:grid-cols-2">
-      {items.map(([label, value]) => (
-        <div className="min-w-0" key={label}>
-          <dt className="text-on-surface-variant text-sm font-medium">{label}</dt>
-          <dd className="mt-1 whitespace-pre-wrap break-words">{value}</dd>
-        </div>
-      ))}
-    </dl>
-  )
 }

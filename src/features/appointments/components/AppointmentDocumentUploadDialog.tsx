@@ -5,6 +5,7 @@ import {
   useId,
   useRef,
   useState,
+  type FormEvent,
   type KeyboardEvent,
   type SyntheticEvent,
 } from 'react'
@@ -156,6 +157,10 @@ export function AppointmentDocumentUploadDialog({
     }
   }
 
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    void form.handleSubmit(submit)(event)
+  }
+
   function handleCancel(event: SyntheticEvent<HTMLDialogElement>) {
     event.preventDefault()
     void requestClose()
@@ -232,7 +237,7 @@ export function AppointmentDocumentUploadDialog({
             aria-busy={mutation.isPending}
             className="mt-6 space-y-6"
             noValidate
-            onSubmit={form.handleSubmit(submit)}
+            onSubmit={handleSubmit}
           >
             <FormFieldScope>
               <FormErrorSummary
