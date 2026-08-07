@@ -27,6 +27,7 @@ import {
   type AppointmentDocumentRecord,
 } from '@/features/appointments/model/appointment-document'
 import { appointmentFeatureQueryKeys } from '@/features/appointments/queries/appointment-query-keys'
+import { saveBlobAsFile } from '@/platform/file-save'
 import { useFeedback } from '@/shared/feedback/feedback-context'
 import { useResourceActionMutation } from '@/shared/resource-detail/use-resource-action-mutation'
 
@@ -162,7 +163,7 @@ export function useDownloadAppointmentDocumentMutation() {
         ),
         { method: 'GET', responseType: 'blob' },
       )
-      triggerBlobDownload(blob, document.originalFilename)
+      await saveBlobAsFile(blob, document.originalFilename)
     },
     mutationKey: ['appointments', 'documents', 'download'],
     onError: async (error, { appointmentId }) => {
@@ -187,17 +188,4 @@ export function useDownloadAppointmentDocumentMutation() {
       })
     },
   })
-}
-
-/** Creates a temporary object URL and always releases it after the browser consumes the click. */
-export function triggerBlobDownload(blob: Blob, filename: string): void {
-  const objectUrl = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = objectUrl
-  anchor.download = filename
-  anchor.hidden = true
-  document.body.append(anchor)
-  anchor.click()
-  anchor.remove()
-  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0)
 }

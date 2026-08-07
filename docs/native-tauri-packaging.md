@@ -2,8 +2,10 @@
 
 Der Behördenclient bleibt eine React/Vite-SPA. Tauri stellt dieselben gebauten Web-Assets in
 einer nativen System-WebView bereit; eine zweite UI oder plattformspezifische Fachlogik ist
-nicht erforderlich. Dieser Stand bildet zunächst die Desktop-Grundlage. Android-spezifische
-Projektdateien und native Datei-/Fensterintegrationen folgen in separaten Patches.
+nicht erforderlich. Die Desktop-Grundlage wird um zwei gezielte Runtime-Integrationen ergänzt:
+PDF-Downloads verwenden im nativen Client einen System-Speicherdialog und Dirty-Formulare
+schützen zusätzlich das Schließen des nativen Desktopfensters. Android-Projektdateien folgen
+weiterhin in einem separaten Patch.
 
 ## Voraussetzungen
 
@@ -54,13 +56,32 @@ auch Backend ausschließlich über HTTPS angebunden werden.
 auf Windows/Android stabil bei `http://tauri.localhost`; ein späterer Wechsel dieses Schalters
 würde den WebView-Speicherort für LocalStorage und damit die persistierten Refresh-Sessions ändern.
 
+## Native Dateiablage
+
+Appointment-PDFs verwenden weiterhin denselben authentifizierten HTTP-Download. Erst nachdem
+der Blob vollständig aus dem Backend geladen wurde, verzweigt die Laufzeit:
+
+- im Browser bleibt der bestehende Download über einen temporären Object-URL-Link erhalten,
+- in Tauri öffnet `@tauri-apps/plugin-dialog` den System-Speicherdialog und
+  `@tauri-apps/plugin-fs` schreibt die Bytes an das ausgewählte Ziel.
+
+Die Capability erlaubt ausschließlich den Save-Dialog und `writeFile`. Der Dialog fügt den vom
+Benutzer ausgewählten Zielpfad temporär zum Filesystem-Scope hinzu; ein allgemeiner Zugriff auf
+Benutzerverzeichnisse wird deshalb nicht freigeschaltet. Abbrechen des Speicherdialogs ist ein
+normaler Benutzerpfad und wird nicht als Downloadfehler behandelt.
+
+## Ungespeicherte Änderungen beim nativen Fensterschließen
+
+Der vorhandene Unsaved-Changes-Guard schützt weiterhin React-Router-Navigationen und
+`beforeunload`. In Tauri registriert derselbe Guard zusätzlich `onCloseRequested` für das
+Hauptfenster. Ist ein Formular dirty, wird der erste native Close sofort verhindert und die
+bereits vorhandene React-Bestätigung angezeigt. Nach bestätigtem Verwerfen wird das Fenster
+anschließend gezielt beendet. Dafür wird kein zweiter Close-Request erzeugt; der Guard kann daher
+weder rekursiv erneut ausgelöst werden noch mit dem Browser-`beforeunload`-Schutz konkurrieren.
+Dadurch bleibt dieselbe Bedienoberfläche für Browser- und Desktop-Navigation erhalten.
+
 ## Abgrenzung dieses Patches
 
-Noch nicht enthalten sind:
-
-- Android-Projektgenerierung und APK/AAB-Builds,
-- nativer Save-Dialog für Appointment-PDFs,
-- Tauri-spezifischer Unsaved-Changes-Guard beim Schließen eines Desktopfensters.
-
-Diese Punkte bleiben bewusst getrennt, damit zunächst React-Build, API-Konfiguration, CSP und
-Desktop-Packaging unabhängig verifiziert werden können.
+Noch nicht enthalten sind Android-Projektgenerierung und APK/AAB-Builds. Diese bleiben im
+folgenden Packaging-Patch getrennt, damit Desktop-Runtime, Dateispeicherung und Fensterverhalten
+zunächst unabhängig verifiziert werden können.

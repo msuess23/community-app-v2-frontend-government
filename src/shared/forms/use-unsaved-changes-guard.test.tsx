@@ -1,11 +1,28 @@
-import { screen } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { Link, useNavigate, type RouteObject } from 'react-router'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useUnsavedChangesGuard } from '@/shared/forms/use-unsaved-changes-guard'
 import { renderRouter } from '@/test/render'
+
+const nativeWindowMocks = vi.hoisted(() => ({
+  closeHandler: undefined as
+    | ((event: { preventDefault: () => void }) => Promise<void> | void)
+    | undefined,
+  destroyNativeWindow: vi.fn<() => Promise<void>>(),
+  listenForNativeWindowClose: vi.fn<
+    (
+      handler: (event: { preventDefault: () => void }) => Promise<void> | void,
+    ) => Promise<() => void>
+  >(),
+}))
+
+vi.mock('@/platform/native-window', () => ({
+  destroyNativeWindow: nativeWindowMocks.destroyNativeWindow,
+  listenForNativeWindowClose: nativeWindowMocks.listenForNativeWindowClose,
+}))
 
 const routes: RouteObject[] = [
   {
@@ -79,6 +96,19 @@ function DeferredSuccessfullySavedForm() {
 }
 
 describe('useUnsavedChangesGuard', () => {
+  beforeEach(() => {
+    nativeWindowMocks.closeHandler = undefined
+    nativeWindowMocks.destroyNativeWindow
+      .mockReset()
+      .mockResolvedValue(undefined)
+    nativeWindowMocks.listenForNativeWindowClose
+      .mockReset()
+      .mockImplementation(async (handler) => {
+        nativeWindowMocks.closeHandler = handler
+        return vi.fn()
+      })
+  })
+
   it('keeps the user on the form when navigation is cancelled', async () => {
     const user = userEvent.setup()
     const rendered = renderRouter(routes)
@@ -177,5 +207,51 @@ describe('useUnsavedChangesGuard', () => {
     window.dispatchEvent(event)
 
     expect(event.defaultPrevented).toBe(true)
+  })
+
+  it('keeps a dirty native window open when discarding is cancelled', async () => {
+    const user = userEvent.setup()
+    renderRouter(routes)
+    await waitFor(() => expect(nativeWindowMocks.closeHandler).toBeDefined())
+    await user.type(screen.getByRole('textbox', { name: 'Notiz' }), 'Entwurf')
+    const preventDefault = vi.fn()
+
+    let closeRequest: Promise<void> | void = undefined
+    act(() => {
+      closeRequest = nativeWindowMocks.closeHandler?.({ preventDefault })
+    })
+
+    expect(preventDefault).toHaveBeenCalledOnce()
+    await user.click(screen.getByRole('button', { name: 'Weiter bearbeiten' }))
+    await act(async () => {
+      await closeRequest
+    })
+
+    expect(nativeWindowMocks.destroyNativeWindow).not.toHaveBeenCalled()
+  })
+
+  it('destroys the native window after discarding dirty changes', async () => {
+    const user = userEvent.setup()
+    renderRouter(routes)
+    await waitFor(() => expect(nativeWindowMocks.closeHandler).toBeDefined())
+    await user.type(screen.getByRole('textbox', { name: 'Notiz' }), 'Entwurf')
+    const firstPreventDefault = vi.fn()
+
+    let closeRequest: Promise<void> | void = undefined
+    act(() => {
+      closeRequest = nativeWindowMocks.closeHandler?.({
+        preventDefault: firstPreventDefault,
+      })
+    })
+
+    await user.click(
+      screen.getByRole('button', { name: 'Änderungen verwerfen' }),
+    )
+    await act(async () => {
+      await closeRequest
+    })
+
+    expect(firstPreventDefault).toHaveBeenCalledOnce()
+    expect(nativeWindowMocks.destroyNativeWindow).toHaveBeenCalledOnce()
   })
 })

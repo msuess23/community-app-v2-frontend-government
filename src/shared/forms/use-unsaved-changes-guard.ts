@@ -5,6 +5,7 @@ import {
   useConfirmation,
   type ConfirmationOptions,
 } from '@/shared/confirmation/confirmation-context'
+import { useNativeUnsavedChangesCloseGuard } from '@/shared/forms/use-native-unsaved-changes-close-guard'
 
 export type UnsavedChangesMessage = Readonly<
   Pick<
@@ -34,7 +35,7 @@ const defaultMessage: UnsavedChangesMessage = {
   title: 'Ungespeicherte Änderungen verwerfen?',
 }
 
-/** Protects dirty forms from in-app navigation and browser-level page exits. */
+/** Protects dirty forms from router navigation, browser exits and native window closes. */
 export function useUnsavedChangesGuard({
   hasUnsavedChanges,
   isEnabled = true,
@@ -99,6 +100,11 @@ export function useUnsavedChangesGuard({
     },
     [confirm, shouldProtect],
   )
+
+  useNativeUnsavedChangesCloseGuard({
+    confirmDiscardChanges,
+    shouldProtect,
+  })
 
   useBeforeUnload(
     useCallback(
