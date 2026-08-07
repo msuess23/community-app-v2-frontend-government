@@ -167,3 +167,16 @@ Administratoren bearbeiten aktive Benutzerkonten über `/users/:userId/edit`. De
 ## Benutzer-Lebenszyklus und Audit-Historie
 
 Administratoren können andere aktive Konten mit verpflichtendem Änderungsgrund deaktivieren. Die Oberfläche erläutert Anonymisierung, Sitzungswiderruf und mögliche Ticket- oder Terminkonflikte. `/users/:userId/history` zeigt die unveränderlichen Kontostände paginiert und mit timezone-bewussten Datumsfiltern als Desktop-Tabelle beziehungsweise responsive Karten. Details stehen unter `docs/user-lifecycle-and-audit-history.md`.
+
+## Native Desktop-Verpackung (Tauri 2)
+
+Zusätzlich zum Browser-Build kann dieselbe React/Vite-Anwendung als Tauri-2-Desktop-App
+ausgeführt und gebündelt werden:
+
+```bash
+npm run native:dev
+```
+
+Für `npm run native:build` muss `VITE_API_BASE_URL` eine absolute `http(s)`-URL sein.
+Einzelheiten zu Rust-/Systemvoraussetzungen, CSP und der Abgrenzung der späteren Android-
+und Runtime-Patches stehen in [`docs/native-tauri-packaging.md`](docs/native-tauri-packaging.md).

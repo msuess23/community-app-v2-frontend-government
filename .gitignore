@@ -34,3 +34,9 @@ test-results/
 
 playwright-report-fullstack/
 test-results-fullstack/
+
+# Generated per-run Tauri configuration
+.tauri-runtime/
+
+# Rust/Tauri build output
+src-tauri/target/
