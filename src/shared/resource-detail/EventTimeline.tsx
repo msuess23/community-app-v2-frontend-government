@@ -42,11 +42,7 @@ export function EventTimeline<TEvent extends ResourceEvent>({
   return (
     <div className="space-y-5">
       {typeof total === 'number' ? (
-        <p
-          aria-atomic="true"
-          className="text-on-surface-variant text-sm"
-          role="status"
-        >
+        <p className="text-on-surface-variant text-sm" role="status">
           {events.length} von {total} Ereignissen angezeigt
         </p>
       ) : null}

@@ -12,7 +12,7 @@ import { OfficeHistoryPage } from '@/features/offices/pages/OfficeHistoryPage'
 import { mockApiServer } from '@/test/server'
 
 const ADMIN_USER: AuthUser = {
-  email: 'admin@example.com',
+  email: 'admin@example.test',
   firstName: 'Ada',
   id: '00000000-0000-4000-8000-000000000001',
   lastName: 'Admin',
@@ -64,7 +64,7 @@ describe('OfficeHistoryPage', () => {
                 change_reason: 'Adresse und Öffnungszeiten angepasst',
                 changed_at: '2026-08-03T10:00:00Z',
                 changed_by_user_id: ADMIN_USER.id,
-                contact_email: 'historisch@example.com',
+                contact_email: 'historisch@example.test',
                 description: 'Historischer Behördenstand',
                 id: 'history-1',
                 is_active: true,
@@ -202,7 +202,7 @@ function officeResponse() {
       street: 'Neue Straße',
       zip_code: '04109',
     },
-    contact_email: 'aktuell@example.com',
+    contact_email: 'aktuell@example.test',
     description: 'Aktueller Stand',
     id: OFFICE_ID,
     metadata: {

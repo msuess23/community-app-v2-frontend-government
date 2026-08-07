@@ -142,7 +142,7 @@ function officeResponse(overrides: Record<string, unknown> = {}) {
       street: 'Musterstraße',
       zip_code: '04109',
     },
-    contact_email: 'ordnung@example.com',
+    contact_email: 'ordnung@example.test',
     description: 'Zentrale Anlaufstelle',
     id: OFFICE_ID,
     metadata: {

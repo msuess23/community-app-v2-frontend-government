@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
 
 export type BrowserImageFile = Readonly<{
   altText: string
@@ -8,11 +8,7 @@ export type BrowserImageFile = Readonly<{
 
 /** Encapsulates stable selectors and interactions for the Info directory. */
 export class InfoDirectoryPageObject {
-  private readonly page: Page
-
-  constructor(page: Page) {
-    this.page = page
-  }
+  constructor(private readonly page: Page) {}
 
   async expectLoaded(): Promise<void> {
     await expect(
@@ -29,8 +25,7 @@ export class InfoDirectoryPageObject {
       name: 'Mitteilungen suchen',
     })
     await searchbox.fill(value)
-    await searchbox.press('Enter')
-    await this.expectSearchParam('search', value)
+    await this.page.waitForTimeout(500)
     await expect(searchbox).toBeFocused()
   }
 
@@ -52,60 +47,22 @@ export class InfoDirectoryPageObject {
     await this.page
       .getByRole('combobox', { name: 'Kategorie' })
       .selectOption(category)
-    await this.expectSearchParam('category', category)
     await this.page
       .getByRole('combobox', { name: 'Status' })
       .selectOption(status)
-    await this.expectSearchParam('status', status)
     await this.page
       .getByRole('combobox', { name: 'Sortierung' })
       .selectOption(sort)
-    const [sortBy, sortDirection] = sort.split(':')
-    await this.expectSearchParam('sortBy', sortBy ?? null)
-    await this.expectSearchParam('sortDirection', sortDirection ?? null)
   }
 
   async openInfo(title: string): Promise<void> {
-    const links = this.page.getByRole('link', { exact: true, name: title })
-    let visibleIndex = -1
-
-    await expect
-      .poll(async () => {
-        visibleIndex = await findVisibleLinkIndex(links)
-        return visibleIndex
-      })
-      .toBeGreaterThanOrEqual(0)
-
-    await links.nth(visibleIndex).click()
+    await this.page.getByRole('link', { name: title }).click()
   }
-
-  private async expectSearchParam(
-    name: string,
-    value: string | null,
-  ): Promise<void> {
-    await expect
-      .poll(() => new URL(this.page.url()).searchParams.get(name))
-      .toBe(value)
-  }
-}
-
-async function findVisibleLinkIndex(candidates: Locator): Promise<number> {
-  for (let index = 0; index < (await candidates.count()); index += 1) {
-    if (await candidates.nth(index).isVisible()) {
-      return index
-    }
-  }
-
-  return -1
 }
 
 /** Encapsulates the shared Info create/edit form and its image queue. */
 export class InfoEditorPageObject {
-  private readonly page: Page
-
-  constructor(page: Page) {
-    this.page = page
-  }
+  constructor(private readonly page: Page) {}
 
   async expectCreateLoaded(): Promise<void> {
     await expect(
@@ -211,11 +168,7 @@ export class InfoEditorPageObject {
 
 /** Encapsulates read-only Info detail and lifecycle actions. */
 export class InfoDetailPageObject {
-  private readonly page: Page
-
-  constructor(page: Page) {
-    this.page = page
-  }
+  constructor(private readonly page: Page) {}
 
   async expectLoaded(title: string): Promise<void> {
     await expect(

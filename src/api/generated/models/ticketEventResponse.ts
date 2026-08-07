@@ -4,10 +4,8 @@
  * Community App V2
  * OpenAPI spec version: 0.1.0
  */
-import type { TicketEventReferences } from './ticketEventReferences'
 import type { TicketEventResponsePayload } from './ticketEventResponsePayload'
 import type { TicketEventType } from './ticketEventType'
-import type { UserReference } from './userReference'
 
 /**
  * Internal chronological event record used by the authority client.
@@ -18,8 +16,6 @@ export interface TicketEventResponse {
   sequence_number: number
   event_type: TicketEventType
   actor_user_id: string
-  actor: UserReference
   occurred_at: string
   payload: TicketEventResponsePayload
-  references?: TicketEventReferences
 }

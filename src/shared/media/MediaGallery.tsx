@@ -50,6 +50,11 @@ export function MediaGallery({
       return
     }
 
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+
     if (!dialog.open) {
       dialog.showModal()
     }
@@ -87,7 +92,7 @@ export function MediaGallery({
       dialog.close()
     }
     setSelectedAsset(null)
-    window.requestAnimationFrame(() => previousFocusRef.current?.focus())
+    queueMicrotask(() => previousFocusRef.current?.focus())
   }
 
   function handleCancel(event: SyntheticEvent<HTMLDialogElement>): void {
@@ -189,10 +194,7 @@ export function MediaGallery({
             >
               <GalleryFigure
                 asset={asset}
-                onOpen={(trigger) => {
-                  previousFocusRef.current = trigger
-                  setSelectedAsset(asset)
-                }}
+                onOpen={() => setSelectedAsset(asset)}
                 renderActions={renderActions}
               />
             </div>
@@ -208,10 +210,7 @@ export function MediaGallery({
           <li key={asset.id}>
             <GalleryFigure
               asset={asset}
-              onOpen={(trigger) => {
-                previousFocusRef.current = trigger
-                setSelectedAsset(asset)
-              }}
+              onOpen={() => setSelectedAsset(asset)}
               renderActions={renderActions}
             />
           </li>
@@ -298,7 +297,7 @@ function GalleryFigure({
   renderActions,
 }: Readonly<{
   asset: MediaAsset
-  onOpen: (trigger: HTMLButtonElement) => void
+  onOpen: () => void
   renderActions?: (asset: MediaAsset) => ReactNode
 }>) {
   return (
@@ -306,7 +305,7 @@ function GalleryFigure({
       <button
         aria-label={`Bild vergrößern: ${asset.altText ?? asset.originalFilename}`}
         className="focus-visible:outline-primary group relative block w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2"
-        onClick={(event) => onOpen(event.currentTarget)}
+        onClick={onOpen}
         type="button"
       >
         <MediaImage

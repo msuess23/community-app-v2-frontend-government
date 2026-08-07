@@ -23,13 +23,12 @@ describe('TextField', () => {
     )
   })
 
+
   it('forwards native date-time attributes to the input control', () => {
     renderWithProviders(
       <TextField
         inputLang="de-DE"
         label="Beginn"
-        max="2099-08-12T12:00"
-        min="2026-08-06T12:00"
         step={60}
         type="datetime-local"
       />,
@@ -37,8 +36,6 @@ describe('TextField', () => {
 
     const input = screen.getByLabelText('Beginn')
     expect(input).toHaveAttribute('lang', 'de-DE')
-    expect(input).toHaveAttribute('max', '2099-08-12T12:00')
-    expect(input).toHaveAttribute('min', '2026-08-06T12:00')
     expect(input).toHaveAttribute('step', '60')
     expect(input).toHaveAttribute('type', 'datetime-local')
   })

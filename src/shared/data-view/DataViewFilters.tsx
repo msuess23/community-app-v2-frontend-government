@@ -1,6 +1,5 @@
 import {
   useId,
-  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -171,109 +170,6 @@ export function DataViewFilterSelect({
   )
 }
 
-export interface DataViewFilterSearchableSelectProps
-  extends DataViewFilterSelectProps {
-  emptySearchMessage?: string
-  searchPlaceholder?: string
-}
-
-/**
- * Filters a long, URL-backed native select locally without discarding its
- * currently selected value.
- */
-export function DataViewFilterSearchableSelect({
-  allLabel = 'Alle',
-  className,
-  description,
-  emptySearchMessage = 'Keine passenden Einträge gefunden.',
-  isDisabled = false,
-  label,
-  onChange,
-  options,
-  searchPlaceholder = 'Auswahl durchsuchen',
-  value,
-}: DataViewFilterSearchableSelectProps) {
-  const descriptionId = useId()
-  const searchId = useId()
-  const selectId = useId()
-  const [search, setSearch] = useState('')
-  const normalizedSearch = normalizeFilterSearch(search)
-  const filteredOptions = useMemo(() => {
-    if (!normalizedSearch) {
-      return options
-    }
-
-    const matches = options.filter((option) =>
-      option.label.toLocaleLowerCase('de-DE').includes(normalizedSearch),
-    )
-    const selectedOption = options.find((option) => option.value === value)
-
-    if (
-      selectedOption &&
-      !matches.some((option) => option.value === selectedOption.value)
-    ) {
-      return [selectedOption, ...matches]
-    }
-
-    return matches
-  }, [normalizedSearch, options, value])
-
-  return (
-    <div className={cn('grid gap-2 lg:w-56 xl:w-64', className)}>
-      <label
-        className="text-on-surface text-sm font-semibold"
-        htmlFor={selectId}
-      >
-        {label}
-      </label>
-      <input
-        aria-describedby={description ? descriptionId : undefined}
-        aria-label={`${label} durchsuchen`}
-        className="border-outline bg-surface text-on-surface hover:border-secondary focus-visible:border-primary focus-visible:ring-primary min-h-11 w-full rounded-lg border px-3 py-2.5 text-base shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
-        disabled={isDisabled}
-        id={searchId}
-        onChange={(event) => setSearch(event.currentTarget.value)}
-        placeholder={searchPlaceholder}
-        type="search"
-        value={search}
-      />
-      <select
-        aria-describedby={description ? descriptionId : undefined}
-        aria-label={label}
-        className="border-outline bg-surface text-on-surface hover:border-secondary focus-visible:border-primary focus-visible:ring-primary min-h-11 w-full rounded-lg border px-3 py-2.5 text-base shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
-        disabled={isDisabled}
-        id={selectId}
-        onChange={(event) => onChange(event.currentTarget.value)}
-        value={value}
-      >
-        <option value="">{allLabel}</option>
-        {filteredOptions.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      {filteredOptions.length === 0 ? (
-        <p className="text-on-surface-variant text-sm leading-5" role="status">
-          {emptySearchMessage}
-        </p>
-      ) : null}
-      {description ? (
-        <p
-          className="text-on-surface-variant text-sm leading-5"
-          id={descriptionId}
-        >
-          {description}
-        </p>
-      ) : null}
-    </div>
-  )
-}
-
-/** Normalizes a human-entered filter without changing the URL-owned value. */
-function normalizeFilterSearch(value: string): string {
-  return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('de-DE')
-}
 
 export interface DataViewFilterDateFieldProps {
   className?: string

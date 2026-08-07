@@ -176,7 +176,7 @@ function createOfficeResponse(): OfficeResponseFixture {
       street: 'Musterstraße',
       zip_code: '04109',
     },
-    contact_email: 'ordnung@example.com',
+    contact_email: 'ordnung@example.test',
     description: 'Zentrale Anlaufstelle für kommunale Anliegen.',
     id: OFFICE_ID,
     metadata: {

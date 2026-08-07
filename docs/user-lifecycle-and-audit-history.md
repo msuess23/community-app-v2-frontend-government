@@ -28,7 +28,7 @@ There is no reactivation action because the backend does not expose one.
 
 ## Audit history
 
-The history page treats every item as an immutable snapshot of the account after an administrative change. The newest snapshot is shown first, followed by progressively older states. It does not present the records as event-sourcing events or as a previous-state diff.
+The history page treats every item as an immutable snapshot of the account after an administrative change. It does not present the records as event-sourcing events or as a previous-state diff.
 
 The page provides:
 

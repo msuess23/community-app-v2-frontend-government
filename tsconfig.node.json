@@ -22,9 +22,7 @@
   "include": [
     "vite.config.ts",
     "playwright.config.ts",
-    "playwright.fullstack.config.ts",
     "orval.config.ts",
-    "tests/e2e/**/*.ts",
-    "tests/fullstack/**/*.ts"
+    "tests/e2e/**/*.ts"
   ]
 }

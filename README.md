@@ -32,9 +32,7 @@ npm run verify
 
 Vitest sammelt ausschließlich Tests unter `src/`. Die Playwright-Spezifikationen unter `tests/e2e/` werden getrennt über `npm run test:e2e` ausgeführt.
 
-Für einen echten Integrationslauf gegen ein frisch migriertes und geseedetes Backend steht zusätzlich `npm run test:fullstack` bereit. Diese Suite verwendet keine API-Mocks, sondern echte Logins, rotierende Refresh-Tokens, mehrere Browser-Sessions, PostgreSQL und reale Datei-Uploads. Voraussetzungen und Ablauf sind in `docs/fullstack-e2e.md` beschrieben.
-
-`verify:fast` führt OpenAPI-Validierung, ESLint, Prettier, Vitest, TypeScript und den Produktionsbuild aus. `verify` ergänzt die Playwright-Tests für Desktop, Tablet und Smartphone. Die Full-Stack-Suite bleibt bewusst separat, weil sie eine entbehrliche, frisch geseedete Backend-Datenbank voraussetzt. Der CI-Workflow verwendet den regulären vollständigen Lauf.
+`verify:fast` führt OpenAPI-Validierung, ESLint, Prettier, Vitest, TypeScript und den Produktionsbuild aus. `verify` ergänzt die Playwright-Tests für Desktop, Tablet und Smartphone. Der CI-Workflow verwendet den vollständigen Lauf.
 
 ## OpenAPI-Client
 
