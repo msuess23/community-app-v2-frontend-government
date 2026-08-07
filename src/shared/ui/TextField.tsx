@@ -21,6 +21,8 @@ export interface TextFieldProps extends Omit<
   inputLang?: string
   inputRef?: Ref<HTMLInputElement>
   label: ReactNode
+  max?: number | string
+  min?: number | string
   placeholder?: string
   step?: number | string
 }
@@ -34,6 +36,8 @@ export function TextField({
   inputRef,
   isRequired,
   label,
+  max,
+  min,
   placeholder,
   step,
   validationBehavior = 'aria',
@@ -57,6 +61,8 @@ export function TextField({
 
       <Input
         lang={inputLang}
+        max={max}
+        min={min}
         ref={inputRef}
         placeholder={placeholder}
         step={step}

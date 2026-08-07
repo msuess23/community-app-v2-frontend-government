@@ -101,13 +101,13 @@ export function ResourceActionBar<TAction extends string>({
 
   return (
     <>
-      {actions.length > 0 ? (
-        <div
-          aria-label={ariaLabel}
-          className="flex flex-wrap gap-2"
-          role="group"
-        >
-          {actions.map((action) => (
+      <div
+        aria-label={ariaLabel}
+        className={actions.length > 0 ? 'flex flex-wrap gap-2' : undefined}
+        role="group"
+      >
+        {actions.length > 0 ? (
+          actions.map((action) => (
             <Button
               key={action.action}
               onPress={(event: ButtonPressEvent) =>
@@ -118,11 +118,11 @@ export function ResourceActionBar<TAction extends string>({
               {action.icon}
               {action.label}
             </Button>
-          ))}
-        </div>
-      ) : (
-        <p className="text-on-surface-variant leading-7">{emptyMessage}</p>
-      )}
+          ))
+        ) : (
+          <p className="text-on-surface-variant leading-7">{emptyMessage}</p>
+        )}
+      </div>
 
       <ResourceActionDialog
         action={selectedAction}

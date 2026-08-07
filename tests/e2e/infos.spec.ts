@@ -20,7 +20,7 @@ import {
 } from './pages/info-pages.js'
 
 const dispatcherUser: AuthorityUserFixture = {
-  email: 'dispatcher@example.test',
+  email: 'dispatcher@example.com',
   first_name: 'Dora',
   id: '00000000-0000-4000-8000-000000000002',
   last_name: 'Dispatcher',
@@ -28,7 +28,7 @@ const dispatcherUser: AuthorityUserFixture = {
   role: 'DISPATCHER',
 }
 const adminUser: AuthorityUserFixture = {
-  email: 'admin@example.test',
+  email: 'admin@example.com',
   first_name: 'Ada',
   id: '00000000-0000-4000-8000-000000000001',
   last_name: 'Admin',
@@ -67,22 +67,42 @@ test(
     ).toHaveValue('20')
 
     await directory.search('Stadtteil Fest')
-    const sortedRequest = page.waitForRequest((request) => {
-      const url = new URL(request.url())
-      return (
-        url.pathname === '/api/v1/infos' &&
-        url.searchParams.get('category') === 'EVENT' &&
-        url.searchParams.get('status') === 'ACTIVE' &&
-        url.searchParams.get('sort_by') === 'updated_at' &&
-        url.searchParams.get('order') === 'desc'
-      )
-    })
     await directory.setFilters({
       category: 'EVENT',
       sort: 'updatedAt:desc',
       status: 'ACTIVE',
     })
-    await sortedRequest
+    await expect
+      .poll(() => new URL(page.url()).searchParams.get('category'))
+      .toBe('EVENT')
+    await expect
+      .poll(() => new URL(page.url()).searchParams.get('status'))
+      .toBe('ACTIVE')
+    await expect
+      .poll(() => new URL(page.url()).searchParams.get('sortBy'))
+      .toBe('updatedAt')
+    await expect
+      .poll(() => new URL(page.url()).searchParams.get('sortDirection'))
+      .toBe('desc')
+    await expect
+      .poll(() =>
+        requests.some((request) => request.includes('category=EVENT')),
+      )
+      .toBe(true)
+    await expect
+      .poll(() =>
+        requests.some((request) => request.includes('status=ACTIVE')),
+      )
+      .toBe(true)
+    await expect
+      .poll(() =>
+        requests.some(
+          (request) =>
+            request.includes('sort_by=updated_at') &&
+            request.includes('order=desc'),
+        ),
+      )
+      .toBe(true)
 
     await directory.openInfo('Stadtteilfest')
     await expect(page).toHaveURL(new RegExp(`/infos/${INFO_ID}$`))
@@ -103,11 +123,15 @@ test(
     expect(requests.some((request) => request.includes('q=Stadtteil+Fest'))).toBe(
       true,
     )
+    expect(requests.some((request) => request.includes('category=EVENT'))).toBe(
+      true,
+    )
+    expect(requests.some((request) => request.includes('status=ACTIVE'))).toBe(
+      true,
+    )
     expect(
       requests.some(
         (request) =>
-          request.includes('category=EVENT') &&
-          request.includes('status=ACTIVE') &&
           request.includes('sort_by=updated_at') &&
           request.includes('order=desc'),
       ),

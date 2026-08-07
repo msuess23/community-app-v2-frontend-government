@@ -11,7 +11,7 @@ import { OfficeDirectoryPage } from '@/features/offices/pages/OfficeDirectoryPag
 import { mockApiServer } from '@/test/server'
 
 const ADMIN_USER: AuthUser = {
-  email: 'admin@example.test',
+  email: 'admin@example.com',
   firstName: 'Ada',
   id: '00000000-0000-4000-8000-000000000001',
   lastName: 'Admin',
@@ -48,7 +48,7 @@ describe('OfficeDirectoryPage', () => {
     expect(screen.getByLabelText('Behördenstatus')).toHaveValue('all')
     expect(screen.getByLabelText('Sortierung')).toHaveValue('createdAt:desc')
     expect(
-      screen.getByRole('combobox', { name: 'Einträge pro Seite' }),
+      await screen.findByRole('combobox', { name: 'Einträge pro Seite' }),
     ).toHaveValue('20')
     expect(
       screen.getByRole('link', { name: 'Behörde anlegen' }),
@@ -68,7 +68,7 @@ describe('OfficeDirectoryPage', () => {
       within(compactList).getByRole('article', {
         name: 'Ordnungsamt, Leipzig',
       }),
-    ).toHaveTextContent('ordnung@example.test')
+    ).toHaveTextContent('ordnung@example.com')
 
     await waitFor(() => {
       expect(requestedSearch).toContain('q=ordnung')
@@ -119,7 +119,7 @@ function createOfficeResponse() {
       street: 'Musterstraße',
       zip_code: '04109',
     },
-    contact_email: 'ordnung@example.test',
+    contact_email: 'ordnung@example.com',
     description: 'Zentrale Anlaufstelle',
     id: OFFICE_ID,
     metadata: {

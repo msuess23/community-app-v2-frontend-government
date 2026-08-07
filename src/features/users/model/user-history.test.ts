@@ -17,7 +17,7 @@ describe('user history model', () => {
             change_reason: 'Rolle angepasst',
             changed_at: '2026-08-03T10:00:00Z',
             changed_by_user_id: 'actor-1',
-            email: 'person@example.test',
+            email: 'person@example.com',
             first_name: 'Petra',
             id: 'history-1',
             is_active: true,
@@ -39,6 +39,48 @@ describe('user history model', () => {
       officeId: null,
       role: 'MANAGER',
     })
+  })
+
+  it('orders each history page from the newest snapshot into the past', () => {
+    const page = mapUserHistoryPage({
+      data: [
+        {
+          change_reason: 'Älter',
+          changed_at: '2026-08-01T10:00:00Z',
+          changed_by_user_id: 'actor-1',
+          email: 'person@example.com',
+          first_name: 'Petra',
+          id: 'history-1',
+          is_active: true,
+          last_name: 'Person',
+          office_id: null,
+          role: 'OFFICER',
+          user_id: 'user-1',
+        },
+        {
+          change_reason: 'Neuer',
+          changed_at: '2026-08-03T10:00:00Z',
+          changed_by_user_id: 'actor-1',
+          email: 'person@example.com',
+          first_name: 'Petra',
+          id: 'history-2',
+          is_active: true,
+          last_name: 'Person',
+          office_id: null,
+          role: 'MANAGER',
+          user_id: 'user-1',
+        },
+      ],
+      page: 1,
+      pages: 1,
+      size: 20,
+      total: 2,
+    })
+
+    expect(page.items.map((item) => item.id)).toEqual([
+      'history-2',
+      'history-1',
+    ])
   })
 
   it('maps URL calendar dates to inclusive timezone-aware query boundaries', () => {

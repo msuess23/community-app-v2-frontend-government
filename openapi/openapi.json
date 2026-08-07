@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Community App V2",
+    "title": "Community App Fachverfahren Backend",
     "version": "0.1.0"
   },
   "paths": {
@@ -697,6 +697,33 @@
         }
       }
     },
+    "/api/v1/appointments/internal/filter-options": {
+      "get": {
+        "tags": [
+          "Appointments"
+        ],
+        "summary": "Get Internal Appointment Filter Options",
+        "description": "Return readable filters from the caller's complete office scope.",
+        "operationId": "get_internal_appointment_filter_options_api_v1_appointments_internal_filter_options_get",
+        "response": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentFilterOptionsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/appointments/{appointment_id}/reschedule": {
       "post": {
         "tags": [
@@ -939,7 +966,7 @@
           "Appointments"
         ],
         "summary": "List Appointment Events",
-        "description": "Return a chronological appointment event page to an authorized reader.",
+        "description": "Return a newest-first appointment event page to an authorized reader.",
         "operationId": "list_appointment_events_api_v1_appointments__appointment_id__events_get",
         "security": [
           {
@@ -1264,10 +1291,13 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "The authorized immutable PDF document version.",
             "content": {
-              "application/json": {
-                "schema": {}
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
               }
             }
           },
@@ -3599,13 +3629,62 @@
         }
       }
     },
+    "/api/v1/tickets/{ticket_id}/workflow-options": {
+      "get": {
+        "tags": [
+          "Tickets"
+        ],
+        "summary": "Get Ticket Workflow Options",
+        "description": "Return targets selectable for the caller's current workflow actions.",
+        "operationId": "get_ticket_workflow_options_api_v1_tickets__ticket_id__workflow_options_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ticket_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Ticket Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketWorkflowOptionsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/tickets/{ticket_id}/events": {
       "get": {
         "tags": [
           "Tickets"
         ],
         "summary": "Get Internal Ticket Events",
-        "description": "Return a chronological page of the append-only event stream.",
+        "description": "Return the append-only event stream with the newest events first.",
         "operationId": "get_internal_ticket_events_api_v1_tickets__ticket_id__events_get",
         "security": [
           {
@@ -5042,8 +5121,8 @@
             "anyOf": [
               {
                 "type": "number",
-                "maximum": 90,
-                "minimum": -90
+                "maximum": 90.0,
+                "minimum": -90.0
               },
               {
                 "type": "null"
@@ -5055,8 +5134,8 @@
             "anyOf": [
               {
                 "type": "number",
-                "maximum": 180,
-                "minimum": -180
+                "maximum": 180.0,
+                "minimum": -180.0
               },
               {
                 "type": "null"
@@ -5275,8 +5354,8 @@
             "anyOf": [
               {
                 "type": "number",
-                "maximum": 90,
-                "minimum": -90
+                "maximum": 90.0,
+                "minimum": -90.0
               },
               {
                 "type": "null"
@@ -5288,8 +5367,8 @@
             "anyOf": [
               {
                 "type": "number",
-                "maximum": 180,
-                "minimum": -180
+                "maximum": 180.0,
+                "minimum": -180.0
               },
               {
                 "type": "null"
@@ -5446,7 +5525,7 @@
         "additionalProperties": false,
         "type": "object",
         "title": "AppointmentCompleteRequest",
-        "description": "Record an optional authority note for a completed appointment."
+        "description": "Record an optional internal authority note for a completed appointment."
       },
       "AppointmentDocumentResponse": {
         "properties": {
@@ -5570,6 +5649,16 @@
             ],
             "title": "Actor User Id"
           },
+          "actor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AppointmentUserReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "occurred_at": {
             "type": "string",
             "format": "date-time",
@@ -5605,6 +5694,27 @@
         "title": "AppointmentEventType",
         "description": "Append-only changes supported by the appointment aggregate."
       },
+      "AppointmentFilterOptionsResponse": {
+        "properties": {
+          "citizens": {
+            "items": {
+              "$ref": "#/components/schemas/AppointmentUserReference"
+            },
+            "type": "array",
+            "title": "Citizens"
+          },
+          "tickets": {
+            "items": {
+              "$ref": "#/components/schemas/AppointmentTicketReference"
+            },
+            "type": "array",
+            "title": "Tickets"
+          }
+        },
+        "type": "object",
+        "title": "AppointmentFilterOptionsResponse",
+        "description": "Readable filters derived only from the caller's appointment scope."
+      },
       "AppointmentNoShowRequest": {
         "properties": {
           "comment": {
@@ -5623,7 +5733,27 @@
         "additionalProperties": false,
         "type": "object",
         "title": "AppointmentNoShowRequest",
-        "description": "Record an optional authority note for a citizen no-show."
+        "description": "Record an optional internal authority note for a citizen no-show."
+      },
+      "AppointmentOfficeReference": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "AppointmentOfficeReference",
+        "description": "Small office label embedded in an appointment response."
       },
       "AppointmentRescheduleRequest": {
         "properties": {
@@ -5672,10 +5802,16 @@
             "format": "uuid",
             "title": "Office Id"
           },
+          "office": {
+            "$ref": "#/components/schemas/AppointmentOfficeReference"
+          },
           "citizen_id": {
             "type": "string",
             "format": "uuid",
             "title": "Citizen Id"
+          },
+          "citizen": {
+            "$ref": "#/components/schemas/AppointmentUserReference"
           },
           "ticket_id": {
             "anyOf": [
@@ -5688,6 +5824,16 @@
               }
             ],
             "title": "Ticket Id"
+          },
+          "ticket": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AppointmentTicketReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "reason": {
             "anyOf": [
@@ -5764,7 +5910,9 @@
           "id",
           "current_slot_id",
           "office_id",
+          "office",
           "citizen_id",
+          "citizen",
           "status",
           "starts_at",
           "ends_at",
@@ -5902,6 +6050,51 @@
         "title": "AppointmentStatus",
         "description": "Citizen-visible lifecycle of a booked appointment."
       },
+      "AppointmentTicketReference": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "can_view": {
+            "type": "boolean",
+            "title": "Can View"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "can_view"
+        ],
+        "title": "AppointmentTicketReference",
+        "description": "Small linked-ticket label and current caller access indication."
+      },
+      "AppointmentUserReference": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "display_name"
+        ],
+        "title": "AppointmentUserReference",
+        "description": "Data-minimizing user label without account or contact information."
+      },
       "Body_login_api_v1_auth_login_post": {
         "properties": {
           "grant_type": {
@@ -5965,7 +6158,7 @@
         "properties": {
           "file": {
             "type": "string",
-            "contentMediaType": "application/octet-stream",
+            "format": "binary",
             "title": "File"
           },
           "document_type": {
@@ -6000,13 +6193,13 @@
         "properties": {
           "file": {
             "type": "string",
-            "contentMediaType": "application/octet-stream",
+            "format": "binary",
             "title": "File"
           },
           "alt_text": {
             "type": "string",
-            "minLength": 1,
             "maxLength": 500,
+            "minLength": 1,
             "title": "Alt Text"
           }
         },
@@ -6021,7 +6214,7 @@
         "properties": {
           "file": {
             "type": "string",
-            "contentMediaType": "application/octet-stream",
+            "format": "binary",
             "title": "File"
           }
         },
@@ -6906,6 +7099,26 @@
         "title": "OfficeHistoryResponse",
         "description": "Serialize one immutable office history snapshot."
       },
+      "OfficeReference": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "OfficeReference",
+        "description": "Stable office label without exposing the full office resource."
+      },
       "OfficeResponse": {
         "properties": {
           "metadata": {
@@ -7199,22 +7412,22 @@
           },
           "total": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Total"
           },
           "page": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Page"
           },
           "size": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Size"
           },
           "pages": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Pages"
           }
         },
@@ -7239,22 +7452,22 @@
           },
           "total": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Total"
           },
           "page": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Page"
           },
           "size": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Size"
           },
           "pages": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Pages"
           }
         },
@@ -7279,22 +7492,22 @@
           },
           "total": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Total"
           },
           "page": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Page"
           },
           "size": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Size"
           },
           "pages": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Pages"
           }
         },
@@ -7319,22 +7532,22 @@
           },
           "total": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Total"
           },
           "page": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Page"
           },
           "size": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Size"
           },
           "pages": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Pages"
           }
         },
@@ -7359,22 +7572,22 @@
           },
           "total": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Total"
           },
           "page": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Page"
           },
           "size": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Size"
           },
           "pages": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Pages"
           }
         },
@@ -7399,22 +7612,22 @@
           },
           "total": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Total"
           },
           "page": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Page"
           },
           "size": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Size"
           },
           "pages": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Pages"
           }
         },
@@ -7439,22 +7652,22 @@
           },
           "total": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Total"
           },
           "page": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Page"
           },
           "size": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Size"
           },
           "pages": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Pages"
           }
         },
@@ -7479,22 +7692,22 @@
           },
           "total": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Total"
           },
           "page": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Page"
           },
           "size": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Size"
           },
           "pages": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Pages"
           }
         },
@@ -7519,22 +7732,22 @@
           },
           "total": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Total"
           },
           "page": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Page"
           },
           "size": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Size"
           },
           "pages": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Pages"
           }
         },
@@ -7559,22 +7772,22 @@
           },
           "total": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Total"
           },
           "page": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Page"
           },
           "size": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Size"
           },
           "pages": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Pages"
           }
         },
@@ -7599,22 +7812,22 @@
           },
           "total": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Total"
           },
           "page": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Page"
           },
           "size": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Size"
           },
           "pages": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Pages"
           }
         },
@@ -7803,6 +8016,40 @@
         "title": "SortOrder",
         "description": "Define ascending and descending list ordering values."
       },
+      "StaffUserReference": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "office": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfficeReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "display_name",
+          "role"
+        ],
+        "title": "StaffUserReference",
+        "description": "Authority user option enriched with role and office context."
+      },
       "TicketCancelRequest": {
         "properties": {
           "reason": {
@@ -7852,6 +8099,41 @@
         "title": "TicketCitizenResponseRequest",
         "description": "Citizen answer to the currently pending authority question."
       },
+      "TicketCommentAuthorResponse": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "author_type": {
+            "type": "string",
+            "enum": [
+              "CITIZEN",
+              "AUTHORITY"
+            ],
+            "title": "Author Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "display_name",
+          "author_type"
+        ],
+        "title": "TicketCommentAuthorResponse",
+        "description": "Privacy-aware author label for a public or internal comment response."
+      },
       "TicketCommentCreateRequest": {
         "properties": {
           "text": {
@@ -7898,6 +8180,9 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "author": {
+            "$ref": "#/components/schemas/TicketCommentAuthorResponse"
           }
         },
         "type": "object",
@@ -7906,7 +8191,8 @@
           "ticket_id",
           "text",
           "is_internal",
-          "created_at"
+          "created_at",
+          "author"
         ],
         "title": "TicketCommentResponse",
         "description": "Comment projection reconstructed directly from a ticket event."
@@ -7995,6 +8281,27 @@
         "title": "TicketDispatchRequest",
         "description": "Dispatcher command that selects the responsible authority."
       },
+      "TicketEventReferences": {
+        "properties": {
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/UserReference"
+            },
+            "type": "array",
+            "title": "Users"
+          },
+          "offices": {
+            "items": {
+              "$ref": "#/components/schemas/OfficeReference"
+            },
+            "type": "array",
+            "title": "Offices"
+          }
+        },
+        "type": "object",
+        "title": "TicketEventReferences",
+        "description": "Resolved labels for identifiers stored in an immutable event payload."
+      },
       "TicketEventResponse": {
         "properties": {
           "id": {
@@ -8019,6 +8326,9 @@
             "format": "uuid",
             "title": "Actor User Id"
           },
+          "actor": {
+            "$ref": "#/components/schemas/UserReference"
+          },
           "occurred_at": {
             "type": "string",
             "format": "date-time",
@@ -8028,6 +8338,9 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Payload"
+          },
+          "references": {
+            "$ref": "#/components/schemas/TicketEventReferences"
           }
         },
         "type": "object",
@@ -8037,6 +8350,7 @@
           "sequence_number",
           "event_type",
           "actor_user_id",
+          "actor",
           "occurred_at",
           "payload"
         ],
@@ -8217,6 +8531,16 @@
             ],
             "title": "Office Id"
           },
+          "office": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfficeReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "address": {
             "anyOf": [
               {
@@ -8234,6 +8558,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
           },
           "current_status": {
             "anyOf": [
@@ -8275,6 +8604,9 @@
             "format": "uuid",
             "title": "Creator User Id"
           },
+          "creator": {
+            "$ref": "#/components/schemas/UserReference"
+          },
           "workflow_state": {
             "$ref": "#/components/schemas/TicketWorkflowState"
           },
@@ -8290,6 +8622,16 @@
             ],
             "title": "Primary Officer Id"
           },
+          "primary_officer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "current_assignee_id": {
             "anyOf": [
               {
@@ -8302,6 +8644,16 @@
             ],
             "title": "Current Assignee Id"
           },
+          "current_assignee": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "return_to_user_id": {
             "anyOf": [
               {
@@ -8313,6 +8665,16 @@
               }
             ],
             "title": "Return To User Id"
+          },
+          "return_to_user": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "allowed_actions": {
             "items": {
@@ -8329,8 +8691,10 @@
           "category",
           "visibility",
           "created_at",
+          "updated_at",
           "version",
           "creator_user_id",
+          "creator",
           "workflow_state"
         ],
         "title": "TicketInternalDetailResponse",
@@ -8373,6 +8737,16 @@
             ],
             "title": "Office Id"
           },
+          "office": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfficeReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "address": {
             "anyOf": [
               {
@@ -8390,6 +8764,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
           },
           "current_status": {
             "anyOf": [
@@ -8431,6 +8810,9 @@
             "format": "uuid",
             "title": "Creator User Id"
           },
+          "creator": {
+            "$ref": "#/components/schemas/UserReference"
+          },
           "workflow_state": {
             "$ref": "#/components/schemas/TicketWorkflowState"
           },
@@ -8446,6 +8828,16 @@
             ],
             "title": "Primary Officer Id"
           },
+          "primary_officer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "current_assignee_id": {
             "anyOf": [
               {
@@ -8458,6 +8850,16 @@
             ],
             "title": "Current Assignee Id"
           },
+          "current_assignee": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "return_to_user_id": {
             "anyOf": [
               {
@@ -8469,6 +8871,16 @@
               }
             ],
             "title": "Return To User Id"
+          },
+          "return_to_user": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -8478,8 +8890,10 @@
           "category",
           "visibility",
           "created_at",
+          "updated_at",
           "version",
           "creator_user_id",
+          "creator",
           "workflow_state"
         ],
         "title": "TicketInternalResponse",
@@ -8532,6 +8946,16 @@
             ],
             "title": "Office Id"
           },
+          "office": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfficeReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "address": {
             "anyOf": [
               {
@@ -8549,6 +8973,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
           },
           "current_status": {
             "anyOf": [
@@ -8593,6 +9022,7 @@
           "category",
           "visibility",
           "created_at",
+          "updated_at",
           "version"
         ],
         "title": "TicketResponse",
@@ -8747,11 +9177,74 @@
         "title": "TicketWorkflowAction",
         "description": "Commands exposed by the simplified authority-side workflow."
       },
+      "TicketWorkflowOptionsResponse": {
+        "properties": {
+          "ticket_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Ticket Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "offices": {
+            "items": {
+              "$ref": "#/components/schemas/OfficeReference"
+            },
+            "type": "array",
+            "title": "Offices"
+          },
+          "primary_officers": {
+            "items": {
+              "$ref": "#/components/schemas/StaffUserReference"
+            },
+            "type": "array",
+            "title": "Primary Officers"
+          },
+          "forward_targets": {
+            "items": {
+              "$ref": "#/components/schemas/StaffUserReference"
+            },
+            "type": "array",
+            "title": "Forward Targets"
+          },
+          "cosignature_targets": {
+            "items": {
+              "$ref": "#/components/schemas/StaffUserReference"
+            },
+            "type": "array",
+            "title": "Cosignature Targets"
+          },
+          "escalation_targets": {
+            "items": {
+              "$ref": "#/components/schemas/StaffUserReference"
+            },
+            "type": "array",
+            "title": "Escalation Targets"
+          },
+          "completion_outcomes": {
+            "items": {
+              "$ref": "#/components/schemas/TicketCompletionOutcome"
+            },
+            "type": "array",
+            "title": "Completion Outcomes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticket_id",
+          "version"
+        ],
+        "title": "TicketWorkflowOptionsResponse",
+        "description": "Only the selectable targets valid for the current ticket and actor."
+      },
       "TicketWorkflowState": {
         "type": "string",
         "enum": [
           "NEW",
           "AWAITING_PRIMARY_ASSIGNMENT",
+          "RETURNED_TO_DISPATCH",
           "IN_PROGRESS",
           "WAITING_FOR_COSIGNATURE",
           "WAITING_FOR_CITIZEN",
@@ -8918,6 +9411,26 @@
         ],
         "title": "UserHistoryResponse",
         "description": "Serialize one immutable user history snapshot."
+      },
+      "UserReference": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "display_name"
+        ],
+        "title": "UserReference",
+        "description": "Stable user label without account or contact information."
       },
       "UserResponse": {
         "properties": {

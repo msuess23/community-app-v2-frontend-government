@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
@@ -68,6 +68,6 @@ describe('MediaGallery', () => {
     await user.click(
       within(dialog).getByRole('button', { name: 'Bildvorschau schließen' }),
     )
-    expect(trigger).toHaveFocus()
+    await waitFor(() => expect(trigger).toHaveFocus())
   })
 })

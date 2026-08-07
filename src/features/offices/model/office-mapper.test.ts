@@ -15,7 +15,7 @@ const OFFICE_DTO = {
     street: 'Musterstraße',
     zip_code: '04109',
   },
-  contact_email: 'ordnung@example.test',
+  contact_email: 'ordnung@example.com',
   description: 'Zentrale Anlaufstelle',
   id: '00000000-0000-4000-8000-000000000010',
   metadata: {
@@ -44,7 +44,7 @@ describe('office DTO mapping', () => {
         street: 'Musterstraße',
         zipCode: '04109',
       },
-      contactEmail: 'ordnung@example.test',
+      contactEmail: 'ordnung@example.com',
       createdAt: '2026-08-01T10:00:00Z',
       deactivatedAt: null,
       description: 'Zentrale Anlaufstelle',

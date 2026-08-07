@@ -16,7 +16,7 @@ import { mockApiServer } from '@/test/server'
 const INFO_ID = '00000000-0000-4000-8000-000000000100'
 const OFFICE_ID = '00000000-0000-4000-8000-000000000010'
 const ADMIN: AuthUser = {
-  email: 'admin@example.test',
+  email: 'admin@example.com',
   firstName: 'Ada',
   id: 'admin-1',
   lastName: 'Admin',
@@ -24,7 +24,7 @@ const ADMIN: AuthUser = {
   role: 'ADMIN',
 }
 const DISPATCHER: AuthUser = {
-  email: 'dispatcher@example.test',
+  email: 'dispatcher@example.com',
   firstName: 'Dora',
   id: 'dispatcher-1',
   lastName: 'Dispatcher',
@@ -92,9 +92,10 @@ describe('InfoDetailPage', () => {
       screen.queryByRole('heading', { name: 'Bilder hochladen' }),
     ).not.toBeInTheDocument()
 
-    const gallery = await screen.findByRole('list', {
+    const gallery = await screen.findByRole('region', {
       name: 'Bilder der Mitteilung',
     })
+    expect(gallery).toHaveAttribute('aria-roledescription', 'Karussell')
     expect(
       within(gallery).getByRole('img', {
         name: 'Bühne und Informationsstände auf dem Leipziger Markt',
@@ -355,7 +356,7 @@ function imageResponse(
 function officeResponse() {
   return {
     address: null,
-    contact_email: 'ordnung@example.test',
+    contact_email: 'ordnung@example.com',
     description: null,
     id: OFFICE_ID,
     metadata: {

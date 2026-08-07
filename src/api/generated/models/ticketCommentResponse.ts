@@ -4,6 +4,7 @@
  * Community App V2
  * OpenAPI spec version: 0.1.0
  */
+import type { TicketCommentAuthorResponse } from './ticketCommentAuthorResponse'
 
 /**
  * Comment projection reconstructed directly from a ticket event.
@@ -14,4 +15,5 @@ export interface TicketCommentResponse {
   text: string
   is_internal: boolean
   created_at: string
+  author: TicketCommentAuthorResponse
 }

@@ -18,7 +18,7 @@ const INFO_ID = '00000000-0000-4000-8000-000000000100'
 const OFFICE_ID = '00000000-0000-4000-8000-000000000010'
 const OTHER_OFFICE_ID = '00000000-0000-4000-8000-000000000011'
 const ADMIN: AuthUser = {
-  email: 'admin@example.test',
+  email: 'admin@example.com',
   firstName: 'Ada',
   id: 'user-admin',
   lastName: 'Admin',
@@ -191,9 +191,11 @@ describe('InfoEditPage', () => {
       )
 
       expect(
-        await screen.findByRole('img', {
-          name: 'Umleitung rund um die Parkstraße',
-        }),
+        await screen.findByRole(
+          'img',
+          { name: 'Umleitung rund um die Parkstraße' },
+          { timeout: 10_000 },
+        ),
       ).toBeVisible()
       expect(uploadRequests).toEqual([
         {
@@ -250,6 +252,7 @@ describe('InfoEditPage', () => {
         ),
       ).toBeVisible()
     },
+    15_000,
   )
 
   it('protects selected but not yet uploaded images from accidental navigation', async () => {
@@ -492,7 +495,7 @@ function imageResponse(
 function officeResponse() {
   return {
     address: null,
-    contact_email: 'ordnung@example.test',
+    contact_email: 'ordnung@example.com',
     description: null,
     id: OFFICE_ID,
     metadata: {

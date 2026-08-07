@@ -14,7 +14,7 @@ import { FeedbackProvider } from '@/shared/feedback/FeedbackProvider'
 import { mockApiServer } from '@/test/server'
 
 const ADMIN_USER: AuthUser = {
-  email: 'admin@example.test',
+  email: 'admin@example.com',
   firstName: 'Ada',
   id: '00000000-0000-4000-8000-000000000001',
   lastName: 'Admin',
@@ -30,7 +30,7 @@ describe('UserDetailPage', () => {
     mockApiServer.use(
       http.get(`http://localhost/api/v1/users/${TARGET_ID}`, () =>
         HttpResponse.json({
-          email: 'officer@example.test',
+          email: 'officer@example.com',
           first_name: 'Otto',
           id: TARGET_ID,
           last_name: 'Officer',
@@ -86,7 +86,7 @@ describe('UserDetailPage', () => {
     mockApiServer.use(
       http.get(`http://localhost/api/v1/users/${TARGET_ID}`, () =>
         HttpResponse.json({
-          email: 'officer@example.test',
+          email: 'officer@example.com',
           first_name: 'Otto',
           id: TARGET_ID,
           last_name: 'Officer',

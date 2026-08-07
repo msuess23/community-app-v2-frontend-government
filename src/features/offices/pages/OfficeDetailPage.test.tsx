@@ -14,7 +14,7 @@ import { FeedbackProvider } from '@/shared/feedback/FeedbackProvider'
 import { mockApiServer } from '@/test/server'
 
 const ADMIN_USER: AuthUser = {
-  email: 'admin@example.test',
+  email: 'admin@example.com',
   firstName: 'Ada',
   id: '00000000-0000-4000-8000-000000000001',
   lastName: 'Admin',
@@ -38,8 +38,8 @@ describe('OfficeDetailPage', () => {
       await screen.findByRole('heading', { level: 1, name: 'Ordnungsamt' }),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('link', { name: 'ordnung@example.test' }),
-    ).toHaveAttribute('href', 'mailto:ordnung@example.test')
+      screen.getByRole('link', { name: 'ordnung@example.com' }),
+    ).toHaveAttribute('href', 'mailto:ordnung@example.com')
     expect(
       screen.getByRole('link', { name: '+49 341 123456' }),
     ).toHaveAttribute('href', 'tel:+49341123456')
@@ -232,7 +232,7 @@ function officeResponse(
       street: 'Musterstraße',
       zip_code: '04109',
     },
-    contact_email: 'ordnung@example.test',
+    contact_email: 'ordnung@example.com',
     description: 'Zentrale Anlaufstelle\nfür kommunale Anliegen.',
     id: OFFICE_ID,
     metadata: {

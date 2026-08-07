@@ -52,7 +52,14 @@ describe('FeedbackProvider', () => {
     ).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Erfolg anzeigen' }))
 
-    expect(screen.getByRole('status')).toHaveTextContent('Gespeichert')
+    const notice = screen.getByRole('status')
+    expect(notice).toHaveTextContent('Gespeichert')
+    expect(notice).toHaveClass('pointer-events-none')
+    expect(
+      screen.getByRole('button', {
+        name: 'Benachrichtigung „Gespeichert“ schließen',
+      }),
+    ).toHaveClass('pointer-events-auto')
 
     act(() => {
       vi.advanceTimersByTime(6_000)

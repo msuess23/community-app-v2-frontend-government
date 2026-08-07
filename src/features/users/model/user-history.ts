@@ -73,7 +73,19 @@ export function mapUserHistoryResponse(
 export function mapUserHistoryPage(
   response: PaginatedResponseUserHistoryResponse,
 ): PageModel<UserHistoryRecord> {
-  return mapApiPage(response, mapUserHistoryResponse)
+  const page = mapApiPage(response, mapUserHistoryResponse)
+  return {
+    ...page,
+    items: [...page.items].sort(compareUserHistoryNewestFirst),
+  }
+}
+
+/** Keeps the most recent immutable account snapshots at the top of each page. */
+function compareUserHistoryNewestFirst(
+  left: UserHistoryRecord,
+  right: UserHistoryRecord,
+): number {
+  return Date.parse(right.changedAt) - Date.parse(left.changedAt)
 }
 
 /** Reads and validates the inclusive calendar-day range owned by the history URL. */

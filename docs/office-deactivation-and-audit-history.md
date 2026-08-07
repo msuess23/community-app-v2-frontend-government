@@ -33,7 +33,7 @@ Ticket and appointment links are deliberately omitted until those feature areas 
 
 ## Immutable history model
 
-History DTOs cross a dedicated feature boundary. The mapper:
+History DTOs cross a dedicated feature boundary. Each page is presented newest first before moving further into the past. The mapper:
 
 - preserves the history-row and office identifiers,
 - normalizes optional contact and descriptive values,

@@ -11,7 +11,7 @@ import { UserDirectoryPage } from '@/features/users/pages/UserDirectoryPage'
 import { mockApiServer } from '@/test/server'
 
 const ADMIN_USER: AuthUser = {
-  email: 'admin@example.test',
+  email: 'admin@example.com',
   firstName: 'Ada',
   id: '00000000-0000-4000-8000-000000000001',
   lastName: 'Admin',
@@ -29,7 +29,7 @@ describe('UserDirectoryPage', () => {
         return HttpResponse.json({
           data: [
             {
-              email: 'citizen@example.test',
+              email: 'citizen@example.com',
               first_name: 'Clara',
               id: '00000000-0000-4000-8000-000000000002',
               last_name: 'Citizen',
@@ -80,7 +80,7 @@ describe('UserDirectoryPage', () => {
     expect(screen.getByLabelText('Kontostatus')).toHaveValue('all')
     expect(screen.getByLabelText('Sortierung')).toHaveValue('email:desc')
     expect(
-      screen.getByRole('combobox', { name: 'Einträge pro Seite' }),
+      await screen.findByRole('combobox', { name: 'Einträge pro Seite' }),
     ).toHaveValue('20')
     await waitFor(() => expect(screen.getByLabelText('Behörde')).toBeEnabled())
 
@@ -95,7 +95,7 @@ describe('UserDirectoryPage', () => {
     })
     expect(
       within(compactList).getByRole('article', { name: 'Clara Citizen' }),
-    ).toHaveTextContent('citizen@example.test')
+    ).toHaveTextContent('citizen@example.com')
 
     expect(requestedUserSearch).toContain('role=CITIZEN')
     expect(requestedUserSearch).toContain('status=all')

@@ -147,7 +147,7 @@ function imageResponse(
 function officeResponse() {
   return {
     address: null,
-    contact_email: 'ordnung@example.test',
+    contact_email: 'ordnung@example.com',
     description: null,
     id: OFFICE_ID,
     metadata: {

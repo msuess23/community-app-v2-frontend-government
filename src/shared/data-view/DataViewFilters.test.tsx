@@ -6,6 +6,7 @@ import {
   ActiveDataViewFilters,
   DataViewFilterDateField,
   DataViewFilterPanel,
+  DataViewFilterSearchableSelect,
   DataViewFilterSelect,
 } from '@/shared/data-view/DataViewFilters'
 import { DataViewSortControl } from '@/shared/data-view/DataViewSortControl'
@@ -102,6 +103,37 @@ describe('data view filters', () => {
     const select = screen.getByLabelText('Behörde')
     expect(select).toBeDisabled()
     expect(select).toHaveAccessibleDescription('Behörden werden geladen.')
+  })
+
+  it('filters long option lists while retaining the selected value', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(
+      <DataViewFilterSearchableSelect
+        label="Bürger"
+        onChange={vi.fn()}
+        options={[
+          { label: 'Clara Bürgerin', value: 'citizen-1' },
+          { label: 'Bernd Beispiel', value: 'citizen-2' },
+        ]}
+        value="citizen-1"
+      />,
+    )
+
+    await user.type(
+      screen.getByRole('searchbox', { name: 'Bürger durchsuchen' }),
+      'Bernd',
+    )
+
+    expect(screen.getByRole('combobox', { name: 'Bürger' })).toHaveValue(
+      'citizen-1',
+    )
+    expect(
+      screen.getByRole('option', { name: 'Clara Bürgerin' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('option', { name: 'Bernd Beispiel' }),
+    ).toBeInTheDocument()
   })
 
   it('uses the established native date input with German locale metadata', () => {

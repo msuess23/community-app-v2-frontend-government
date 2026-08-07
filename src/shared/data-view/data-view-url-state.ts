@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router'
 
 export type DataViewSortDirection = 'asc' | 'desc'
@@ -123,19 +123,31 @@ export function useDataViewUrlState<
   TFilterKey extends string,
 >(config: DataViewUrlConfig<TSortField, TFilterKey>) {
   const [searchParams, setSearchParams] = useSearchParams()
+  const searchParamsRef = useRef(searchParams)
   const state = useMemo(
     () => parseDataViewUrlState(searchParams, config),
     [config, searchParams],
   )
+
+  useLayoutEffect(() => {
+    // React Router does not queue successive search-param callbacks
+    // like React state updates.
+    searchParamsRef.current = searchParams
+  }, [searchParams])
 
   const update = useCallback(
     (
       nextUpdate: DataViewUrlUpdate<TSortField, TFilterKey>,
       options?: DataViewUrlUpdateOptions,
     ) => {
-      setSearchParams((current) =>
-        createDataViewSearchParams(current, config, nextUpdate, options),
+      const nextSearchParams = createDataViewSearchParams(
+        searchParamsRef.current,
+        config,
+        nextUpdate,
+        options,
       )
+      searchParamsRef.current = nextSearchParams
+      setSearchParams(nextSearchParams)
     },
     [config, setSearchParams],
   )

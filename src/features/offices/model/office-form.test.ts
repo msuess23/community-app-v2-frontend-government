@@ -20,7 +20,7 @@ const OFFICE: OfficeRecord = {
     street: 'Musterstraße',
     zipCode: '04109',
   },
-  contactEmail: 'ordnung@example.test',
+  contactEmail: 'ordnung@example.com',
   createdAt: '2026-08-01T10:00:00Z',
   deactivatedAt: null,
   description: 'Zentrale Anlaufstelle',
@@ -45,7 +45,7 @@ describe('office form mapping', () => {
     const values = createEmptyOfficeFormValues()
     values.name = '  Bürger   Service  '
     values.description = '  Hilfe vor Ort  '
-    values.contactEmail = 'SERVICE@EXAMPLE.TEST'
+    values.contactEmail = 'SERVICE@example.com'
     values.phone = '+49 30 123 45'
     values.services = [{ value: ' Ausweise ' }, { value: 'Meldewesen' }]
     values.openingHours.monday = {
@@ -71,7 +71,7 @@ describe('office form mapping', () => {
         street: 'Rathausstraße',
         zip_code: '10178',
       },
-      contact_email: 'SERVICE@EXAMPLE.TEST',
+      contact_email: 'SERVICE@example.com',
       description: 'Hilfe vor Ort',
       name: 'Bürger Service',
       opening_hours: {
