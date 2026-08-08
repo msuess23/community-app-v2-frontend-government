@@ -26,7 +26,14 @@
     "test:fullstack:ui": "playwright test --config=playwright.fullstack.config.ts --ui",
     "tauri": "tauri",
     "native:dev": "node scripts/run-tauri.mjs dev",
-    "native:build": "node scripts/run-tauri.mjs build"
+    "native:build": "node scripts/run-tauri.mjs build",
+    "native:android:init": "tauri android init",
+    "native:android:dev": "node scripts/run-tauri.mjs android-dev",
+    "native:android:run": "node scripts/run-tauri.mjs android-run",
+    "native:android:build:apk": "node scripts/run-tauri.mjs android-build --apk",
+    "native:android:build:aab": "node scripts/run-tauri.mjs android-build --aab",
+    "native:android:open": "node scripts/run-tauri.mjs android-dev --open",
+    "native:icons": "tauri icon src-tauri/icons/icon.png"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",

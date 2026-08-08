@@ -40,3 +40,10 @@ test-results-fullstack/
 
 # Rust/Tauri build output
 src-tauri/target/
+
+# Android/Tauri local build state and signing secrets
+src-tauri/gen/android/.gradle/
+src-tauri/gen/android/local.properties
+src-tauri/gen/android/keystore.properties
+src-tauri/gen/android/*.jks
+src-tauri/gen/android/**/build/
