@@ -105,7 +105,7 @@ describe('useUnsavedChangesGuard', () => {
       .mockReset()
       .mockImplementation(async (handler) => {
         nativeWindowMocks.closeHandler = handler
-        return vi.fn()
+        return () => {}
       })
   })
 
